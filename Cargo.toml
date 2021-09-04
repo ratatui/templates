@@ -1,6 +1,13 @@
 [package]
-name = "rust-tui-template"
+name = "{{project-name}}"
 version = "0.1.0"
+authors = ["{{authors}}"]
 edition = "2018"
 
 [dependencies]
+crossterm = "0.21.0"
+
+[dependencies.tui]
+version = "0.16.0"
+default-features = false
+features = ["crossterm"]
