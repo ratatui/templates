@@ -1,13 +1,9 @@
 [package]
-name = "{{project-name}}"
+name = "template"
 version = "0.1.0"
-authors = ["{{authors}}"]
-edition = "2018"
+authors = ["orhub", "jedsek"]
+edition = "2021"
 
 [dependencies]
+tui = "0.19.0"
 crossterm = "0.21.0"
-
-[dependencies.tui]
-version = "0.16.0"
-default-features = false
-features = ["crossterm"]

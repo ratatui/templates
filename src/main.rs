@@ -1,10 +1,10 @@
 use std::io;
+use template::app::{App, AppResult};
+use template::event::{Event, EventHandler};
+use template::handler::handle_key_events;
+use template::tui::Tui;
 use tui::backend::CrosstermBackend;
 use tui::Terminal;
-use {{crate_name}}::app::{App, AppResult};
-use {{crate_name}}::event::{Event, EventHandler};
-use {{crate_name}}::handler::handle_key_events;
-use {{crate_name}}::tui::Tui;
 
 fn main() -> AppResult<()> {
     // Create an application.
