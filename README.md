@@ -1,12 +1,14 @@
 # rust-tui-template
 
-A template for bootstrapping a Rust [**TUI**](https://en.wikipedia.org/wiki/Text-based_user_interface) application with [`tui-rs`](https://github.com/fdehau/tui-rs) & [`crossterm`](https://github.com/crossterm-rs/crossterm).
+A template for bootstrapping a Rust [**TUI**](https://en.wikipedia.org/wiki/Text-based_user_interface) application with [`ratatui`](https://github.com/tui-rs-revival/ratatui) & [`crossterm`](https://github.com/crossterm-rs/crossterm).
 
-<img src="https://raw.githubusercontent.com/fdehau/tui-rs/master/assets/demo.gif" width="600">
+<img src="https://raw.githubusercontent.com/tui-rs-revival/ratatui/master/assets/demo.gif" width="600">
 
-### tui-rs
+### ratatui
 
 > The library is based on the principle of immediate rendering with intermediate buffers. This means that at each new frame you should build all widgets that are supposed to be part of the UI. While providing a great flexibility for rich and interactive UI, this may introduce overhead for highly dynamic content. So, the implementation try to minimize the number of ansi escapes sequences generated to draw the updated UI. In practice, given the speed of Rust the overhead rather comes from the terminal emulator than the library itself.
+
+> ratatui is an actively maintained fork of [tui-rs](https://github.com/fdehau/tui-rs).
 
 #### [Documentation](https://docs.rs/tui)
 

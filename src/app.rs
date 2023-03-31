@@ -34,11 +34,11 @@ impl App {
     pub fn render<B: Backend>(&mut self, frame: &mut Frame<'_, B>) {
         // This is where you add new widgets.
         // See the following resources:
-        // - https://docs.rs/tui/latest/tui/widgets/index.html
-        // - https://github.com/fdehau/tui-rs/tree/master/examples
+        // - https://docs.rs/ratatui/latest/ratatui/widgets/index.html
+        // - https://github.com/tui-rs-revival/ratatui/tree/master/examples
         frame.render_widget(
             Paragraph::new(
-                "This is a tui-rs template.\nPress `Esc`, `Ctrl-C` or `q` to stop running.",
+                "This is a tui template.\nPress `Esc`, `Ctrl-C` or `q` to stop running.",
             )
             .block(
                 Block::default()
