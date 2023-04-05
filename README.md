@@ -42,7 +42,7 @@ cargo install cargo-generate
 2. Clone this repository via `cargo-generate`:
 
 ```sh
-cargo generate --git https://github.com/orhun/rust-tui-template --name <project-name>
+cargo generate --git https://github.com/tui-rs-revival/rust-tui-template --name <project-name>
 ```
 
 ## See also
