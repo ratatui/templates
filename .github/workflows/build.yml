@@ -1,0 +1,31 @@
+name: 'Build Template'
+on:
+  workflow_dispatch:
+  schedule:
+    # Run once a week at 6pm on Saturday (UTC)
+    - cron: '0 18 * * 6'
+  push:
+    paths-ignore:
+      - "**.md"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      PROJECT_NAME: my-project
+    steps:
+      - uses: actions/checkout@v3
+      - uses: cargo-generate/cargo-generate-action@v0.17.5
+        with:
+          name: ${{ env.PROJECT_NAME }}
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+      # We need to move the generated project to a temp folder, away from the template project
+      # otherwise `cargo` runs would fail .
+      # see https://github.com/rust-lang/cargo/issues/9922
+      - run: |
+          mv $PROJECT_NAME ${{ runner.temp }}/
+          cd ${{ runner.temp }}/$PROJECT_NAME
+          cargo check
+
