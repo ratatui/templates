@@ -1,6 +1,6 @@
 # ratatui-template
 
-<img width="1512" alt="image" src="https://github.com/kdheepak/ratatui-template/assets/1813121/8f303760-bd8a-411f-accd-4ef3a97b7aa7">
+<img width="1512" alt="image" src="https://github.com/kdheepak/ratatui-template/assets/1813121/61d9f3a4-14d7-4bb8-85be-771fd5da4c0f">
 
 ### Features
 
