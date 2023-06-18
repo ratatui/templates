@@ -3,7 +3,7 @@ use std::time::Duration;
 use anyhow::{anyhow, Context, Result};
 use crossterm::event::{Event as CrosstermEvent, EventStream, KeyEvent, KeyEventKind, MouseEvent};
 use futures::{FutureExt, StreamExt};
-use tokio::{signal, sync::mpsc};
+use tokio::sync::mpsc;
 use tracing::{error, info, trace};
 
 #[derive(Clone, Copy, Debug)]
@@ -58,9 +58,6 @@ impl EventHandler {
               None => {},
             }
           },
-          // result = signal::ctrl_c() => {
-          //   _tx.send(Event::Quit).unwrap();
-          // },
           _ = delay => {
               _tx.send(Event::Tick).unwrap();
           },

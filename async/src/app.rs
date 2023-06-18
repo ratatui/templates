@@ -8,6 +8,7 @@ use crate::{
   action::Action,
   components::{home::Home, Component},
   event::EventHandler,
+  trace_dbg,
   tui::Tui,
 };
 
@@ -37,6 +38,9 @@ impl App {
         .unwrap();
       let event = self.events.next().await;
       let mut action = Some(self.home.handle_events(event).await);
+      if action != Some(Action::Tick) {
+        trace_dbg!(action);
+      }
       while action.is_some() {
         action = self.home.dispatch(action.unwrap()).await;
       }
