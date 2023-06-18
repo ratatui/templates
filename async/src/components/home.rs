@@ -30,7 +30,7 @@ impl Home {
     debug!("Tick");
   }
 
-  pub async fn increment(&mut self, i: usize) {
+  pub fn increment(&mut self, i: usize) {
     let counter_clone = Arc::clone(&self.counter);
     tokio::task::spawn(async move {
       tokio::time::sleep(Duration::from_secs(5)).await;
@@ -39,7 +39,7 @@ impl Home {
     });
   }
 
-  pub async fn decrement(&mut self, i: usize) {
+  pub fn decrement(&mut self, i: usize) {
     let counter_clone = Arc::clone(&self.counter);
     tokio::task::spawn(async move {
       tokio::time::sleep(Duration::from_secs(5)).await;
@@ -78,8 +78,8 @@ impl Component for Home {
       Action::Quit => self.is_running = false,
       Action::Tick => self.tick(),
       Action::ToggleShowLogger => self.show_logger = !self.show_logger,
-      Action::IncrementCounter => self.increment(1).await,
-      Action::DecrementCounter => self.decrement(1).await,
+      Action::IncrementCounter => self.increment(1),
+      Action::DecrementCounter => self.decrement(1),
       _ => (),
     }
     None
