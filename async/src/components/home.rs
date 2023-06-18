@@ -6,11 +6,7 @@ use ratatui::{
   style::{Color, Style},
   widgets::{Block, BorderType, Borders, Paragraph},
 };
-use tokio::{
-  runtime::{Handle, Runtime},
-  sync::Mutex,
-  task,
-};
+use tokio::sync::Mutex;
 use tracing::debug;
 
 use super::{logger::Logger, Component, Frame};

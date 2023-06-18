@@ -18,27 +18,25 @@ pub trait Component {
   fn init(&mut self) -> Result<()> {
     Ok(())
   }
-  async fn handle_events(&self, event: Option<Event>, handler: &ActionHandler) -> Result<()> {
+  async fn handle_events(&self, event: Option<Event>) -> Action {
     match event {
-      Some(Event::Quit) => handler.send(Action::Quit).await,
-      Some(Event::Tick) => handler.send(Action::Tick).await,
-      Some(Event::Key(key_event)) => self.handle_key_events(key_event, handler).await,
-      Some(Event::Mouse(mouse_event)) => self.handle_mouse_events(mouse_event, handler).await,
-      Some(Event::Resize(x, y)) => handler.send(Action::Resize(x, y)).await,
-      Some(_) => handler.send(Action::Noop).await,
-      None => handler.send(Action::Noop).await,
+      Some(Event::Quit) => Action::Quit,
+      Some(Event::Tick) => Action::Tick,
+      Some(Event::Key(key_event)) => self.handle_key_events(key_event).await,
+      Some(Event::Mouse(mouse_event)) => self.handle_mouse_events(mouse_event).await,
+      Some(Event::Resize(x, y)) => Action::Resize(x, y),
+      Some(_) => Action::Noop,
+      None => Action::Noop,
     }
   }
-  async fn handle_key_events(&self, key: KeyEvent, handler: &ActionHandler) -> Result<()> {
-    let action = self.on_key_event(key);
-    handler.send(action).await
+  async fn handle_key_events(&self, key: KeyEvent) -> Action {
+    self.on_key_event(key)
   }
   fn on_key_event(&self, key: KeyEvent) -> Action {
     Action::Noop
   }
-  async fn handle_mouse_events(&self, mouse: MouseEvent, handler: &ActionHandler) -> Result<()> {
-    let action = self.on_mouse_event(mouse);
-    handler.send(action).await
+  async fn handle_mouse_events(&self, mouse: MouseEvent) -> Action {
+    self.on_mouse_event(mouse)
   }
   fn on_mouse_event(&self, mouse: MouseEvent) -> Action {
     Action::Noop

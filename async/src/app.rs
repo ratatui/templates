@@ -14,59 +14,49 @@ use crate::{
 pub struct App {
   pub events: EventHandler,
   pub actions: ActionHandler,
-  pub home: Arc<Mutex<Home>>,
-  pub tui: Arc<Mutex<Tui>>,
+  pub home: Home,
+  pub tui: Tui,
 }
 
 impl App {
   pub fn new(tick_rate: u64) -> Self {
-    let tui = Arc::new(Mutex::new(Tui::new().context(anyhow!("Unable to create TUI")).unwrap()));
+    let tui = Tui::new().context(anyhow!("Unable to create TUI")).unwrap();
     let events = EventHandler::new(tick_rate);
     let actions = ActionHandler::new();
-    let home = Arc::new(Mutex::new(Home::default()));
+    let home = Home::default();
     Self { tui, events, actions, home }
   }
 
   pub async fn init(&mut self) -> Result<()> {
-    self.home.lock().await.init()
+    self.home.init()
   }
 
   pub async fn enter(&mut self) -> Result<()> {
-    self.tui.lock().await.enter()?;
+    self.tui.enter()?;
     Ok(())
   }
 
   pub async fn exit(&mut self) -> Result<()> {
-    self.tui.lock().await.exit()?;
+    self.tui.exit()?;
     Ok(())
   }
 
   pub async fn run(&mut self) -> Result<()> {
-    let home = Arc::clone(&self.home);
-    let tui = Arc::clone(&self.tui);
-    tokio::spawn(async move {
-      loop {
-        let mut h = home.lock().await;
-        let mut t = tui.lock().await;
-        t.terminal
-          .draw(|f| {
-            h.render(f, f.size());
-          })
-          .unwrap();
-        h.ticker = h.ticker.saturating_add(1);
-        drop(h);
-        tokio::time::sleep(Duration::from_millis(50)).await;
-      }
-    });
-
     loop {
+      self
+        .tui
+        .terminal
+        .draw(|f| {
+          self.home.render(f, f.size());
+        })
+        .unwrap();
+      self.home.ticker = self.home.ticker.saturating_add(1);
       let event = self.events.next().await;
-      self.home.lock().await.handle_events(event, &self.actions).await?;
-      let mut action = Some(self.actions.recv().await);
+      let mut action = Some(self.home.handle_events(event).await);
       while action.is_some() {
-        action = self.home.lock().await.dispatch(action.unwrap()).await;
+        action = self.home.dispatch(action.unwrap()).await;
       }
-      if !(self.home.lock().await.is_running) {
+      if !(self.home.is_running) {
         break;
       }
     }
