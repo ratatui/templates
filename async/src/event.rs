@@ -9,6 +9,7 @@ use tracing::{error, info, trace};
 #[derive(Clone, Copy, Debug)]
 pub enum Event {
   Quit,
+  Error,
   Closed,
   Tick,
   Key(KeyEvent),
@@ -51,7 +52,9 @@ impl EventHandler {
                   _ => {},
                 }
               }
-              Some(Err(_)) => {}
+              Some(Err(_)) => {
+                _tx.send(Event::Error).unwrap();
+              }
               None => {},
             }
           },
