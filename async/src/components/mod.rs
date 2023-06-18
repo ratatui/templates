@@ -6,10 +6,7 @@ use ratatui::{backend::CrosstermBackend, layout::Rect, Frame as TuiFrame};
 
 pub type Frame<'a> = TuiFrame<'a, CrosstermBackend<Stderr>>;
 
-use crate::{
-  action::{Action, ActionHandler},
-  event::Event,
-};
+use crate::{action::Action, event::Event};
 
 pub mod home;
 pub mod logger;

@@ -10,7 +10,7 @@ use tokio::sync::Mutex;
 use tracing::debug;
 
 use super::{logger::Logger, Component, Frame};
-use crate::action::{Action, ActionHandler};
+use crate::action::Action;
 
 #[derive(Default)]
 pub struct Home {

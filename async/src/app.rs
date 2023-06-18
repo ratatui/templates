@@ -5,7 +5,7 @@ use tokio::sync::Mutex;
 use tracing::debug;
 
 use crate::{
-  action::{Action, ActionHandler},
+  action::Action,
   components::{home::Home, Component},
   event::EventHandler,
   tui::Tui,
@@ -13,7 +13,6 @@ use crate::{
 
 pub struct App {
   pub events: EventHandler,
-  pub actions: ActionHandler,
   pub home: Home,
   pub tui: Tui,
 }
@@ -22,9 +21,8 @@ impl App {
   pub fn new(tick_rate: u64) -> Self {
     let tui = Tui::new().context(anyhow!("Unable to create TUI")).unwrap();
     let events = EventHandler::new(tick_rate);
-    let actions = ActionHandler::new();
     let home = Home::default();
-    Self { tui, events, actions, home }
+    Self { tui, events, home }
   }
 
   pub async fn init(&mut self) -> Result<()> {

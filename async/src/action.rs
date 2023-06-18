@@ -13,28 +13,3 @@ pub enum Action {
   DecrementCounter,
   Noop,
 }
-
-#[derive(Debug)]
-pub struct ActionHandler {
-  pub sender: mpsc::UnboundedSender<Action>,
-  pub receiver: mpsc::UnboundedReceiver<Action>,
-}
-
-impl ActionHandler {
-  pub fn new() -> Self {
-    let (sender, receiver) = mpsc::unbounded_channel();
-    Self { sender, receiver }
-  }
-
-  pub async fn recv(&mut self) -> Action {
-    let action = self.receiver.recv().await;
-    debug!("Received action {:?}", action);
-    action.unwrap_or(Action::Quit)
-  }
-
-  pub async fn send(&self, action: Action) -> Result<()> {
-    debug!("Sending action {:?}", action);
-    self.sender.send(action)?;
-    Ok(())
-  }
-}
