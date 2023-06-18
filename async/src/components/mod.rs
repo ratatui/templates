@@ -18,7 +18,7 @@ pub trait Component {
   fn init(&mut self) -> Result<()> {
     Ok(())
   }
-  async fn handle_events(&self, event: Option<Event>, handler: &mut ActionHandler) -> Result<()> {
+  async fn handle_events(&self, event: Option<Event>, handler: &ActionHandler) -> Result<()> {
     match event {
       Some(Event::Quit) => handler.send(Action::Quit).await,
       Some(Event::Tick) => handler.send(Action::Tick).await,
@@ -29,21 +29,21 @@ pub trait Component {
       None => handler.send(Action::Noop).await,
     }
   }
-  async fn handle_key_events(&self, key: KeyEvent, handler: &mut ActionHandler) -> Result<()> {
+  async fn handle_key_events(&self, key: KeyEvent, handler: &ActionHandler) -> Result<()> {
     let action = self.on_key_event(key);
     handler.send(action).await
   }
   fn on_key_event(&self, key: KeyEvent) -> Action {
     Action::Noop
   }
-  async fn handle_mouse_events(&self, mouse: MouseEvent, handler: &mut ActionHandler) -> Result<()> {
+  async fn handle_mouse_events(&self, mouse: MouseEvent, handler: &ActionHandler) -> Result<()> {
     let action = self.on_mouse_event(mouse);
     handler.send(action).await
   }
   fn on_mouse_event(&self, mouse: MouseEvent) -> Action {
     Action::Noop
   }
-  fn dispatch(&mut self, action: Action) -> Option<Action> {
+  async fn dispatch(&mut self, action: Action) -> Option<Action> {
     None
   }
   fn render(&mut self, f: &mut Frame<'_>, rect: Rect);

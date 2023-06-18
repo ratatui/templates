@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 
 use anyhow::{anyhow, Context, Result};
 use tokio::sync::Mutex;
@@ -53,15 +53,18 @@ impl App {
             h.render(f, f.size());
           })
           .unwrap();
+        h.ticker = h.ticker.saturating_add(1);
+        drop(h);
+        tokio::time::sleep(Duration::from_millis(50)).await;
       }
     });
 
     loop {
       let event = self.events.next().await;
-      self.home.lock().await.handle_events(event, &mut self.actions).await?;
+      self.home.lock().await.handle_events(event, &self.actions).await?;
       let mut action = Some(self.actions.recv().await);
       while action.is_some() {
-        action = self.home.lock().await.dispatch(action.unwrap());
+        action = self.home.lock().await.dispatch(action.unwrap()).await;
       }
       if !(self.home.lock().await.is_running) {
         break;
