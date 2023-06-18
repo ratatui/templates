@@ -14,5 +14,6 @@ pub fn initialize_panic_handler() {
       Err(r) => error!("Unable to exit Tui: {r:?}"),
     }
     Settings::auto().most_recent_first(false).lineno_suffix(true).create_panic_handler()(panic_info);
+    std::process::exit(libc::EXIT_FAILURE);
   }));
 }

@@ -14,11 +14,10 @@ struct Args {
 }
 
 async fn tui_main(tick_rate: u64) -> Result<()> {
-  let mut app = App::new(tick_rate);
-  app.enter().await?;
-  app.init().await?;
+  let mut app = App::new(tick_rate)?;
+  app.tui.enter()?;
   app.run().await?;
-  app.exit().await?;
+  app.tui.exit()?;
   Ok(())
 }
 

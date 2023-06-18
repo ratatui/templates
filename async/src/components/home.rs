@@ -1,4 +1,7 @@
-use std::{sync::Arc, time::Duration};
+use std::{
+  sync::{Arc, RwLock},
+  time::Duration,
+};
 
 use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::{
@@ -6,7 +9,6 @@ use ratatui::{
   style::{Color, Style},
   widgets::{Block, BorderType, Borders, Paragraph},
 };
-use tokio::sync::Mutex;
 use tracing::debug;
 
 use super::{logger::Logger, Component, Frame};
@@ -17,35 +19,36 @@ pub struct Home {
   pub logger: Logger,
   pub is_running: bool,
   pub show_logger: bool,
-  pub counter: Arc<Mutex<usize>>,
+  pub counter: Arc<RwLock<usize>>,
   pub ticker: usize,
 }
 
 impl Home {
-  pub fn tick(&self) {
-    debug!("Tick");
+  pub fn tick(&mut self) {
+    // debug!("Tick");
+    self.ticker = self.ticker.saturating_add(1);
   }
 
   pub fn increment(&mut self, i: usize) {
-    let counter_clone = Arc::clone(&self.counter);
+    let counter = self.counter.clone();
     tokio::task::spawn(async move {
-      tokio::time::sleep(Duration::from_secs(5)).await;
-      let mut counter = counter_clone.lock().await;
+      // tokio::time::sleep(Duration::from_secs(5)).await;
+      let mut counter = counter.write().unwrap();
       *counter = counter.saturating_add(i);
     });
   }
 
   pub fn decrement(&mut self, i: usize) {
-    let counter_clone = Arc::clone(&self.counter);
+    let counter = self.counter.clone();
     tokio::task::spawn(async move {
-      tokio::time::sleep(Duration::from_secs(5)).await;
-      let mut counter = counter_clone.lock().await;
+      // tokio::time::sleep(Duration::from_secs(5)).await;
+      let mut counter = counter.write().unwrap();
       *counter = counter.saturating_sub(i);
     });
   }
 
   pub fn counter(&self) -> usize {
-    futures::executor::block_on(self.counter.lock()).clone()
+    *(self.counter.read().unwrap())
   }
 
   pub fn is_running(&self) -> bool {

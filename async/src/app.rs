@@ -18,25 +18,12 @@ pub struct App {
 }
 
 impl App {
-  pub fn new(tick_rate: u64) -> Self {
+  pub fn new(tick_rate: u64) -> Result<Self> {
     let tui = Tui::new().context(anyhow!("Unable to create TUI")).unwrap();
     let events = EventHandler::new(tick_rate);
-    let home = Home::default();
-    Self { tui, events, home }
-  }
-
-  pub async fn init(&mut self) -> Result<()> {
-    self.home.init()
-  }
-
-  pub async fn enter(&mut self) -> Result<()> {
-    self.tui.enter()?;
-    Ok(())
-  }
-
-  pub async fn exit(&mut self) -> Result<()> {
-    self.tui.exit()?;
-    Ok(())
+    let mut home = Home::default();
+    home.init()?;
+    Ok(Self { tui, events, home })
   }
 
   pub async fn run(&mut self) -> Result<()> {
@@ -48,7 +35,6 @@ impl App {
           self.home.render(f, f.size());
         })
         .unwrap();
-      self.home.ticker = self.home.ticker.saturating_add(1);
       let event = self.events.next().await;
       let mut action = Some(self.home.handle_events(event).await);
       while action.is_some() {
