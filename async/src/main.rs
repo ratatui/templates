@@ -31,7 +31,7 @@ fn main() -> Result<()> {
     .build()?
     .block_on(async { tui_main(args.tick_rate).await })
   {
-    Ok(_) => std::process::exit(0),
+    Ok(_) => std::process::exit(libc::EXIT_SUCCESS),
     Err(e) => {
       match Tui::new() {
         Ok(tui) => {
@@ -43,7 +43,7 @@ fn main() -> Result<()> {
       }
       let s = "Error".red().bold();
       eprintln!("{s}: {e}");
-      std::process::exit(1)
+      std::process::exit(libc::EXIT_FAILURE)
     },
   }
 }
