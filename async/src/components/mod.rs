@@ -29,15 +29,18 @@ pub trait Component {
   fn handle_key_events(&self, key: KeyEvent) -> Action {
     self.on_key_event(key)
   }
+  #[allow(unused_variables)]
   fn on_key_event(&self, key: KeyEvent) -> Action {
     Action::Noop
   }
   fn handle_mouse_events(&self, mouse: MouseEvent) -> Action {
     self.on_mouse_event(mouse)
   }
+  #[allow(unused_variables)]
   fn on_mouse_event(&self, mouse: MouseEvent) -> Action {
     Action::Noop
   }
+  #[allow(unused_variables)]
   fn dispatch(&mut self, action: Action) -> Option<Action> {
     None
   }
