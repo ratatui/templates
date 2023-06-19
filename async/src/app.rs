@@ -4,7 +4,7 @@ use anyhow::{anyhow, Context, Result};
 use tokio::sync::Mutex;
 
 use crate::{
-  action::ActionHandler,
+  action::{Action, ActionHandler},
   components::{home::Home, Component},
   event::EventHandler,
   trace_dbg,
@@ -57,7 +57,9 @@ impl App {
       let mut maybe_action = self.actions.try_recv();
       while maybe_action.is_some() {
         let action = maybe_action.unwrap();
-        trace_dbg!(action);
+        if action != Action::Tick {
+          trace_dbg!(action);
+        }
         if let Some(action) = self.home.lock().await.dispatch(action) {
           self.actions.send(action).await?
         };
