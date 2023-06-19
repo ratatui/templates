@@ -1,12 +1,51 @@
+use std::path::PathBuf;
+
 use anyhow::Result;
 use clap::Parser;
 // use clap_complete::{generate, Shell as CompletionShell};
 use colored::Colorize;
-use ratatui_template::{app::App, logging::initialize_logging, tui::Tui, utils::initialize_panic_handler};
+use ratatui_template::{
+  app::App,
+  logging::initialize_logging,
+  tui::Tui,
+  utils::{get_config_dir, initialize_panic_handler},
+};
+use shadow_rs::shadow;
 use tracing::error;
 
+shadow!(build);
+
+pub fn version() -> String {
+  let version = clap::crate_version!();
+  // let author = clap::crate_authors!();
+  // let home_page = env!("CARGO_PKG_HOMEPAGE");
+
+  let commit_date = build::COMMIT_DATE;
+  let commit_hash = build::SHORT_COMMIT;
+  let build_time = build::BUILD_TIME;
+  let build_target = build::BUILD_TARGET;
+
+  let current_exe_path = PathBuf::from(clap::crate_name!()).display().to_string();
+  let config_dir_path = get_config_dir().display().to_string();
+  let data_dir_path = ratatui_template::utils::get_data_dir().display().to_string();
+
+  format!(
+    "\
+{version}
+
+Commit date: {commit_date}
+Commit hash: {commit_hash}
+Build time: {build_time}
+Build target: {build_target}
+
+Executable path: {current_exe_path}
+Config directory: {config_dir_path}
+Data directory: {data_dir_path}"
+  )
+}
+
 #[derive(Parser, Debug)]
-#[command(version=ratatui_template::utils::version_msg(), about = "ratatui template with crossterm and tokio")]
+#[command(version=version(), about = "ratatui template with crossterm and tokio")]
 struct Args {
   /// The tick rate to use
   #[arg(short, long, default_value_t = 50)]
