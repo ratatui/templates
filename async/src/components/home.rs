@@ -58,8 +58,8 @@ impl Home {
   pub fn increment(&mut self, i: usize) {
     let counter = self.counter.clone();
     let actions = self.actions.clone();
-    actions.send(Action::EnterProcessing).unwrap();
     tokio::task::spawn(async move {
+      actions.send(Action::EnterProcessing).unwrap();
       tokio::time::sleep(Duration::from_secs(5)).await;
       let mut counter = counter.write().unwrap();
       *counter = counter.saturating_add(i);
@@ -70,8 +70,8 @@ impl Home {
   pub fn decrement(&mut self, i: usize) {
     let counter = self.counter.clone();
     let actions = self.actions.clone();
-    actions.send(Action::EnterProcessing).unwrap();
     tokio::task::spawn(async move {
+      actions.send(Action::EnterProcessing).unwrap();
       tokio::time::sleep(Duration::from_secs(5)).await;
       let mut counter = counter.write().unwrap();
       *counter = counter.saturating_sub(i);
