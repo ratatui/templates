@@ -36,22 +36,7 @@ pub fn initialize_logging() -> Result<()> {
       "info" => log::LevelFilter::Info,
       "debug" => log::LevelFilter::Debug,
       "trace" => log::LevelFilter::Trace,
-      _ => {
-        let module_directive: Vec<&str> = val.split('=').collect();
-        if module_directive.len() == 2 && module_directive[0] == "ratatui-template" {
-          match module_directive[1].to_lowercase().as_str() {
-            "off" => log::LevelFilter::Off,
-            "error" => log::LevelFilter::Error,
-            "warn" => log::LevelFilter::Warn,
-            "info" => log::LevelFilter::Info,
-            "debug" => log::LevelFilter::Debug,
-            "trace" => log::LevelFilter::Trace,
-            _ => log::LevelFilter::Info,
-          }
-        } else {
-          log::LevelFilter::Info
-        }
-      },
+      _ => log::LevelFilter::Info,
     }
   });
   tui_logger::set_default_level(default_level);

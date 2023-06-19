@@ -9,3 +9,14 @@
 - [better-panic](https://github.com/mitsuhiko/better-panic)
 - Clap for command line argument parsing
 - App with `Component` trait, with [`Home`](./src/components/home.rs) and [`Logger`](./src/components/logger.rs) components as examples
+
+### Usage
+
+- Clone the repository
+- Rename `ratatui-template` with your app name in the following files:
+  - `src/main.rs`
+  - `src/logging.rs`
+  - `Cargo.toml`
+  - `README.md`
+  - `.github/workflows/cd.yml`
+  - `.envrc`
