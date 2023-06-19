@@ -12,7 +12,7 @@ use crate::{
 };
 
 pub struct App {
-  pub events: EventHandler,
+  pub tick_rate: u64,
   pub actions: ActionHandler,
   pub home: Arc<Mutex<Home>>,
   pub tui: Arc<Mutex<Tui>>,
@@ -20,17 +20,18 @@ pub struct App {
 
 impl App {
   pub fn new(tick_rate: u64) -> Result<Self> {
-    let events = EventHandler::new(tick_rate);
     let actions = ActionHandler::new();
     let tui = Arc::new(Mutex::new(Tui::new().context(anyhow!("Unable to create TUI")).unwrap()));
     let home = Arc::new(Mutex::new(Home::new(actions.tx.clone())));
-    Ok(Self { tui, events, actions, home })
+    Ok(Self { tick_rate, tui, actions, home })
   }
 
   pub async fn run(&mut self) -> Result<()> {
-    let home = Arc::clone(&self.home);
-    let tui = Arc::clone(&self.tui);
-    home.lock().await.init()?;
+    self.home.lock().await.init()?;
+
+    let home = self.home.clone();
+    let tui = self.tui.clone();
+
     tokio::spawn(async move {
       loop {
         let mut h = home.lock().await;
@@ -43,16 +44,24 @@ impl App {
       }
     });
 
+    let home = self.home.clone();
+    let tx = self.actions.tx.clone();
+    let tick_rate = self.tick_rate;
+    tokio::spawn(async move {
+      let mut events = EventHandler::new(tick_rate);
+      loop {
+        // get the next event
+        let event = events.next().await;
+
+        // map event to an action
+        let action = home.lock().await.handle_events(event);
+
+        // add action to action handler channel queue
+        tx.send(action).unwrap();
+      }
+    });
+
     loop {
-      // get the next event
-      let event = self.events.next().await;
-
-      // map event to an action
-      let action = self.home.lock().await.handle_events(event);
-
-      // add action to action handler channel queue
-      self.actions.send(action).await?;
-
       // clear all actions from action handler channel queue
       let mut maybe_action = self.actions.try_recv();
       while maybe_action.is_some() {
