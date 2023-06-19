@@ -1,9 +1,7 @@
 [package]
 name = "ratatui-template"
-author = "kdheepak"
 version = "0.1.0"
 edition = "2021"
-about = "Template for tui using ratatui crossterm and tokio."
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -17,7 +15,20 @@ tokio-stream = "0.1.14"
 unicode-segmentation = "1.10.1"
 anyhow = "1.0.71"
 better-panic = "0.3.0"
-clap = { version = "4.3.4", features = ["derive", "cargo", "unicode"] }
+clap = { version = "4.3.4", default-features = false, features = [
+  "std",
+  "color",
+  "help",
+  "usage",
+  "error-context",
+  "suggestions",
+  "derive",
+  "cargo",
+  "wrap_help",
+  "unicode",
+  "string",
+  "unstable-styles",
+] }
 clap_complete = "4.3.1"
 futures = "0.3.28"
 tracing-macros = "0.0.0"
@@ -33,10 +44,16 @@ colored = "2.0.0"
 log = "0.4.19"
 libc = "0.2.146"
 tui-input = "0.7.1"
-shadow-rs = { version = "0.23.0", default-features = false }
+shadow-rs = { version = "0.23.0", default-features = false, features = [
+  "git2",
+  "tzdb",
+] }
 
 [build-dependencies]
-shadow-rs = { version = "0.23.0", default-features = false }
+shadow-rs = { version = "0.23.0", default-features = false, features = [
+  "git2",
+  "tzdb",
+] }
 
 [profile.release]
 codegen-units = 1

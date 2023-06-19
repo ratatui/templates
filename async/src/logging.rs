@@ -1,22 +1,12 @@
-use std::path::PathBuf;
-
 use anyhow::{Context, Result};
-use colored::Colorize;
-use directories::ProjectDirs;
 use tracing_subscriber::{
   self, filter::EnvFilter, prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt, Layer,
 };
 
+use crate::utils::get_data_dir;
+
 pub fn initialize_logging() -> Result<()> {
-  let directory = if let Ok(s) = std::env::var("RATATUI_TEMPLATE_DATA") {
-    PathBuf::from(s)
-  } else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "ratatui-template") {
-    proj_dirs.data_local_dir().to_path_buf()
-  } else {
-    let s = "Error".red().bold();
-    eprintln!("{s}: Unable to find data directory for ratatui-template");
-    std::process::exit(1)
-  };
+  let directory = get_data_dir();
   std::fs::create_dir_all(directory.clone()).context(format!("{directory:?} could not be created"))?;
   let log_path = directory.join("ratatui-template-debug.log");
   let log_file = std::fs::File::create(&log_path)?;
