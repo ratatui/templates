@@ -15,7 +15,7 @@ pub trait Component {
   fn init(&mut self) -> Result<()> {
     Ok(())
   }
-  fn handle_events(&self, event: Option<Event>) -> Action {
+  fn handle_events(&mut self, event: Option<Event>) -> Action {
     match event {
       Some(Event::Quit) => Action::Quit,
       Some(Event::Tick) => Action::Tick,
@@ -26,18 +26,18 @@ pub trait Component {
       None => Action::Noop,
     }
   }
-  fn handle_key_events(&self, key: KeyEvent) -> Action {
+  fn handle_key_events(&mut self, key: KeyEvent) -> Action {
     self.on_key_event(key)
   }
   #[allow(unused_variables)]
-  fn on_key_event(&self, key: KeyEvent) -> Action {
+  fn on_key_event(&mut self, key: KeyEvent) -> Action {
     Action::Noop
   }
-  fn handle_mouse_events(&self, mouse: MouseEvent) -> Action {
+  fn handle_mouse_events(&mut self, mouse: MouseEvent) -> Action {
     self.on_mouse_event(mouse)
   }
   #[allow(unused_variables)]
-  fn on_mouse_event(&self, mouse: MouseEvent) -> Action {
+  fn on_mouse_event(&mut self, mouse: MouseEvent) -> Action {
     Action::Noop
   }
   #[allow(unused_variables)]

@@ -9,7 +9,7 @@ use tracing::error;
 #[command(author, version, about)]
 struct Args {
   /// The tick rate to use
-  #[arg(short, long, default_value_t = 50)]
+  #[arg(short, long, default_value_t = 250)]
   tick_rate: u64,
 }
 
