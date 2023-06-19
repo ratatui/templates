@@ -14,6 +14,7 @@ pub enum Action {
   EnterNormal,
   EnterInsert,
   EnterProcessing,
+  ExitProcessing,
   Update,
   Noop,
 }

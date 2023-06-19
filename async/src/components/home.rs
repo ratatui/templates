@@ -14,7 +14,7 @@ use tui_input::{backend::crossterm::EventHandler, Input};
 use super::{logger::Logger, Component, Frame};
 use crate::action::Action;
 
-#[derive(Default, PartialEq, Eq)]
+#[derive(Default, Copy, Clone, PartialEq, Eq)]
 pub enum Mode {
   #[default]
   Normal,
@@ -41,8 +41,8 @@ impl Home {
       show_logger: Default::default(),
       counter: Default::default(),
       ticker: Default::default(),
-      mode: Default::default(),
       input: Default::default(),
+      mode: Default::default(),
       tx,
     }
   }
@@ -58,7 +58,7 @@ impl Home {
       tx.send(Action::EnterProcessing).unwrap();
       tokio::time::sleep(Duration::from_secs(5)).await;
       tx.send(Action::AddToCounter(i)).unwrap();
-      tx.send(Action::EnterNormal).unwrap();
+      tx.send(Action::ExitProcessing).unwrap();
     });
   }
 
@@ -68,7 +68,7 @@ impl Home {
       tx.send(Action::EnterProcessing).unwrap();
       tokio::time::sleep(Duration::from_secs(5)).await;
       tx.send(Action::SubtractFromCounter(i)).unwrap();
-      tx.send(Action::EnterNormal).unwrap();
+      tx.send(Action::ExitProcessing).unwrap();
     });
   }
 
@@ -86,7 +86,7 @@ impl Component for Home {
           KeyCode::Char('l') => Action::ToggleShowLogger,
           KeyCode::Char('j') => Action::ScheduleIncrementCounter,
           KeyCode::Char('k') => Action::ScheduleDecrementCounter,
-          KeyCode::Char('i') => Action::EnterInsert,
+          KeyCode::Char('/') => Action::EnterInsert,
           _ => Action::Tick,
         }
       },
@@ -112,9 +112,19 @@ impl Component for Home {
       Action::ScheduleDecrementCounter => self.decrement(1),
       Action::AddToCounter(i) => self.counter = self.counter.saturating_add(i),
       Action::SubtractFromCounter(i) => self.counter = self.counter.saturating_sub(i),
-      Action::EnterNormal => self.mode = Mode::Normal,
-      Action::EnterInsert => self.mode = Mode::Insert,
-      Action::EnterProcessing => self.mode = Mode::Processing,
+      Action::EnterNormal => {
+        self.mode = Mode::Normal;
+      },
+      Action::EnterInsert => {
+        self.mode = Mode::Insert;
+      },
+      Action::EnterProcessing => {
+        self.mode = Mode::Processing;
+      },
+      Action::ExitProcessing => {
+        // TODO: Make this go to previous mode instead
+        self.mode = Mode::Normal;
+      },
       _ => (),
     }
     None
