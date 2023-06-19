@@ -102,8 +102,8 @@ impl App {
 
       // quit state
       if self.home.lock().await.should_quit {
-        stop_tui_tx.send(()).unwrap_or_else(|_| ());
-        stop_event_tx.send(()).unwrap_or_else(|_| ());
+        stop_tui_tx.send(()).unwrap_or(());
+        stop_event_tx.send(()).unwrap_or(());
         tui_task.await?;
         event_task.await?;
         break;
