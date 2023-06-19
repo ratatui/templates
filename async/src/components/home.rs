@@ -78,6 +78,11 @@ impl Home {
 }
 
 impl Component for Home {
+  fn init(&mut self) -> anyhow::Result<()> {
+    self.should_quit = false;
+    Ok(())
+  }
+
   fn on_key_event(&mut self, key: KeyEvent) -> Action {
     match self.mode {
       Mode::Normal | Mode::Processing => {

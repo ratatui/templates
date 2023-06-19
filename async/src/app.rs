@@ -16,21 +16,19 @@ use crate::{
 
 pub struct App {
   pub tick_rate: u64,
-  pub stop_tui_tx: Option<oneshot::Sender<()>>,
-  pub tui_task: Option<JoinHandle<()>>,
+  pub home: Arc<Mutex<Home>>,
   pub tx: mpsc::UnboundedSender<Action>,
   pub rx: mpsc::UnboundedReceiver<Action>,
-  pub home: Arc<Mutex<Home>>,
 }
 
 impl App {
   pub fn new(tick_rate: u64) -> Result<Self> {
     let (tx, rx) = mpsc::unbounded_channel();
     let home = Arc::new(Mutex::new(Home::new(tx.clone())));
-    Ok(Self { tick_rate, tx, rx, home, stop_tui_tx: None, tui_task: None })
+    Ok(Self { tick_rate, tx, rx, home })
   }
 
-  pub fn spawn_tui_task(&mut self) {
+  pub fn spawn_tui_task(&mut self) -> (JoinHandle<()>, oneshot::Sender<()>) {
     let home = self.home.clone();
 
     let (stop_tui_tx, mut rx) = oneshot::channel::<()>();
@@ -53,15 +51,15 @@ impl App {
       tui.exit().unwrap();
     });
 
-    self.tui_task = Some(tui_task);
-    self.stop_tui_tx = Some(stop_tui_tx);
+    (tui_task, stop_tui_tx)
   }
 
-  pub fn spawn_event_task(&mut self) {
+  pub fn spawn_event_task(&mut self) -> (JoinHandle<()>, oneshot::Sender<()>) {
     let home = self.home.clone();
     let tx = self.tx.clone();
     let tick_rate = self.tick_rate;
-    tokio::spawn(async move {
+    let (stop_event_tx, mut rx) = oneshot::channel::<()>();
+    let event_task = tokio::spawn(async move {
       let mut events = EventHandler::new(tick_rate);
       loop {
         // get the next event
@@ -72,15 +70,21 @@ impl App {
 
         // add action to action handler channel queue
         tx.send(action).unwrap();
+
+        if rx.try_recv().ok().is_some() {
+          events.stop().await.unwrap();
+          break;
+        }
       }
     });
+    (event_task, stop_event_tx)
   }
 
   pub async fn run(&mut self) -> Result<()> {
     self.home.lock().await.init()?;
 
-    self.spawn_tui_task();
-    self.spawn_event_task();
+    let (tui_task, stop_tui_tx) = self.spawn_tui_task();
+    let (event_task, stop_event_tx) = self.spawn_event_task();
 
     loop {
       // clear all actions from action handler channel queue
@@ -98,12 +102,10 @@ impl App {
 
       // quit state
       if self.home.lock().await.should_quit {
-        if let Some(tx) = self.stop_tui_tx.take() {
-          tx.send(()).unwrap_or_else(|_| ());
-        }
-        if let Some(h) = self.tui_task.take() {
-          h.await?;
-        }
+        stop_tui_tx.send(()).unwrap_or_else(|_| ());
+        stop_event_tx.send(()).unwrap_or_else(|_| ());
+        tui_task.await?;
+        event_task.await?;
         break;
       }
     }
