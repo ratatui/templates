@@ -22,6 +22,7 @@ pub enum Mode {
   Processing,
 }
 
+#[derive(Default)]
 pub struct Home {
   pub logger: Logger,
   pub should_quit: bool,
@@ -30,21 +31,12 @@ pub struct Home {
   pub ticker: usize,
   pub mode: Mode,
   pub input: Input,
-  pub tx: mpsc::UnboundedSender<Action>,
+  pub tx: Option<mpsc::UnboundedSender<Action>>,
 }
 
 impl Home {
-  pub fn new(tx: mpsc::UnboundedSender<Action>) -> Self {
-    Self {
-      logger: Default::default(),
-      should_quit: Default::default(),
-      show_logger: Default::default(),
-      counter: Default::default(),
-      ticker: Default::default(),
-      input: Default::default(),
-      mode: Default::default(),
-      tx,
-    }
+  pub fn new() -> Self {
+    Self::default()
   }
 
   pub fn tick(&mut self) {
@@ -53,7 +45,7 @@ impl Home {
   }
 
   pub fn increment(&mut self, i: usize) {
-    let tx = self.tx.clone();
+    let tx = self.tx.as_ref().unwrap().clone();
     tokio::task::spawn(async move {
       tx.send(Action::EnterProcessing).unwrap();
       tokio::time::sleep(Duration::from_secs(5)).await;
@@ -63,7 +55,7 @@ impl Home {
   }
 
   pub fn decrement(&mut self, i: usize) {
-    let tx = self.tx.clone();
+    let tx = self.tx.as_ref().unwrap().clone();
     tokio::task::spawn(async move {
       tx.send(Action::EnterProcessing).unwrap();
       tokio::time::sleep(Duration::from_secs(5)).await;

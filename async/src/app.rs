@@ -17,15 +17,12 @@ use crate::{
 pub struct App {
   pub tick_rate: u64,
   pub home: Arc<Mutex<Home>>,
-  pub tx: mpsc::UnboundedSender<Action>,
-  pub rx: mpsc::UnboundedReceiver<Action>,
 }
 
 impl App {
   pub fn new(tick_rate: u64) -> Result<Self> {
-    let (tx, rx) = mpsc::unbounded_channel();
-    let home = Arc::new(Mutex::new(Home::new(tx.clone())));
-    Ok(Self { tick_rate, tx, rx, home })
+    let home = Arc::new(Mutex::new(Home::new()));
+    Ok(Self { tick_rate, home })
   }
 
   pub fn spawn_tui_task(&mut self) -> (JoinHandle<()>, oneshot::Sender<()>) {
@@ -54,9 +51,8 @@ impl App {
     (tui_task, stop_tui_tx)
   }
 
-  pub fn spawn_event_task(&mut self) -> (JoinHandle<()>, oneshot::Sender<()>) {
+  pub fn spawn_event_task(&mut self, tx: mpsc::UnboundedSender<Action>) -> (JoinHandle<()>, oneshot::Sender<()>) {
     let home = self.home.clone();
-    let tx = self.tx.clone();
     let tick_rate = self.tick_rate;
     let (stop_event_tx, mut stop_event_rx) = oneshot::channel::<()>();
     let event_task = tokio::spawn(async move {
@@ -81,23 +77,27 @@ impl App {
   }
 
   pub async fn run(&mut self) -> Result<()> {
+    let (tx, mut rx) = mpsc::unbounded_channel();
+
+    self.home.lock().await.tx = Some(tx.clone());
+
     self.home.lock().await.init()?;
 
     let (tui_task, stop_tui_tx) = self.spawn_tui_task();
-    let (event_task, stop_event_tx) = self.spawn_event_task();
+    let (event_task, stop_event_tx) = self.spawn_event_task(tx.clone());
 
     loop {
       // clear all actions from action handler channel queue
-      let mut maybe_action = self.rx.try_recv().ok();
+      let mut maybe_action = rx.try_recv().ok();
       while maybe_action.is_some() {
         let action = maybe_action.unwrap();
         if action != Action::Tick {
           trace_dbg!(action);
         }
         if let Some(action) = self.home.lock().await.dispatch(action) {
-          self.tx.send(action)?
+          tx.send(action)?
         };
-        maybe_action = self.rx.try_recv().ok();
+        maybe_action = rx.try_recv().ok();
       }
 
       // quit state
