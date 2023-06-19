@@ -31,7 +31,7 @@ impl App {
   pub fn spawn_tui_task(&mut self) -> (JoinHandle<()>, oneshot::Sender<()>) {
     let home = self.home.clone();
 
-    let (stop_tui_tx, mut rx) = oneshot::channel::<()>();
+    let (stop_tui_tx, mut stop_tui_rx) = oneshot::channel::<()>();
 
     let tui_task = tokio::spawn(async move {
       let mut tui = Tui::new().context(anyhow!("Unable to create TUI")).unwrap();
@@ -44,7 +44,7 @@ impl App {
             h.render(f, f.size());
           })
           .unwrap();
-        if rx.try_recv().ok().is_some() {
+        if stop_tui_rx.try_recv().ok().is_some() {
           break;
         }
       }
@@ -58,7 +58,7 @@ impl App {
     let home = self.home.clone();
     let tx = self.tx.clone();
     let tick_rate = self.tick_rate;
-    let (stop_event_tx, mut rx) = oneshot::channel::<()>();
+    let (stop_event_tx, mut stop_event_rx) = oneshot::channel::<()>();
     let event_task = tokio::spawn(async move {
       let mut events = EventHandler::new(tick_rate);
       loop {
@@ -71,7 +71,7 @@ impl App {
         // add action to action handler channel queue
         tx.send(action).unwrap();
 
-        if rx.try_recv().ok().is_some() {
+        if stop_event_rx.try_recv().ok().is_some() {
           events.stop().await.unwrap();
           break;
         }
