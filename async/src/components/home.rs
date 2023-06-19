@@ -108,12 +108,8 @@ impl Component for Home {
       Action::Quit => self.should_quit = true,
       Action::Tick => self.tick(),
       Action::ToggleShowLogger => self.show_logger = !self.show_logger,
-      Action::ScheduleIncrementCounter => {
-        self.increment(1);
-      },
-      Action::ScheduleDecrementCounter => {
-        self.decrement(1);
-      },
+      Action::ScheduleIncrementCounter => self.increment(1),
+      Action::ScheduleDecrementCounter => self.decrement(1),
       Action::AddToCounter(i) => self.counter = self.counter.saturating_add(i),
       Action::SubtractFromCounter(i) => self.counter = self.counter.saturating_sub(i),
       Action::EnterNormal => self.mode = Mode::Normal,
