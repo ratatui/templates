@@ -32,10 +32,10 @@ impl EventHandler {
 
     tokio::spawn(async move {
       let mut reader = crossterm::event::EventStream::new();
+      let mut interval = tokio::time::interval(tick_rate);
       loop {
-        let delay = tokio::time::sleep(tick_rate).fuse();
+        let delay = interval.tick();
         let crossterm_event = reader.next().fuse();
-
         tokio::select! {
           maybe_event = crossterm_event => {
             match maybe_event {
