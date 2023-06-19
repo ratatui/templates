@@ -3,7 +3,10 @@ use std::path::PathBuf;
 use better_panic::Settings;
 use colored::Colorize;
 use directories::ProjectDirs;
+use shadow_rs::shadow;
 use tracing::error;
+
+shadow!(build);
 
 use crate::tui::Tui;
 
@@ -46,4 +49,33 @@ pub fn get_config_dir() -> PathBuf {
     std::process::exit(libc::EXIT_FAILURE)
   };
   directory
+}
+
+pub fn version_msg() -> String {
+  let version = clap::crate_version!();
+  // let author = clap::crate_authors!();
+  // let home_page = env!("CARGO_PKG_HOMEPAGE");
+
+  let commit_date = build::COMMIT_DATE;
+  let commit_hash = build::SHORT_COMMIT;
+  let build_time = build::BUILD_TIME;
+  let build_target = build::BUILD_TARGET;
+
+  let current_exe_path = PathBuf::from(clap::crate_name!()).display().to_string();
+  let config_dir_path = get_config_dir().display().to_string();
+  let data_dir_path = get_data_dir().display().to_string();
+
+  format!(
+    "\
+{version}
+
+Commit date: {commit_date}
+Commit hash: {commit_hash}
+Build time: {build_time}
+Build target: {build_target}
+
+Executable path: {current_exe_path}
+Config directory: {config_dir_path}
+Data directory: {data_dir_path}"
+  )
 }
