@@ -10,20 +10,13 @@ use ratatui_template::{
   tui::Tui,
   utils::{get_config_dir, initialize_panic_handler},
 };
-use shadow_rs::shadow;
 use tracing::error;
-
-shadow!(build);
 
 pub fn version() -> String {
   let version = clap::crate_version!();
-  // let author = clap::crate_authors!();
-  // let home_page = env!("CARGO_PKG_HOMEPAGE");
+  let author = clap::crate_authors!();
 
-  let commit_date = build::COMMIT_DATE;
-  let commit_hash = build::SHORT_COMMIT;
-  let build_time = build::BUILD_TIME;
-  let build_target = build::BUILD_TARGET;
+  let commit_hash = env!("RATATUI_TEMPLATE_GIT_INFO");
 
   let current_exe_path = PathBuf::from(clap::crate_name!()).display().to_string();
   let config_dir_path = get_config_dir().display().to_string();
@@ -31,13 +24,9 @@ pub fn version() -> String {
 
   format!(
     "\
-{version}
+{version} - ({commit_hash})
 
-Commit date: {commit_date}
-Commit hash: {commit_hash}
-Build time: {build_time}
-Build target: {build_target}
-
+Authors: {author}
 Executable path: {current_exe_path}
 Config directory: {config_dir_path}
 Data directory: {data_dir_path}"
@@ -45,7 +34,7 @@ Data directory: {data_dir_path}"
 }
 
 #[derive(Parser, Debug)]
-#[command(version=version(), about = "ratatui template with crossterm and tokio")]
+#[command(version = version(), about = "ratatui template with crossterm and tokio")]
 struct Args {
   /// The tick rate to use
   #[arg(short, long, default_value_t = 50)]

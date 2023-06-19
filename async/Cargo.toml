@@ -2,6 +2,8 @@
 name = "ratatui-template"
 version = "0.1.0"
 edition = "2021"
+authors = ["Dheepak Krishnamurthy"]
+build = "build.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -44,16 +46,6 @@ colored = "2.0.0"
 log = "0.4.19"
 libc = "0.2.146"
 tui-input = "0.7.1"
-shadow-rs = { version = "0.23.0", default-features = false, features = [
-  "git2",
-  "tzdb",
-] }
-
-[build-dependencies]
-shadow-rs = { version = "0.23.0", default-features = false, features = [
-  "git2",
-  "tzdb",
-] }
 
 [profile.release]
 codegen-units = 1
