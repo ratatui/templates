@@ -1,7 +1,4 @@
-use std::{
-  sync::{Arc, RwLock},
-  time::Duration,
-};
+use std::time::Duration;
 
 use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::{
@@ -29,15 +26,15 @@ pub struct Home {
   pub logger: Logger,
   pub should_quit: bool,
   pub show_logger: bool,
-  pub counter: Arc<RwLock<usize>>,
+  pub counter: usize,
   pub ticker: usize,
   pub mode: Mode,
   pub input: Input,
-  pub actions: mpsc::UnboundedSender<Action>,
+  pub tx: mpsc::UnboundedSender<Action>,
 }
 
 impl Home {
-  pub fn new(actions: mpsc::UnboundedSender<Action>) -> Self {
+  pub fn new(tx: mpsc::UnboundedSender<Action>) -> Self {
     Self {
       logger: Default::default(),
       should_quit: Default::default(),
@@ -46,7 +43,7 @@ impl Home {
       ticker: Default::default(),
       mode: Default::default(),
       input: Default::default(),
-      actions,
+      tx,
     }
   }
 
@@ -56,31 +53,23 @@ impl Home {
   }
 
   pub fn increment(&mut self, i: usize) {
-    let counter = self.counter.clone();
-    let actions = self.actions.clone();
+    let tx = self.tx.clone();
     tokio::task::spawn(async move {
-      actions.send(Action::EnterProcessing).unwrap();
+      tx.send(Action::EnterProcessing).unwrap();
       tokio::time::sleep(Duration::from_secs(5)).await;
-      let mut counter = counter.write().unwrap();
-      *counter = counter.saturating_add(i);
-      actions.send(Action::EnterNormal).unwrap();
+      tx.send(Action::AddToCounter(i)).unwrap();
+      tx.send(Action::EnterNormal).unwrap();
     });
   }
 
   pub fn decrement(&mut self, i: usize) {
-    let counter = self.counter.clone();
-    let actions = self.actions.clone();
+    let tx = self.tx.clone();
     tokio::task::spawn(async move {
-      actions.send(Action::EnterProcessing).unwrap();
+      tx.send(Action::EnterProcessing).unwrap();
       tokio::time::sleep(Duration::from_secs(5)).await;
-      let mut counter = counter.write().unwrap();
-      *counter = counter.saturating_sub(i);
-      actions.send(Action::EnterNormal).unwrap();
+      tx.send(Action::SubtractFromCounter(i)).unwrap();
+      tx.send(Action::EnterNormal).unwrap();
     });
-  }
-
-  pub fn counter(&self) -> usize {
-    *(self.counter.read().unwrap())
   }
 
   pub fn is_running(&self) -> bool {
@@ -95,8 +84,8 @@ impl Component for Home {
         match key.code {
           KeyCode::Char('q') => Action::Quit,
           KeyCode::Char('l') => Action::ToggleShowLogger,
-          KeyCode::Char('j') => Action::IncrementCounter,
-          KeyCode::Char('k') => Action::DecrementCounter,
+          KeyCode::Char('j') => Action::ScheduleIncrementCounter,
+          KeyCode::Char('k') => Action::ScheduleDecrementCounter,
           KeyCode::Char('i') => Action::EnterInsert,
           _ => Action::Tick,
         }
@@ -119,14 +108,14 @@ impl Component for Home {
       Action::Quit => self.should_quit = true,
       Action::Tick => self.tick(),
       Action::ToggleShowLogger => self.show_logger = !self.show_logger,
-      Action::IncrementCounter => {
+      Action::ScheduleIncrementCounter => {
         self.increment(1);
-        return Some(Action::Tick);
       },
-      Action::DecrementCounter => {
+      Action::ScheduleDecrementCounter => {
         self.decrement(1);
-        return Some(Action::Tick);
       },
+      Action::AddToCounter(i) => self.counter = self.counter.saturating_add(i),
+      Action::SubtractFromCounter(i) => self.counter = self.counter.saturating_sub(i),
       Action::EnterNormal => self.mode = Mode::Normal,
       Action::EnterInsert => self.mode = Mode::Insert,
       Action::EnterProcessing => self.mode = Mode::Processing,
@@ -152,8 +141,7 @@ impl Component for Home {
     f.render_widget(
       Paragraph::new(format!(
         "Press j or k to increment or decrement.\n\nCounter: {}\n\nTicker: {}",
-        self.counter(),
-        self.ticker
+        self.counter, self.ticker
       ))
       .block(
         Block::default()
