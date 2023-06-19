@@ -7,4 +7,5 @@
 - Uses [tokio](https://tokio.rs/) for async events
 - Logs with [tui-logger](https://github.com/gin66/tui-logger) and [tracing](https://github.com/tokio-rs/tracing)
 - [better-panic](https://github.com/mitsuhiko/better-panic)
+- Clap for command line argument parsing
 - App with `Component` trait, with [`Home`](./src/components/home.rs) and [`Logger`](./src/components/logger.rs) components as examples
