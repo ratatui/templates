@@ -1,7 +1,4 @@
-use std::{
-  sync::{Arc, RwLock},
-  time::Duration,
-};
+use std::sync::{Arc, RwLock};
 
 use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::{
@@ -9,7 +6,7 @@ use ratatui::{
   style::{Color, Style},
   widgets::{Block, BorderType, Borders, Paragraph},
 };
-use tracing::debug;
+use tracing::trace;
 
 use super::{logger::Logger, Component, Frame};
 use crate::action::Action;
@@ -25,7 +22,7 @@ pub struct Home {
 
 impl Home {
   pub fn tick(&mut self) {
-    // debug!("Tick");
+    trace!("Tick");
     self.ticker = self.ticker.saturating_add(1);
   }
 
@@ -72,7 +69,7 @@ impl Component for Home {
     }
   }
 
-  async fn dispatch(&mut self, action: Action) -> Option<Action> {
+  fn dispatch(&mut self, action: Action) -> Option<Action> {
     match action {
       Action::Quit => self.is_running = false,
       Action::Tick => self.tick(),

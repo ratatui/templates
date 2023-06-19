@@ -1,8 +1,4 @@
-use std::{sync::Arc, time::Duration};
-
 use anyhow::{anyhow, Context, Result};
-use tokio::sync::Mutex;
-use tracing::debug;
 
 use crate::{
   action::Action,
@@ -37,12 +33,12 @@ impl App {
         })
         .unwrap();
       let event = self.events.next().await;
-      let mut action = Some(self.home.handle_events(event).await);
+      let mut action = Some(self.home.handle_events(event));
       if action != Some(Action::Tick) {
         trace_dbg!(action);
       }
       while action.is_some() {
-        action = self.home.dispatch(action.unwrap()).await;
+        action = self.home.dispatch(action.unwrap());
       }
       if !(self.home.is_running) {
         break;
