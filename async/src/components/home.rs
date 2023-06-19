@@ -77,8 +77,14 @@ impl Component for Home {
       Action::Quit => self.is_running = false,
       Action::Tick => self.tick(),
       Action::ToggleShowLogger => self.show_logger = !self.show_logger,
-      Action::IncrementCounter => self.increment(1),
-      Action::DecrementCounter => self.decrement(1),
+      Action::IncrementCounter => {
+        self.increment(1);
+        return Some(Action::Tick);
+      },
+      Action::DecrementCounter => {
+        self.decrement(1);
+        return Some(Action::Tick);
+      },
       _ => (),
     }
     None
