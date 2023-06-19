@@ -27,6 +27,7 @@ impl App {
 
   pub async fn run(&mut self) -> Result<()> {
     loop {
+      // draw to terminal
       self
         .tui
         .terminal
@@ -35,12 +36,16 @@ impl App {
         })
         .unwrap();
 
+      // get the next event
       let event = self.events.next().await;
 
+      // map event to an action
       let action = self.home.handle_events(event);
 
+      // add action to action handler channel queue
       self.actions.send(action).await?;
 
+      // clear all actions from action handler channel queue
       let mut maybe_action = self.actions.try_recv();
       while maybe_action.is_some() {
         let action = maybe_action.unwrap();
@@ -51,7 +56,8 @@ impl App {
         maybe_action = self.actions.try_recv();
       }
 
-      if !(self.home.is_running) {
+      // quit state
+      if self.home.should_quit {
         break;
       }
     }

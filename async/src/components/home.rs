@@ -1,5 +1,5 @@
 use std::{
-  sync::{Arc, Mutex, RwLock},
+  sync::{Arc, RwLock},
   time::Duration,
 };
 
@@ -27,7 +27,7 @@ pub enum Mode {
 
 pub struct Home {
   pub logger: Logger,
-  pub is_running: bool,
+  pub should_quit: bool,
   pub show_logger: bool,
   pub counter: Arc<RwLock<usize>>,
   pub ticker: usize,
@@ -40,7 +40,7 @@ impl Home {
   pub fn new(actions: mpsc::UnboundedSender<Action>) -> Self {
     Self {
       logger: Default::default(),
-      is_running: Default::default(),
+      should_quit: Default::default(),
       show_logger: Default::default(),
       counter: Default::default(),
       ticker: Default::default(),
@@ -60,7 +60,7 @@ impl Home {
     let actions = self.actions.clone();
     actions.send(Action::EnterProcessing).unwrap();
     tokio::task::spawn(async move {
-      tokio::time::sleep(Duration::from_secs(1)).await;
+      tokio::time::sleep(Duration::from_secs(5)).await;
       let mut counter = counter.write().unwrap();
       *counter = counter.saturating_add(i);
       actions.send(Action::EnterNormal).unwrap();
@@ -72,7 +72,7 @@ impl Home {
     let actions = self.actions.clone();
     actions.send(Action::EnterProcessing).unwrap();
     tokio::task::spawn(async move {
-      tokio::time::sleep(Duration::from_secs(1)).await;
+      tokio::time::sleep(Duration::from_secs(5)).await;
       let mut counter = counter.write().unwrap();
       *counter = counter.saturating_sub(i);
       actions.send(Action::EnterNormal).unwrap();
@@ -84,16 +84,11 @@ impl Home {
   }
 
   pub fn is_running(&self) -> bool {
-    self.is_running
+    self.should_quit
   }
 }
 
 impl Component for Home {
-  fn init(&mut self) -> anyhow::Result<()> {
-    self.is_running = true;
-    Ok(())
-  }
-
   fn on_key_event(&mut self, key: KeyEvent) -> Action {
     match self.mode {
       Mode::Normal | Mode::Processing => {
@@ -121,7 +116,7 @@ impl Component for Home {
 
   fn dispatch(&mut self, action: Action) -> Option<Action> {
     match action {
-      Action::Quit => self.is_running = false,
+      Action::Quit => self.should_quit = true,
       Action::Tick => self.tick(),
       Action::ToggleShowLogger => self.show_logger = !self.show_logger,
       Action::IncrementCounter => {
