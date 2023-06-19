@@ -8,23 +8,22 @@ use ratatui_template::{
   app::App,
   logging::initialize_logging,
   tui::Tui,
-  utils::{get_config_dir, initialize_panic_handler},
+  utils::{get_config_dir, get_data_dir, initialize_panic_handler},
 };
 use tracing::error;
 
 pub fn version() -> String {
-  let version = clap::crate_version!();
   let author = clap::crate_authors!();
 
   let commit_hash = env!("RATATUI_TEMPLATE_GIT_INFO");
 
   let current_exe_path = PathBuf::from(clap::crate_name!()).display().to_string();
   let config_dir_path = get_config_dir().display().to_string();
-  let data_dir_path = ratatui_template::utils::get_data_dir().display().to_string();
+  let data_dir_path = get_data_dir().display().to_string();
 
   format!(
     "\
-{version} - ({commit_hash})
+{commit_hash}
 
 Authors: {author}
 Executable path: {current_exe_path}
