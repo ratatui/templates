@@ -1,4 +1,7 @@
-use std::sync::{Arc, RwLock};
+use std::{
+  sync::{Arc, RwLock},
+  time::Duration,
+};
 
 use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::{
@@ -29,7 +32,7 @@ impl Home {
   pub fn increment(&mut self, i: usize) {
     let counter = self.counter.clone();
     tokio::task::spawn(async move {
-      // tokio::time::sleep(Duration::from_secs(5)).await;
+      tokio::time::sleep(Duration::from_secs(1)).await;
       let mut counter = counter.write().unwrap();
       *counter = counter.saturating_add(i);
     });
@@ -38,7 +41,7 @@ impl Home {
   pub fn decrement(&mut self, i: usize) {
     let counter = self.counter.clone();
     tokio::task::spawn(async move {
-      // tokio::time::sleep(Duration::from_secs(5)).await;
+      tokio::time::sleep(Duration::from_secs(1)).await;
       let mut counter = counter.write().unwrap();
       *counter = counter.saturating_sub(i);
     });
