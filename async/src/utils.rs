@@ -9,11 +9,11 @@ use tracing_subscriber::{
   self, filter::EnvFilter, prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt, Layer,
 };
 
-use crate::terminal::TuiHandler;
+use crate::terminal::TerminalHandler;
 
 pub fn initialize_panic_handler() {
   std::panic::set_hook(Box::new(|panic_info| {
-    match TuiHandler::new() {
+    match TerminalHandler::new() {
       Ok(tui) => {
         if let Err(r) = tui.exit() {
           error!("Unable to exit Tui: {r:?}");

@@ -8,7 +8,7 @@ use tokio::{
 
 use crate::{
   components::{home::Home, Component},
-  terminal::{EventHandler, TuiHandler},
+  terminal::{EventHandler, TerminalHandler},
   trace_dbg,
 };
 
@@ -47,7 +47,7 @@ impl App {
     let (stop_tui_tx, mut stop_tui_rx) = oneshot::channel::<()>();
 
     let tui_task = tokio::spawn(async move {
-      let mut tui = TuiHandler::new().context(anyhow!("Unable to create TUI")).unwrap();
+      let mut tui = TerminalHandler::new().context(anyhow!("Unable to create TUI")).unwrap();
       tui.enter().unwrap();
       loop {
         let mut h = home.lock().await;

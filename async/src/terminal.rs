@@ -11,11 +11,11 @@ use tokio::{
   task::JoinHandle,
 };
 
-pub struct TuiHandler {
+pub struct TerminalHandler {
   pub terminal: Terminal<CrosstermBackend<std::io::Stderr>>,
 }
 
-impl TuiHandler {
+impl TerminalHandler {
   pub fn new() -> Result<Self> {
     let terminal = Terminal::new(CrosstermBackend::new(std::io::stderr()))?;
     Ok(Self { terminal })
