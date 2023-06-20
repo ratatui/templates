@@ -49,8 +49,8 @@ pub enum Event {
 pub struct EventHandler {
   _tx: mpsc::UnboundedSender<Event>,
   rx: mpsc::UnboundedReceiver<Event>,
-  stop: Option<oneshot::Sender<()>>,
-  task: Option<JoinHandle<()>>,
+  stop_tx: Option<oneshot::Sender<()>>,
+  handle: Option<JoinHandle<()>>,
 }
 
 impl EventHandler {
@@ -100,7 +100,7 @@ impl EventHandler {
       }
     });
 
-    Self { _tx, rx, stop: Some(stop_tx), task: Some(task) }
+    Self { _tx, rx, stop_tx: Some(stop_tx), handle: Some(task) }
   }
 
   pub async fn next(&mut self) -> Option<Event> {
@@ -108,11 +108,11 @@ impl EventHandler {
   }
 
   pub async fn stop(&mut self) -> Result<()> {
-    if let Some(stop_tx) = self.stop.take() {
+    if let Some(stop_tx) = self.stop_tx.take() {
       stop_tx.send(()).unwrap()
     }
-    if let Some(task) = self.task.take() {
-      task.await.unwrap()
+    if let Some(handle) = self.handle.take() {
+      handle.await.unwrap()
     }
     Ok(())
   }
