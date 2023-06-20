@@ -111,7 +111,7 @@ pub fn version() -> String {
 
   let commit_hash = env!("RATATUI_TEMPLATE_GIT_INFO");
 
-  let current_exe_path = PathBuf::from(clap::crate_name!()).display().to_string();
+  // let current_exe_path = PathBuf::from(clap::crate_name!()).display().to_string();
   let config_dir_path = get_config_dir().display().to_string();
   let data_dir_path = get_data_dir().display().to_string();
 
@@ -120,7 +120,7 @@ pub fn version() -> String {
 {commit_hash}
 
 Authors: {author}
-Executable path: {current_exe_path}
+
 Config directory: {config_dir_path}
 Data directory: {data_dir_path}"
   )
