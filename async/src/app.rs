@@ -7,12 +7,28 @@ use tokio::{
 };
 
 use crate::{
-  action::Action,
   components::{home::Home, Component},
-  event::EventHandler,
   trace_dbg,
-  tui::Tui,
+  tui::{EventHandler, TuiHandler},
 };
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Action {
+  Quit,
+  Tick,
+  Resize(u16, u16),
+  ToggleShowLogger,
+  ScheduleIncrementCounter,
+  ScheduleDecrementCounter,
+  AddToCounter(usize),
+  SubtractFromCounter(usize),
+  EnterNormal,
+  EnterInsert,
+  EnterProcessing,
+  ExitProcessing,
+  Update,
+  Noop,
+}
 
 pub struct App {
   pub tick_rate: u64,
@@ -31,7 +47,7 @@ impl App {
     let (stop_tui_tx, mut stop_tui_rx) = oneshot::channel::<()>();
 
     let tui_task = tokio::spawn(async move {
-      let mut tui = Tui::new().context(anyhow!("Unable to create TUI")).unwrap();
+      let mut tui = TuiHandler::new().context(anyhow!("Unable to create TUI")).unwrap();
       tui.enter().unwrap();
       loop {
         let mut h = home.lock().await;
