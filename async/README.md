@@ -15,7 +15,7 @@
 - Clone the repository
 - Rename `ratatui-template` with your app name in the following files:
   - `src/main.rs`
-  - `src/logging.rs`
+  - `src/utils.rs`
   - `Cargo.toml`
   - `README.md`
   - `.github/workflows/cd.yml`
