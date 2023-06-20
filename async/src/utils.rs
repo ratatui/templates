@@ -9,7 +9,7 @@ use tracing_subscriber::{
   self, filter::EnvFilter, prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt, Layer,
 };
 
-use crate::tui::TuiHandler;
+use crate::terminal::TuiHandler;
 
 pub fn initialize_panic_handler() {
   std::panic::set_hook(Box::new(|panic_info| {

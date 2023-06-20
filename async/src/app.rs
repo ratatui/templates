@@ -8,8 +8,8 @@ use tokio::{
 
 use crate::{
   components::{home::Home, Component},
+  terminal::{EventHandler, TuiHandler},
   trace_dbg,
-  tui::{EventHandler, TuiHandler},
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
