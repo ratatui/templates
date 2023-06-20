@@ -1,12 +1,11 @@
-use std::io::Stderr;
-
 use anyhow::Result;
 use crossterm::event::{KeyEvent, MouseEvent};
-use ratatui::{backend::CrosstermBackend, layout::Rect, Frame as TuiFrame};
+use ratatui::layout::Rect;
 
-pub type Frame<'a> = TuiFrame<'a, CrosstermBackend<Stderr>>;
-
-use crate::{app::Action, terminal::Event};
+use crate::{
+  app::Action,
+  terminal::{Event, Frame},
+};
 
 pub mod home;
 pub mod logger;

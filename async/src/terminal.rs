@@ -5,11 +5,13 @@ use crossterm::{
   terminal::{EnterAlternateScreen, LeaveAlternateScreen},
 };
 use futures::{FutureExt, StreamExt};
-use ratatui::{backend::CrosstermBackend, terminal::Terminal};
+use ratatui::{backend::CrosstermBackend, terminal::Terminal, Frame as TuiFrame};
 use tokio::{
   sync::{mpsc, oneshot},
   task::JoinHandle,
 };
+
+pub type Frame<'a> = TuiFrame<'a, CrosstermBackend<std::io::Stderr>>;
 
 pub struct TerminalHandler {
   pub terminal: Terminal<CrosstermBackend<std::io::Stderr>>,
