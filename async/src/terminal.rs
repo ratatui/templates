@@ -34,6 +34,18 @@ impl TerminalHandler {
     crossterm::terminal::disable_raw_mode()?;
     Ok(())
   }
+
+  pub fn suspend(&self) -> Result<()> {
+    self.exit()?;
+    #[cfg(not(windows))]
+    signal_hook::low_level::raise(signal_hook::consts::signal::SIGTSTP)?;
+    Ok(())
+  }
+
+  pub fn resume(&self) -> Result<()> {
+    self.enter()?;
+    Ok(())
+  }
 }
 
 #[derive(Clone, Copy, Debug)]

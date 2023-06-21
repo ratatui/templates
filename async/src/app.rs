@@ -15,6 +15,8 @@ use crate::{
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Action {
   Quit,
+  Resume,
+  Suspend,
   Tick,
   Resize(u16, u16),
   ToggleShowLogger,
@@ -99,8 +101,8 @@ impl App {
 
     self.home.lock().await.init()?;
 
-    let (tui_task, stop_tui_tx) = self.spawn_tui_task();
-    let (event_task, stop_event_tx) = self.spawn_event_task(tx.clone());
+    let (mut tui_task, mut stop_tui_tx) = self.spawn_tui_task();
+    let (mut event_task, mut stop_event_tx) = self.spawn_event_task(tx.clone());
 
     loop {
       // clear all actions from action handler channel queue
@@ -116,8 +118,18 @@ impl App {
         maybe_action = rx.try_recv().ok();
       }
 
-      // quit state
-      if self.home.lock().await.should_quit {
+      if self.home.lock().await.should_suspend {
+        stop_tui_tx.send(()).unwrap_or(());
+        stop_event_tx.send(()).unwrap_or(());
+        tui_task.await?;
+        event_task.await?;
+        let tui = TerminalHandler::new().context(anyhow!("Unable to create TUI")).unwrap();
+        tui.suspend()?; // Blocks here till process resumes on Linux and Mac.
+                        // TODO: figure out appropriate behaviour on Windows.
+        (tui_task, stop_tui_tx) = self.spawn_tui_task();
+        (event_task, stop_event_tx) = self.spawn_event_task(tx.clone());
+        tx.send(Action::Resume)?;
+      } else if self.home.lock().await.should_quit {
         stop_tui_tx.send(()).unwrap_or(());
         stop_event_tx.send(()).unwrap_or(());
         tui_task.await?;

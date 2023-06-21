@@ -46,6 +46,7 @@ colored = "2.0.0"
 log = "0.4.19"
 libc = "0.2.146"
 tui-input = "0.7.1"
+signal-hook = "0.3.15"
 
 [profile.release]
 codegen-units = 1

@@ -783,6 +783,7 @@ dependencies = [
  "libc",
  "log",
  "ratatui",
+ "signal-hook",
  "tokio",
  "tokio-stream",
  "tracing",

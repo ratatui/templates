@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use crossterm::event::{KeyCode, KeyEvent};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::{
   layout::{Alignment, Constraint, Direction, Layout, Rect},
   style::{Color, Modifier, Style},
@@ -26,6 +26,7 @@ pub enum Mode {
 pub struct Home {
   pub logger: Logger,
   pub should_quit: bool,
+  pub should_suspend: bool,
   pub show_logger: bool,
   pub counter: usize,
   pub ticker: usize,
@@ -63,15 +64,12 @@ impl Home {
       tx.send(Action::ExitProcessing).unwrap();
     });
   }
-
-  pub fn is_running(&self) -> bool {
-    self.should_quit
-  }
 }
 
 impl Component for Home {
   fn init(&mut self) -> anyhow::Result<()> {
     self.should_quit = false;
+    self.should_suspend = false;
     Ok(())
   }
 
@@ -80,6 +78,9 @@ impl Component for Home {
       Mode::Normal | Mode::Processing => {
         match key.code {
           KeyCode::Char('q') => Action::Quit,
+          KeyCode::Char('d') if key.modifiers.contains(KeyModifiers::CONTROL) => Action::Quit,
+          KeyCode::Char('c') if key.modifiers.contains(KeyModifiers::CONTROL) => Action::Quit,
+          KeyCode::Char('z') if key.modifiers.contains(KeyModifiers::CONTROL) => Action::Suspend,
           KeyCode::Char('l') => Action::ToggleShowLogger,
           KeyCode::Char('j') => Action::ScheduleIncrementCounter,
           KeyCode::Char('k') => Action::ScheduleDecrementCounter,
@@ -103,6 +104,8 @@ impl Component for Home {
   fn dispatch(&mut self, action: Action) -> Option<Action> {
     match action {
       Action::Quit => self.should_quit = true,
+      Action::Suspend => self.should_suspend = true,
+      Action::Resume => self.should_suspend = false,
       Action::Tick => self.tick(),
       Action::ToggleShowLogger => self.show_logger = !self.show_logger,
       Action::ScheduleIncrementCounter => self.increment(1),
