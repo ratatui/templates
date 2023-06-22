@@ -99,17 +99,17 @@ impl App {
   }
 
   pub async fn run(&mut self) -> Result<()> {
-    let (tx, mut rx) = mpsc::unbounded_channel();
+    let (action_tx, mut action_rx) = mpsc::unbounded_channel();
 
-    self.home.lock().await.tx = Some(tx.clone());
+    self.home.lock().await.action_tx = Some(action_tx.clone());
 
     self.home.lock().await.init()?;
 
     let (mut tui_task, mut tui_tx) = self.spawn_tui_task();
-    let (mut event_task, mut stop_event_tx) = self.spawn_event_task(tx.clone());
+    let (mut event_task, mut stop_event_tx) = self.spawn_event_task(action_tx.clone());
 
     loop {
-      let mut maybe_action = rx.recv().await;
+      let mut maybe_action = action_rx.recv().await;
       while maybe_action.is_some() {
         let action = maybe_action.unwrap();
         if action != Action::Tick {
@@ -118,9 +118,9 @@ impl App {
           tui_tx.send(Message::Render).unwrap_or(());
         }
         if let Some(action) = self.home.lock().await.dispatch(action) {
-          tx.send(action)?
+          action_tx.send(action)?
         };
-        maybe_action = rx.try_recv().ok();
+        maybe_action = action_rx.try_recv().ok();
       }
 
       if self.home.lock().await.should_suspend {
@@ -133,8 +133,8 @@ impl App {
                         // TODO: figure out appropriate behaviour on Windows.
         debug!("resuming");
         (tui_task, tui_tx) = self.spawn_tui_task();
-        (event_task, stop_event_tx) = self.spawn_event_task(tx.clone());
-        tx.send(Action::Resume)?;
+        (event_task, stop_event_tx) = self.spawn_event_task(action_tx.clone());
+        action_tx.send(Action::Resume)?;
       } else if self.home.lock().await.should_quit {
         tui_tx.send(Message::Stop).unwrap_or(());
         stop_event_tx.send(()).unwrap_or(());
