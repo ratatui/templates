@@ -34,7 +34,7 @@ pub enum Action {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum TuiMsg {
+pub enum Message {
   Render,
   Stop,
 }
@@ -50,18 +50,18 @@ impl App {
     Ok(Self { tick_rate, home })
   }
 
-  pub fn spawn_tui_task(&mut self) -> (JoinHandle<()>, mpsc::UnboundedSender<TuiMsg>) {
+  pub fn spawn_tui_task(&mut self) -> (JoinHandle<()>, mpsc::UnboundedSender<Message>) {
     let home = self.home.clone();
 
-    let (tui_tx, mut tui_rx) = mpsc::unbounded_channel::<TuiMsg>();
+    let (tui_tx, mut tui_rx) = mpsc::unbounded_channel::<Message>();
 
     let tui_task = tokio::spawn(async move {
       let mut tui = TerminalHandler::new().context(anyhow!("Unable to create TUI")).unwrap();
       tui.enter().unwrap();
       loop {
         match tui_rx.recv().await {
-          Some(TuiMsg::Stop) => break,
-          Some(TuiMsg::Render) => {
+          Some(Message::Stop) => break,
+          Some(Message::Render) => {
             let mut h = home.lock().await;
             tui
               .terminal
@@ -89,7 +89,6 @@ impl App {
         let event = events.next().await;
         let action = home.lock().await.handle_events(event);
         tx.send(action).unwrap();
-
         if stop_event_rx.try_recv().ok().is_some() {
           events.stop().await.unwrap();
           break;
@@ -110,14 +109,13 @@ impl App {
     let (mut event_task, mut stop_event_tx) = self.spawn_event_task(tx.clone());
 
     loop {
-      // clear all actions from action handler channel queue
       let mut maybe_action = rx.recv().await;
       while maybe_action.is_some() {
         let action = maybe_action.unwrap();
         if action != Action::Tick {
           trace_dbg!(action);
         } else {
-          tui_tx.send(TuiMsg::Render).unwrap_or(());
+          tui_tx.send(Message::Render).unwrap_or(());
         }
         if let Some(action) = self.home.lock().await.dispatch(action) {
           tx.send(action)?
@@ -126,7 +124,7 @@ impl App {
       }
 
       if self.home.lock().await.should_suspend {
-        tui_tx.send(TuiMsg::Stop).unwrap_or(());
+        tui_tx.send(Message::Stop).unwrap_or(());
         stop_event_tx.send(()).unwrap_or(());
         tui_task.await?;
         event_task.await?;
@@ -138,7 +136,7 @@ impl App {
         (event_task, stop_event_tx) = self.spawn_event_task(tx.clone());
         tx.send(Action::Resume)?;
       } else if self.home.lock().await.should_quit {
-        tui_tx.send(TuiMsg::Stop).unwrap_or(());
+        tui_tx.send(Message::Stop).unwrap_or(());
         stop_event_tx.send(()).unwrap_or(());
         tui_task.await?;
         event_task.await?;
