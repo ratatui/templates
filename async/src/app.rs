@@ -19,6 +19,7 @@ pub enum Action {
   Resume,
   Suspend,
   Tick,
+  RenderTick,
   Resize(u16, u16),
   ToggleShowLogger,
   ScheduleIncrementCounter,
@@ -40,12 +41,12 @@ pub enum Message {
 }
 
 pub struct App {
-  pub tick_rate: u64,
+  pub tick_rate: (u64, u64),
   pub home: Arc<Mutex<Home>>,
 }
 
 impl App {
-  pub fn new(tick_rate: u64) -> Result<Self> {
+  pub fn new(tick_rate: (u64, u64)) -> Result<Self> {
     let home = Arc::new(Mutex::new(Home::new()));
     Ok(Self { tick_rate, home })
   }
@@ -81,10 +82,10 @@ impl App {
 
   pub fn spawn_event_task(&mut self, tx: mpsc::UnboundedSender<Action>) -> (JoinHandle<()>, oneshot::Sender<()>) {
     let home = self.home.clone();
-    let tick_rate = self.tick_rate;
+    let (app_tick_rate, render_tick_rate) = self.tick_rate;
     let (stop_event_tx, mut stop_event_rx) = oneshot::channel::<()>();
     let event_task = tokio::spawn(async move {
-      let mut events = EventHandler::new(tick_rate);
+      let mut events = EventHandler::new(app_tick_rate, render_tick_rate);
       loop {
         let event = events.next().await;
         let action = home.lock().await.handle_events(event);
@@ -112,10 +113,10 @@ impl App {
       let mut maybe_action = action_rx.recv().await;
       while maybe_action.is_some() {
         let action = maybe_action.unwrap();
-        if action != Action::Tick {
-          trace_dbg!(action);
-        } else {
+        if action == Action::RenderTick {
           tui_tx.send(Message::Render).unwrap_or(());
+        } else if action != Action::Tick {
+          trace_dbg!(action);
         }
         if let Some(action) = self.home.lock().await.dispatch(action) {
           action_tx.send(action)?

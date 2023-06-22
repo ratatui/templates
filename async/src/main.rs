@@ -9,12 +9,15 @@ use ratatui_template::{
 #[derive(Parser, Debug)]
 #[command(version = version(), about = "ratatui template with crossterm and tokio")]
 struct Args {
-  /// The tick rate to use
+  /// App tick rate
   #[arg(short, long, default_value_t = 50)]
-  tick_rate: u64,
+  app_tick_rate: u64,
+  /// Render tick rate
+  #[arg(short, long, default_value_t = 50)]
+  render_tick_rate: u64,
 }
 
-async fn tui_main(tick_rate: u64) -> Result<()> {
+async fn tui_main(tick_rate: (u64, u64)) -> Result<()> {
   let mut app = App::new(tick_rate)?;
   app.run().await?;
   Ok(())
@@ -30,7 +33,7 @@ fn main() -> Result<()> {
   tokio::runtime::Builder::new_multi_thread()
     .enable_all()
     .build()?
-    .block_on(async { tui_main(args.tick_rate).await })
+    .block_on(async { tui_main((args.app_tick_rate, args.render_tick_rate)).await })
     .unwrap();
 
   Ok(())
