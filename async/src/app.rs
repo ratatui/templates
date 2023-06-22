@@ -5,6 +5,7 @@ use tokio::{
   sync::{mpsc, oneshot, Mutex},
   task::JoinHandle,
 };
+use tracing::debug;
 
 use crate::{
   components::{home::Home, Component},
@@ -32,6 +33,12 @@ pub enum Action {
   Noop,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TuiMsg {
+  Render,
+  Stop,
+}
+
 pub struct App {
   pub tick_rate: u64,
   pub home: Arc<Mutex<Home>>,
@@ -43,30 +50,33 @@ impl App {
     Ok(Self { tick_rate, home })
   }
 
-  pub fn spawn_tui_task(&mut self) -> (JoinHandle<()>, oneshot::Sender<()>) {
+  pub fn spawn_tui_task(&mut self) -> (JoinHandle<()>, mpsc::UnboundedSender<TuiMsg>) {
     let home = self.home.clone();
 
-    let (stop_tui_tx, mut stop_tui_rx) = oneshot::channel::<()>();
+    let (tui_tx, mut tui_rx) = mpsc::unbounded_channel::<TuiMsg>();
 
     let tui_task = tokio::spawn(async move {
       let mut tui = TerminalHandler::new().context(anyhow!("Unable to create TUI")).unwrap();
       tui.enter().unwrap();
       loop {
-        let mut h = home.lock().await;
-        tui
-          .terminal
-          .draw(|f| {
-            h.render(f, f.size());
-          })
-          .unwrap();
-        if stop_tui_rx.try_recv().ok().is_some() {
-          break;
+        match tui_rx.recv().await {
+          Some(TuiMsg::Stop) => break,
+          Some(TuiMsg::Render) => {
+            let mut h = home.lock().await;
+            tui
+              .terminal
+              .draw(|f| {
+                h.render(f, f.size());
+              })
+              .unwrap();
+          },
+          None => {},
         }
       }
       tui.exit().unwrap();
     });
 
-    (tui_task, stop_tui_tx)
+    (tui_task, tui_tx)
   }
 
   pub fn spawn_event_task(&mut self, tx: mpsc::UnboundedSender<Action>) -> (JoinHandle<()>, oneshot::Sender<()>) {
@@ -76,13 +86,8 @@ impl App {
     let event_task = tokio::spawn(async move {
       let mut events = EventHandler::new(tick_rate);
       loop {
-        // get the next event
         let event = events.next().await;
-
-        // map event to an action
         let action = home.lock().await.handle_events(event);
-
-        // add action to action handler channel queue
         tx.send(action).unwrap();
 
         if stop_event_rx.try_recv().ok().is_some() {
@@ -101,16 +106,18 @@ impl App {
 
     self.home.lock().await.init()?;
 
-    let (mut tui_task, mut stop_tui_tx) = self.spawn_tui_task();
+    let (mut tui_task, mut tui_tx) = self.spawn_tui_task();
     let (mut event_task, mut stop_event_tx) = self.spawn_event_task(tx.clone());
 
     loop {
       // clear all actions from action handler channel queue
-      let mut maybe_action = rx.try_recv().ok();
+      let mut maybe_action = rx.recv().await;
       while maybe_action.is_some() {
         let action = maybe_action.unwrap();
         if action != Action::Tick {
           trace_dbg!(action);
+        } else {
+          tui_tx.send(TuiMsg::Render).unwrap_or(());
         }
         if let Some(action) = self.home.lock().await.dispatch(action) {
           tx.send(action)?
@@ -119,18 +126,19 @@ impl App {
       }
 
       if self.home.lock().await.should_suspend {
-        stop_tui_tx.send(()).unwrap_or(());
+        tui_tx.send(TuiMsg::Stop).unwrap_or(());
         stop_event_tx.send(()).unwrap_or(());
         tui_task.await?;
         event_task.await?;
         let tui = TerminalHandler::new().context(anyhow!("Unable to create TUI")).unwrap();
         tui.suspend()?; // Blocks here till process resumes on Linux and Mac.
                         // TODO: figure out appropriate behaviour on Windows.
-        (tui_task, stop_tui_tx) = self.spawn_tui_task();
+        debug!("resuming");
+        (tui_task, tui_tx) = self.spawn_tui_task();
         (event_task, stop_event_tx) = self.spawn_event_task(tx.clone());
         tx.send(Action::Resume)?;
       } else if self.home.lock().await.should_quit {
-        stop_tui_tx.send(()).unwrap_or(());
+        tui_tx.send(TuiMsg::Stop).unwrap_or(());
         stop_event_tx.send(()).unwrap_or(());
         tui_task.await?;
         event_task.await?;
