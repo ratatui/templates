@@ -13,9 +13,10 @@
 ### Usage
 
 - Clone the repository
-- Rename `ratatui-template` with your app name in the following files:
+- Rename `ratatui-template` and `RATATUI_TEMPLATE` with your `app-name` and `APP_NAME` in the following files:
   - `src/main.rs`
   - `src/utils.rs`
+  - `build.rs`
   - `Cargo.toml`
   - `README.md`
   - `.github/workflows/cd.yml`
