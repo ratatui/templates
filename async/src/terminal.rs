@@ -112,10 +112,10 @@ impl EventHandler {
             }
           },
           _ = app_delay => {
-              tx.send(Event::RenderTick).unwrap();
+              tx.send(Event::AppTick).unwrap();
           },
           _ = render_delay => {
-              tx.send(Event::AppTick).unwrap();
+              tx.send(Event::RenderTick).unwrap();
           },
         }
       }
