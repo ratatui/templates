@@ -1,7 +1,39 @@
 ---
-title: "docs"
+title: "ratatui-template"
 ---
 
-This is a Quarto website.
+This is the documentation for the ratatui-template.
 
-To learn more about Quarto websites visit <https://quarto.org/docs/websites>.
+## What is `ratatui`?
+
+[`ratatui`](https://github.com/tui-rs-revival/ratatui) is a Rust library to build rich terminal user interfaces (TUIs) and dashboards.
+It is a community fork of the original [`tui-rs`](https://github.com/fdehau/tui-rs) created to maintain and improve the project.
+
+## Why this template?
+
+The `ratatui` library is based on the principle of immediate rendering with intermediate buffers.
+This means that at each new frame you should build all widgets that are supposed to be part of the UI.
+Moreover, the library does not provide any input handling nor any event system.
+
+In short, the `ratatui` library is largely handles just drawing to the terminal.
+The responsibility of getting keyboard input events, modifying the state of your application based on those events and figuring out which widgets best reflect the view of the state of your application is on you.
+
+The `tui-rs-revival` project has added a template that covers the basics: <https://github.com/tui-rs-revival/rust-tui-template>.
+
+This project's template takes a more opinionated view.
+And organizes the project in a _particular_ fashion.
+This project also adds commonly used dependencies like logging, command line arguments, configuration options, etc.
+
+::: {.callout .callout-tip}
+Since `ratatui` is a immediate mode rendering based library, there are _multiple_ ways to organize your code, and there's no real "right" answer.
+Choose whatever works best for you!
+:::
+
+As part of this documentation, we'll walk through some of the different ways you may choose to organize your code and project in order to build a functioning terminal user interface.
+You can pick and choose the parts you like.
+
+## Alternatives
+
+- <https://github.com/tui-rs-revival/rust-tui-template>
+- <https://github.com/tui-rs-revival/ratatui/tree/main/examples>
+- <https://github.com/veeso/tui-realm/>
