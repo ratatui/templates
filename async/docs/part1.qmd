@@ -1,0 +1,109 @@
+---
+title: "Basics"
+---
+
+In this section of the tutorial, we are going to discuss the basic components of a TUI application.
+
+To start off, we are going to use code that is based off the [simple example](https://github.com/tui-rs-revival/ratatui/blob/main/examples/hello_world.rs) from the `ratatui` repository.
+
+### `main` function
+
+This `main` function shows how you can do a basic setup and teardown of a terminal application using `crossterm`.
+
+```rust
+fn setup_terminal() -> Result<Terminal<CrosstermBackend<Stdout>>> {
+  let mut stdout = io::stdout();
+  crossterm::terminal::enable_raw_mode()?;
+  crossterm::execute!(stdout, EnterAlternateScreen, EnableMouseCapture, HideCursor)?;
+  Terminal::new(CrosstermBackend::new(stdout))
+}
+
+fn restore_terminal(terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result<()> {
+  let mut stdout = io::stdout();
+  crossterm::terminal::disable_raw_mode()?;
+  crossterm::execute!(stdout, LeaveAlternateScreen, DisableMouseCapture, ShowCursor)?;
+  Ok(())
+}
+
+fn main() -> Result<()> {
+  let mut terminal = setup_terminal()?;
+  run(&mut terminal)?;
+  restore_terminal(&mut terminal)?;
+  Ok(())
+}
+```
+
+You can use `termion` or `wezterm` instead here, and you'll have to change the implementation of `setup_terminal` and `restore_terminal`.
+
+I personally like to use `crossterm` so that I can run the TUI on windows as well.
+
+::: callout-note
+Terminals have two screen buffers for each window.
+The default screen buffer is what you are dropped into when you start up a terminal.
+The second screen buffer, called the alternate screen, is used for running interactive apps such as the `vim`, `less` etc.
+
+Here's a 8 minute talk on Terminal User Interfaces I gave at JuliaCon2020: <https://www.youtube.com/watch?v=-TASx67pphw> that might be worth watching for more information about how terminal user interfaces work.
+:::
+
+### Run the application loop
+
+All terminal user interfaces have at the very least one main loop.
+In our example, this is the `run` function:
+
+```rust
+fn render_app(frame: &mut ratatui::Frame<CrosstermBackend<Stdout>>) {
+  let greeting = Paragraph::new("Hello World! (press 'q' to quit)");
+  frame.render_widget(greeting, frame.size());
+}
+
+fn run(terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result<()> {
+  loop {
+    terminal.draw(|f| render_app(f))?;
+  }
+  Ok(())
+}
+```
+
+The instance of the `ratatui::Terminal` struct has a `draw` method that takes an argument that implements `FnOnce`^[FnOnce is a trait in Rust that represents a function pointer/closure that can be called exactly once and may consume the variables it captures.].
+
+The `render_app` function that we pass in takes a reference to `ratatui::Frame` and we can use that frame to draw to it.
+`ratatui` then uses the content of `Frame` to decide how it wants to render the contents to the terminal^[`ratatui` uses a double frame painting method, i.e. it keeps a reference to the old frame and the current frame in memory. When drawing, it compares the two frames and only inserts the characters in screen buffer where there are differences. This is the most efficient way to do it because it minimizes IO writes. This is an implementation detail of `ratatui` and is not necessarily something we need to be concerned about.].
+
+While we are in the "raw mode", i.e. after we call `enable_raw_mode()`, any key presses in that terminal window are sent to `stdin`.
+We have to read these key presses from `stdin` if we want to act on them.
+
+There's a number of different ways to do that.
+`crossterm` has a `event` module that implements features to read these key presses for us.
+We will use that to call `poll` and if the `q` key is pressed we will exit.
+
+```rust
+fn render_app(...) {
+  ...
+}
+
+fn should_quit() -> Result<bool> {
+  if event::poll(Duration::from_millis(250))? {
+    if let Event::Key(key) = event::read()? {
+      return Ok(KeyCode::Char('q') == key.code);
+    }
+  }
+  Ok(false)
+}
+
+fn run(terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result<()> {
+  loop {
+    terminal.draw(|f| render_app(f))?;
+    if should_quit()? {
+      break;
+    }
+  }
+  Ok(())
+}
+```
+
+When we `break` out of `run`'s `loop`, as we saw in the `main` function, we end up calling `restore_terminal()` which resets the terminal state back to what it was before we started the application.
+
+There you have it, the very basics of getting a TUI up and running.
+
+In the next section, we will discuss some quality of life improvements to our program.
+
