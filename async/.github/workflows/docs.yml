@@ -1,0 +1,50 @@
+name: deploy
+on:
+  push:
+    branches: [main]
+jobs:
+  publish:
+    name: website
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v2
+      - uses: julia-actions/setup-julia@v1
+        with:
+          version: 1.8
+          arch: x64
+      - uses: julia-actions/julia-buildpkg@v1
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+      - run: pip install jupyter jupyter-client jupyter-cache
+
+      - name: Install IJulia Conda
+        run: julia -e 'using Pkg; Pkg.add("IJulia"); Pkg.add("Conda");'
+
+      - name: Run apt update and install
+        run: |
+          sudo apt-get update
+          sudo apt install texlive-latex-extra texlive-base texlive-fonts-extra texlive-luatex pdf2svg imagemagick ghostscript
+
+      - name: Set up Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+        with:
+          version: pre-release
+          tinytex: true
+
+      - name: Check Quarto install
+        run: quarto check install
+
+      - name: Check Quarto kernels
+        run: quarto check jupyter
+
+      - name: Publish to GitHub Pages
+        uses: quarto-dev/quarto-actions/publish@v2
+        with:
+          target: gh-pages
+          path: docs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
