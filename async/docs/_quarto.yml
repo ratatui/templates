@@ -3,12 +3,13 @@ project:
 
 website:
   title: "ratatui-template"
+  page-navigation: true
   navbar:
     left:
       - href: index.qmd
         text: Home
-      - href: part1.qmd
-        text: "Part 1: Basics"
+  sidebar:
+    contents: auto
 
 format:
   html:

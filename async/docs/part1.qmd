@@ -51,7 +51,7 @@ All terminal user interfaces have at the very least one main loop.
 In our example, this is the `run` function:
 
 ```rust
-fn render_app(frame: &mut ratatui::Frame<CrosstermBackend<Stdout>>) {
+fn render_app(frame: &mut Frame<CrosstermBackend<Stdout>>) {
   let greeting = Paragraph::new("Hello World! (press 'q' to quit)");
   frame.render_widget(greeting, frame.size());
 }
@@ -106,4 +106,3 @@ When we `break` out of `run`'s `loop`, as we saw in the `main` function, we end 
 There you have it, the very basics of getting a TUI up and running.
 
 In the next section, we will discuss some quality of life improvements to our program.
-
