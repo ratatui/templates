@@ -1,0 +1,8 @@
+title: Line-highlight
+author: Shafayet Khan Shafee
+version: 1.2.2
+quarto-required: ">=1.2.0"
+contributes:
+  filters:
+    - line-highlight.lua
+

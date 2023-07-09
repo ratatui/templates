@@ -11,6 +11,10 @@ website:
   sidebar:
     contents: auto
 
+filters:
+  - quarto
+  - line-highlight
+
 format:
   html:
     theme: cosmo

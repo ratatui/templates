@@ -27,7 +27,7 @@ fn restore_terminal(terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result
 
 fn main() -> Result<()> {
   let mut terminal = setup_terminal()?;
-  run(&mut terminal)?;
+  run_app(&mut terminal)?;
   restore_terminal(&mut terminal)?;
   Ok(())
 }
@@ -48,7 +48,7 @@ Here's a 8 minute talk on Terminal User Interfaces I gave at JuliaCon2020: <http
 ### Run the application loop
 
 All terminal user interfaces have at the very least one main loop.
-In our example, this is the `run` function:
+In our example, this is the `run_app` function:
 
 ```rust
 fn render_app(frame: &mut Frame<CrosstermBackend<Stdout>>) {
@@ -56,7 +56,7 @@ fn render_app(frame: &mut Frame<CrosstermBackend<Stdout>>) {
   frame.render_widget(greeting, frame.size());
 }
 
-fn run(terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result<()> {
+fn run_app(terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result<()> {
   loop {
     terminal.draw(|f| render_app(f))?;
   }
@@ -90,7 +90,7 @@ fn should_quit() -> Result<bool> {
   Ok(false)
 }
 
-fn run(terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result<()> {
+fn run_app(terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result<()> {
   loop {
     terminal.draw(|f| render_app(f))?;
     if should_quit()? {
@@ -101,8 +101,56 @@ fn run(terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result<()> {
 }
 ```
 
-When we `break` out of `run`'s `loop`, as we saw in the `main` function, we end up calling `restore_terminal()` which resets the terminal state back to what it was before we started the application.
+When we `break` out of `run_app`'s `loop`, as we saw in the `main` function, we end up calling `restore_terminal()` which resets the terminal state back to what it was before we started the application.
 
 There you have it, the very basics of getting a TUI up and running.
 
-In the next section, we will discuss some quality of life improvements to our program.
+In the previous section, we had a function called `should_quit` that used `crossterm::event::poll()` and `event::read()` to decide when we want to quit.
+
+In real world apps, we may have a lot more key events that we want to act on.
+For example, if we wanted to have a vertical and horizontal scroll bar, and wanted to change the state of the scrollbar we might have to write code like this:
+
+```rust
+fn run_app(terminal: &mut Terminal<CrosstermBackend<Stdout>>, mut app: App) -> Result<()> {
+  let mut last_tick = Instant::now();
+  loop {
+    terminal.draw(|f| render_app(f))?;
+    if event::poll(timeout)? {
+      if let Event::Key(key) = event::read()? {
+        match key.code {
+          KeyCode::Char('q') => return Ok(()),
+          KeyCode::Char('j') => {
+            app.vertical_scroll = app.vertical_scroll.saturating_add(1);
+            app.vertical_scroll_state = app
+              .vertical_scroll_state
+              .position(app.vertical_scroll);
+          }
+          KeyCode::Char('k') => {
+            app.vertical_scroll = app.vertical_scroll.saturating_sub(1);
+            app.vertical_scroll_state = app
+              .vertical_scroll_state
+              .position(app.vertical_scroll);
+          }
+          KeyCode::Char('h') => {
+            app.horizontal_scroll = app.horizontal_scroll.saturating_sub(1);
+            app.horizontal_scroll_state = app
+              .horizontal_scroll_state
+              .position(app.horizontal_scroll);
+          }
+          KeyCode::Char('l') => {
+            app.horizontal_scroll = app.horizontal_scroll.saturating_add(1);
+            app.horizontal_scroll_state = app
+              .horizontal_scroll_state
+              .position(app.horizontal_scroll);
+          }
+          _ => {}
+        }
+      }
+    }
+  }
+```
+
+But in addition to changing the state of the scroll bar, we may also want to do additional things (e.g. scroll down a table) and this code could get more complicated.
+We may even want key presses to mean _different_ things depending on the state of the app (when you are focused on an input field, you may want to enter the letter `"j"` but when focused on a list of items, you may want to scroll down.)
+
+In the next section, we will discuss refactoring our application as well as make some quality of life improvements to our program.
