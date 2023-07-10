@@ -1,0 +1,152 @@
+---
+title: "Tokio"
+---
+
+In this section, we are doing to introduce `tokio`.
+
+The first thing we need to do is update the `src/main.rs`:
+
+```rust
+use anyhow::Result;
+use ratatui_template::app::App;
+
+#[tokio::main(flavor = "multi_thread", worker_threads = 10)]
+async fn main() -> Result<()> {
+  let mut app = App::new((250, 250))?; // 250 ms for render and app tick rate
+  app.run().await?;
+  Ok(())
+}
+
+```
+
+Here's the new `src/event.rs` which has a separate app tick rate and a render tick rate now:
+
+```rust
+use anyhow::Result;
+use crossterm::{
+  cursor,
+  event::{DisableMouseCapture, EnableMouseCapture, Event as CrosstermEvent, KeyEvent, KeyEventKind, MouseEvent},
+  terminal::{EnterAlternateScreen, LeaveAlternateScreen},
+};
+use futures::{FutureExt, StreamExt};
+use tokio::{
+  sync::{mpsc, oneshot},
+  task::JoinHandle,
+};
+
+#[derive(Clone, Copy, Debug)]
+pub enum Event {
+  Quit,
+  Error,
+  Closed,
+  RenderTick,
+  AppTick,
+  Key(KeyEvent),
+  Mouse(MouseEvent),
+  Resize(u16, u16),
+}
+
+#[derive(Debug)]
+pub struct EventHandler {
+  _tx: mpsc::UnboundedSender<Event>,
+  rx: mpsc::UnboundedReceiver<Event>,
+  stop_tx: Option<oneshot::Sender<()>>,
+  task: Option<JoinHandle<()>>,
+}
+
+impl EventHandler {
+  pub fn new(app_tick_rate: u64, render_tick_rate: u64) -> Self {
+    let app_tick_rate = std::time::Duration::from_millis(app_tick_rate);
+    let render_tick_rate = std::time::Duration::from_millis(render_tick_rate);
+
+    let (tx, rx) = mpsc::unbounded_channel();
+    let _tx = tx.clone();
+
+    let (stop_tx, mut stop_rx) = oneshot::channel::<()>();
+
+    let task = tokio::spawn(async move {
+      let mut reader = crossterm::event::EventStream::new();
+      let mut app_interval = tokio::time::interval(app_tick_rate);
+      let mut render_interval = tokio::time::interval(render_tick_rate);
+      loop {
+        let app_delay = app_interval.tick();
+        let render_delay = render_interval.tick();
+        let crossterm_event = reader.next().fuse();
+        if stop_rx.try_recv().ok().is_some() {
+          break;
+        }
+        tokio::select! {
+          maybe_event = crossterm_event => {
+            match maybe_event {
+              Some(Ok(evt)) => {
+                match evt {
+                  CrosstermEvent::Key(key) => {
+                    if key.kind == KeyEventKind::Press {
+                      tx.send(Event::Key(key)).unwrap();
+                    }
+                  },
+                  CrosstermEvent::Resize(x, y) => {
+                    tx.send(Event::Resize(x, y)).unwrap();
+                  },
+                  _ => {},
+                }
+              }
+              Some(Err(_)) => {
+                tx.send(Event::Error).unwrap();
+              }
+              None => {},
+            }
+          },
+          _ = app_delay => {
+              tx.send(Event::AppTick).unwrap();
+          },
+          _ = render_delay => {
+              tx.send(Event::RenderTick).unwrap();
+          },
+        }
+      }
+    });
+
+    Self { _tx, rx, stop_tx: Some(stop_tx), task: Some(task) }
+  }
+
+  pub async fn next(&mut self) -> Option<Event> {
+    self.rx.recv().await
+  }
+
+  pub async fn stop(&mut self) -> Result<()> {
+    if let Some(stop_tx) = self.stop_tx.take() {
+      stop_tx.send(()).unwrap()
+    }
+    if let Some(handle) = self.task.take() {
+      handle.await.unwrap()
+    }
+    Ok(())
+  }
+}
+```
+
+There's just a few changes that needs to be made in `src/app.rs` to make it work using `tokio` instead:
+
+```diff
+  pub struct App {
+-   pub tick_rate: u64,
++   pub tick_rate: (u64, u64),
+    pub should_quit: bool,
+  }
+
+  impl App {
+-   pub fn new(tick_rate: u64) -> Result<Self> {
++   pub fn new(tick_rate: (u64, u64)) -> Result<Self> {
+      Ok(Self { tick_rate, should_quit: false })
+    }
+
+-   pub fn run(&mut self) -> Result<()> {
++   pub async fn run(&mut self) -> Result<()> {
+
+-     let mut events = EventHandler::new(tick_rate);
++     let mut events = EventHandler::new((app_tick_rate, render_tick_rate));
+
+-     if let Some(event) = events.next() {
++     if let Some(event) = events.next().await {
+```

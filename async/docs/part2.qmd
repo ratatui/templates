@@ -14,7 +14,7 @@ use ratatui_template::app::App;
 
 fn main() -> Result<()> {
   let mut app = App::new(250)?; // 250 ms tick rate
-  app.run().await?;
+  app.run()?;
   Ok(())
 }
 ```
