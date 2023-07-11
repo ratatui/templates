@@ -1,7 +1,206 @@
 ---
-title: "ratatui-template"
+title: Introduction
 ---
 
-This is the documentation for the ratatui-template.
+[`ratatui`](https://github.com/tui-rs-revival/ratatui) is a Rust library to build rich terminal user interfaces (TUIs) and dashboards.
+It is a community fork of the original [`tui-rs`](https://github.com/fdehau/tui-rs) created to maintain and improve the project.
 
-Use the sidebar to get started.
+`ratatui` is based on the principle of immediate rendering with intermediate buffers.
+This means that at each new frame you have to build all widgets that are supposed to be part of the UI.
+In short, the `ratatui` library is largely handles just drawing to the terminal.
+
+Additionally, the library does not provide any input handling nor any event system.
+The responsibility of getting keyboard input events, modifying the state of your application based on those events and figuring out which widgets best reflect the view of the state of your application is on you.
+
+The `tui-rs-revival` project has added a template that covers the basics: <https://github.com/tui-rs-revival/rust-tui-template>.
+
+This project's template takes an opinionated view on how to organize a `ratatui` project, and organizes the project in a _particular_ fashion.
+
+::: {.callout .callout-tip}
+Since `ratatui` is a immediate mode rendering based library, there are _multiple_ ways to organize your code, and there's no real "right" answer.
+Choose whatever works best for you!
+:::
+
+This project also adds commonly used dependencies like logging, command line arguments, configuration options, etc.
+
+As part of this documentation, we'll walk through some of the different ways you may choose to organize your code and project in order to build a functioning terminal user interface.
+You can pick and choose the parts you like.
+
+- <https://github.com/tui-rs-revival/rust-tui-template>
+- <https://github.com/tui-rs-revival/ratatui/tree/main/examples>
+- <https://github.com/veeso/tui-realm/>
+
+## Usage
+
+You can start by git cloning the project:
+
+```bash
+git clone https://github.com/kdheepak/ratatui-template your-project-name-here
+```
+
+I also recommend renaming the `ratatui-template` and `RATATUI_TEMPLATE` in all files with the name of your project.
+Here's a short Python script that does that:
+
+```bash
+cd your-project-name-here
+
+python3 <<EOF
+import os
+import re
+
+for root, _, filenames in os.walk('.'):
+    if ".git" in root or "target" in root or "docs" in root:
+        continue
+
+    for filename in filenames:
+        f = os.path.join(root, filename)
+        with open(f, 'r') as file:
+            content = file.read()
+
+        content = re.sub(r'ratatui-template', 'your-project-name-here', content)
+        content = re.sub(r'RATATUI_TEMPLATE', 'YOUR_PROJECT_NAME_HERE', content)
+
+        with open(f, 'w') as file:
+            file.write(content)
+EOF
+```
+
+Here's a diff of the changes you should expect:
+
+```diff
+diff --git a/.envrc b/.envrc
+index c3df7c8..2adc637 100644
+--- a/.envrc
++++ b/.envrc
+@@ -1,3 +1,3 @@
+-export RATATUI_TEMPLATE_CONFIG=`pwd`/.config
+-export RATATUI_TEMPLATE_DATA=`pwd`/.data
++export YOUR_PROJECT_NAME_HERE_CONFIG=`pwd`/.config
++export YOUR_PROJECT_NAME_HERE_DATA=`pwd`/.data
+ export RUST_LOG=debug
+
+diff --git a/Cargo.lock b/Cargo.lock
+index 27cb77c..a6b58d4 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -768,7 +768,7 @@ dependencies = [
+ ]
+
+ [[package]]
+-name = "ratatui-template"
++name = "your-project-name-here"
+ version = "0.1.0"
+ dependencies = [
+  "anyhow",
+
+diff --git a/Cargo.toml b/Cargo.toml
+index e7bf63d..95b9980 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -1,5 +1,5 @@
+ [package]
+-name = "ratatui-template"
++name = "your-project-name-here"
+ version = "0.1.0"
+ edition = "2021"
+ authors = ["Dheepak Krishnamurthy"]
+@@ -54,5 +54,5 @@ lto = true
+ strip = true
+
+ [[bin]]
+-name = "ratatui-template"
++name = "your-project-name-here"
+ path = "src/main.rs"
+
+diff --git a/build.rs b/build.rs
+index b206e27..8485fac 100644
+--- a/build.rs
++++ b/build.rs
+@@ -42,5 +42,5 @@ fn main() {
+     }
+   }
+
+-  println!("cargo:rustc-env=RATATUI_TEMPLATE_GIT_INFO={}", git_describe);
++  println!("cargo:rustc-env=YOUR_PROJECT_NAME_HERE_GIT_INFO={}", git_describe);
+ }
+
+diff --git a/src/utils.rs b/src/utils.rs
+index 21e3adb..05ce270 100644
+--- a/src/utils.rs
++++ b/src/utils.rs
+@@ -27,26 +27,26 @@ pub fn initialize_panic_handler() {
+ }
+
+ pub fn get_data_dir() -> PathBuf {
+-  let directory = if let Ok(s) = std::env::var("RATATUI_TEMPLATE_DATA") {
++  let directory = if let Ok(s) = std::env::var("YOUR_PROJECT_NAME_HERE_DATA") {
+     PathBuf::from(s)
+-  } else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "ratatui-template") {
++  } else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "your-project-name-here") {
+     proj_dirs.data_local_dir().to_path_buf()
+   } else {
+     let s = "Error".red().bold();
+-    eprintln!("{s}: Unable to find data directory for ratatui-template");
++    eprintln!("{s}: Unable to find data directory for your-project-name-here");
+     std::process::exit(libc::EXIT_FAILURE)
+   };
+   directory
+ }
+
+ pub fn get_config_dir() -> PathBuf {
+-  let directory = if let Ok(s) = std::env::var("RATATUI_TEMPLATE_CONFIG") {
++  let directory = if let Ok(s) = std::env::var("YOUR_PROJECT_NAME_HERE_CONFIG") {
+     PathBuf::from(s)
+-  } else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "ratatui-template") {
++  } else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "your-project-name-here") {
+     proj_dirs.config_local_dir().to_path_buf()
+   } else {
+     let s = "Error".red().bold();
+-    eprintln!("{s}: Unable to find data directory for ratatui-template");
++    eprintln!("{s}: Unable to find data directory for your-project-name-here");
+     std::process::exit(libc::EXIT_FAILURE)
+   };
+   directory
+@@ -55,7 +55,7 @@ pub fn get_config_dir() -> PathBuf {
+ pub fn initialize_logging() -> Result<()> {
+   let directory = get_data_dir();
+   std::fs::create_dir_all(directory.clone()).context(format!("{directory:?} could not be created"))?;
+-  let log_path = directory.join("ratatui-template.log");
++  let log_path = directory.join("your-project-name-here.log");
+   let log_file = std::fs::File::create(log_path)?;
+   let file_subscriber = tracing_subscriber::fmt::layer()
+     .with_file(true)
+@@ -109,7 +109,7 @@ macro_rules! trace_dbg {
+ pub fn version() -> String {
+   let author = clap::crate_authors!();
+
+-  let commit_hash = env!("RATATUI_TEMPLATE_GIT_INFO");
++  let commit_hash = env!("YOUR_PROJECT_NAME_HERE_GIT_INFO");
+
+   // let current_exe_path = PathBuf::from(clap::crate_name!()).display().to_string();
+   let config_dir_path = get_config_dir().display().to_string();
+```
+
+
+Here's some other changes you probably want to make:
+
+```bash
+$ rg "dheepak"
+LICENSE
+1:Copyright (c) 2023 Dheepak Krishnamurthy
+
+Cargo.toml
+5:authors = ["Dheepak Krishnamurthy"]
+
+src/utils.rs
+32:} else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "ratatui-template") {
+45:} else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "ratatui-template") {
+
+docs/index.qmd
+38:git clone https://github.com/kdheepak/ratatui-template your-project-name-here
+106:authors = ["Dheepak Krishnamurthy"]
+138:-  } else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "ratatui-template") {
+139:+  } else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "your-project-name-here") {
+154:-  } else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "ratatui-template") {
+155:+  } else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "your-project-name-here") {
+```

@@ -55,7 +55,7 @@ pub fn get_config_dir() -> PathBuf {
 pub fn initialize_logging() -> Result<()> {
   let directory = get_data_dir();
   std::fs::create_dir_all(directory.clone()).context(format!("{directory:?} could not be created"))?;
-  let log_path = directory.join("ratatui-template-debug.log");
+  let log_path = directory.join("ratatui-template.log");
   let log_file = std::fs::File::create(log_path)?;
   let file_subscriber = tracing_subscriber::fmt::layer()
     .with_file(true)

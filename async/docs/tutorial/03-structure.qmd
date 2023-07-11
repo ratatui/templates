@@ -1,51 +1,6 @@
 ---
-title: "Basics"
+title: "`terminal.rs` EventHandler"
 ---
-
-In this section of the tutorial, we are going to discuss the basic components of a TUI application.
-
-To start off, we are going to use code that is based off the [simple example](https://github.com/tui-rs-revival/ratatui/blob/main/examples/hello_world.rs) from the `ratatui` repository.
-
-### `main` function
-
-This `main` function shows how you can do a basic setup and teardown of a terminal application using `crossterm`.
-
-```rust
-fn setup_terminal() -> Result<Terminal<CrosstermBackend<Stdout>>> {
-  let mut stdout = io::stdout();
-  crossterm::terminal::enable_raw_mode()?;
-  crossterm::execute!(stdout, EnterAlternateScreen, EnableMouseCapture, HideCursor)?;
-  Terminal::new(CrosstermBackend::new(stdout))
-}
-
-fn restore_terminal(terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result<()> {
-  let mut stdout = io::stdout();
-  crossterm::terminal::disable_raw_mode()?;
-  crossterm::execute!(stdout, LeaveAlternateScreen, DisableMouseCapture, ShowCursor)?;
-  Ok(())
-}
-
-fn main() -> Result<()> {
-  let mut terminal = setup_terminal()?;
-  run_app(&mut terminal)?;
-  restore_terminal(&mut terminal)?;
-  Ok(())
-}
-```
-
-You can use `termion` or `wezterm` instead here, and you'll have to change the implementation of `setup_terminal` and `restore_terminal`.
-
-I personally like to use `crossterm` so that I can run the TUI on windows as well.
-
-::: callout-note
-Terminals have two screen buffers for each window.
-The default screen buffer is what you are dropped into when you start up a terminal.
-The second screen buffer, called the alternate screen, is used for running interactive apps such as the `vim`, `less` etc.
-
-Here's a 8 minute talk on Terminal User Interfaces I gave at JuliaCon2020: <https://www.youtube.com/watch?v=-TASx67pphw> that might be worth watching for more information about how terminal user interfaces work.
-:::
-
-### Run the application loop
 
 All terminal user interfaces have at the very least one main loop.
 In our example, this is the `run_app` function:
@@ -144,4 +99,107 @@ We may even want key presses to mean _different_ things depending on the state o
 
 Additionally, if any block of code takes a while to run, the app would block after pressing a key, which is not a pleasant user experience.
 
-In the next section, we will discuss refactoring our application as well as make some quality of life improvements to our program.
+```rust
+use anyhow::Result;
+use crossterm::{
+  cursor,
+  event::{DisableMouseCapture, EnableMouseCapture, Event as CrosstermEvent, KeyEvent, KeyEventKind, MouseEvent},
+  terminal::{EnterAlternateScreen, LeaveAlternateScreen},
+};
+use futures::{FutureExt, StreamExt};
+use tokio::{
+  sync::{mpsc, oneshot},
+  task::JoinHandle,
+};
+
+#[derive(Clone, Copy, Debug)]
+pub enum Event {
+  Quit,
+  Error,
+  Closed,
+  RenderTick,
+  AppTick,
+  Key(KeyEvent),
+  Mouse(MouseEvent),
+  Resize(u16, u16),
+}
+
+#[derive(Debug)]
+pub struct EventHandler {
+  _tx: mpsc::UnboundedSender<Event>,
+  rx: mpsc::UnboundedReceiver<Event>,
+  stop_tx: Option<oneshot::Sender<()>>,
+  task: Option<JoinHandle<()>>,
+}
+
+impl EventHandler {
+  pub fn new(app_tick_rate: u64, render_tick_rate: u64) -> Self {
+    let app_tick_rate = std::time::Duration::from_millis(app_tick_rate);
+    let render_tick_rate = std::time::Duration::from_millis(render_tick_rate);
+
+    let (tx, rx) = mpsc::unbounded_channel();
+    let _tx = tx.clone();
+
+    let (stop_tx, mut stop_rx) = oneshot::channel::<()>();
+
+    let task = tokio::spawn(async move {
+      let mut reader = crossterm::event::EventStream::new();
+      let mut app_interval = tokio::time::interval(app_tick_rate);
+      let mut render_interval = tokio::time::interval(render_tick_rate);
+      loop {
+        let app_delay = app_interval.tick();
+        let render_delay = render_interval.tick();
+        let crossterm_event = reader.next().fuse();
+        if stop_rx.try_recv().ok().is_some() {
+          break;
+        }
+        tokio::select! {
+          maybe_event = crossterm_event => {
+            match maybe_event {
+              Some(Ok(evt)) => {
+                match evt {
+                  CrosstermEvent::Key(key) => {
+                    if key.kind == KeyEventKind::Press {
+                      tx.send(Event::Key(key)).unwrap();
+                    }
+                  },
+                  CrosstermEvent::Resize(x, y) => {
+                    tx.send(Event::Resize(x, y)).unwrap();
+                  },
+                  _ => {},
+                }
+              }
+              Some(Err(_)) => {
+                tx.send(Event::Error).unwrap();
+              }
+              None => {},
+            }
+          },
+          _ = app_delay => {
+              tx.send(Event::AppTick).unwrap();
+          },
+          _ = render_delay => {
+              tx.send(Event::RenderTick).unwrap();
+          },
+        }
+      }
+    });
+
+    Self { _tx, rx, stop_tx: Some(stop_tx), task: Some(task) }
+  }
+
+  pub async fn next(&mut self) -> Option<Event> {
+    self.rx.recv().await
+  }
+
+  pub async fn stop(&mut self) -> Result<()> {
+    if let Some(stop_tx) = self.stop_tx.take() {
+      stop_tx.send(()).unwrap()
+    }
+    if let Some(handle) = self.task.take() {
+      handle.await.unwrap()
+    }
+    Ok(())
+  }
+}
+```

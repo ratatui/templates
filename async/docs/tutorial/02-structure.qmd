@@ -1,0 +1,89 @@
+---
+title: "`terminal.rs` TerminalHandler"
+---
+
+In this section of the tutorial, we are going to discuss the basic components of the `TerminalHandler`.
+
+This following functions show how you can do a basic setup and teardown of a terminal application using `crossterm`.
+
+```rust
+fn setup_terminal() -> Result<Terminal<CrosstermBackend<Stdout>>> {
+  let mut stdout = io::stdout();
+  crossterm::terminal::enable_raw_mode()?;
+  crossterm::execute!(stdout, EnterAlternateScreen, EnableMouseCapture, HideCursor)?;
+  Terminal::new(CrosstermBackend::new(stdout))
+}
+
+fn restore_terminal(terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result<()> {
+  let mut stdout = io::stdout();
+  crossterm::terminal::disable_raw_mode()?;
+  crossterm::execute!(stdout, LeaveAlternateScreen, DisableMouseCapture, ShowCursor)?;
+  Ok(())
+}
+
+fn main() -> Result<()> {
+  let mut terminal = setup_terminal()?;
+  run_app(&mut terminal)?;
+  restore_terminal(&mut terminal)?;
+  Ok(())
+}
+```
+
+You can use `termion` or `wezterm` instead here, and you'll have to change the implementation of `setup_terminal` and `restore_terminal`.
+
+I personally like to use `crossterm` so that I can run the TUI on windows as well.
+
+::: callout-note
+Terminals have two screen buffers for each window.
+The default screen buffer is what you are dropped into when you start up a terminal.
+The second screen buffer, called the alternate screen, is used for running interactive apps such as the `vim`, `less` etc.
+
+Here's a 8 minute talk on Terminal User Interfaces I gave at JuliaCon2020: <https://www.youtube.com/watch?v=-TASx67pphw> that might be worth watching for more information about how terminal user interfaces work.
+:::
+
+```rust
+use anyhow::Result;
+use crossterm::{
+  cursor,
+  event::{DisableMouseCapture, EnableMouseCapture},
+  terminal::{EnterAlternateScreen, LeaveAlternateScreen},
+};
+use ratatui::{backend::CrosstermBackend, terminal::Terminal, Frame as TuiFrame};
+
+pub type Frame<'a> = TuiFrame<'a, CrosstermBackend<std::io::Stderr>>;
+
+pub struct TerminalHandler {
+  pub terminal: Terminal<CrosstermBackend<std::io::Stderr>>,
+}
+
+impl TerminalHandler {
+  pub fn new() -> Result<Self> {
+    let terminal = Terminal::new(CrosstermBackend::new(std::io::stderr()))?;
+    Ok(Self { terminal })
+  }
+
+  pub fn enter(&self) -> Result<()> {
+    crossterm::terminal::enable_raw_mode()?;
+    crossterm::execute!(std::io::stderr(), EnterAlternateScreen, EnableMouseCapture, cursor::Hide)?;
+    Ok(())
+  }
+
+  pub fn exit(&self) -> Result<()> {
+    crossterm::execute!(std::io::stderr(), LeaveAlternateScreen, DisableMouseCapture, cursor::Show)?;
+    crossterm::terminal::disable_raw_mode()?;
+    Ok(())
+  }
+
+  pub fn suspend(&self) -> Result<()> {
+    self.exit()?;
+    #[cfg(not(windows))]
+    signal_hook::low_level::raise(signal_hook::consts::signal::SIGTSTP)?;
+    Ok(())
+  }
+
+  pub fn resume(&self) -> Result<()> {
+    self.enter()?;
+    Ok(())
+  }
+}
+```

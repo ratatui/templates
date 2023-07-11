@@ -1,0 +1,22 @@
+---
+title: Structure of files
+---
+
+The rust files in the `ratatui-template` project are organized as follows:
+
+```bash
+$ tree
+.
+├── build.rs
+└── src
+   ├── app.rs
+   ├── components
+   │  ├── home.rs
+   │  ├── logger.rs
+   │  └── mod.rs
+   ├── lib.rs
+   ├── main.rs
+   ├── terminal.rs
+   └── utils.rs
+```
+
