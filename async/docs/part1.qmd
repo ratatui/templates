@@ -108,9 +108,9 @@ There you have it, the very basics of getting a TUI up and running.
 In the previous section, we had a function called `should_quit` that used `crossterm::event::poll()` and `event::read()` to decide when we want to quit.
 
 In real world apps, we may have a lot more key events that we want to act on.
-For example, if we wanted to have a vertical and horizontal scroll bar, and wanted to change the state of the scrollbar we might have to write code like this:
+For example, if we wanted to add a vertical scroll bar, we might want change the state of the scrollbar like this:
 
-```rust
+```rust {source-line-numbers="9-14" .numberLines}
 fn run_app(terminal: &mut Terminal<CrosstermBackend<Stdout>>, mut app: App) -> Result<()> {
   let mut last_tick = Instant::now();
   loop {
@@ -131,18 +131,6 @@ fn run_app(terminal: &mut Terminal<CrosstermBackend<Stdout>>, mut app: App) -> R
               .vertical_scroll_state
               .position(app.vertical_scroll);
           }
-          KeyCode::Char('h') => {
-            app.horizontal_scroll = app.horizontal_scroll.saturating_sub(1);
-            app.horizontal_scroll_state = app
-              .horizontal_scroll_state
-              .position(app.horizontal_scroll);
-          }
-          KeyCode::Char('l') => {
-            app.horizontal_scroll = app.horizontal_scroll.saturating_add(1);
-            app.horizontal_scroll_state = app
-              .horizontal_scroll_state
-              .position(app.horizontal_scroll);
-          }
           _ => {}
         }
       }
@@ -150,7 +138,10 @@ fn run_app(terminal: &mut Terminal<CrosstermBackend<Stdout>>, mut app: App) -> R
   }
 ```
 
-But in addition to changing the state of the scroll bar, we may also want to do additional things (e.g. scroll down a table) and this code could get more complicated.
+But in addition to changing the state of the scroll bar, we may also want to do additional things (e.g. scroll down a table).
+This code could get more complicated.
 We may even want key presses to mean _different_ things depending on the state of the app (when you are focused on an input field, you may want to enter the letter `"j"` but when focused on a list of items, you may want to scroll down.)
+
+Additionally, if any block of code takes a while to run, the app would block after pressing a key, which is not a pleasant user experience.
 
 In the next section, we will discuss refactoring our application as well as make some quality of life improvements to our program.

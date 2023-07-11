@@ -2,6 +2,7 @@
 title: "Refactoring basics"
 ---
 
+So the first thing that we are going to do is move code around to multiple files.
 Let's start with refactoring our program to a few different files.
 
 1. `src/main.rs`:
@@ -208,7 +209,8 @@ impl EventHandler {
 }
 ```
 
-In this tutorial, we introduced the sending an `Event` over a channel using a separate thread.
-This is essentially what is done in the official [`tui-rs-revival/rust-tui-template`](https://github.com/tui-rs-revival/rust-tui-template/tree/master/src).
+In this section of tutorial, we introduced the sending an `Event` over a channel using a separate thread.
+This is essentially the setup used in the official [template](https://github.com/tui-rs-revival/rust-tui-template/tree/master/src).
 
-In the next section, we'll introduce `tokio` to do the same thing.
+Using channels can make it easy to separate concerns and isolate different parts of your code.
+In the next section, we'll introduce `tokio` and `async` to do the same thing.
