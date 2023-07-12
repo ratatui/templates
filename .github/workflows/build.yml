@@ -1,3 +1,13 @@
+#
+#  project administrative file
+#
+#  When you got this file through
+#     cargo generate --git https://github.com/tui-rs-revival/rust-tui-template --name <project-name>
+#  you can deleted it safely. (Above directories also.)
+#
+#  By the way: Enjoy the template files   :-)
+#
+#
 name: 'Build Template'
 on:
   workflow_dispatch:
