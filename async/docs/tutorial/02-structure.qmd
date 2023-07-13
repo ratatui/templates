@@ -89,3 +89,7 @@ impl TerminalHandler {
   }
 }
 ```
+
+Feel free to modify this if you want to use `termion` or `wezterm`.
+
+The type alias to `Frame` is only to make the `components` folder easier to work with, and is not strictly required.

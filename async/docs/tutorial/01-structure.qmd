@@ -51,6 +51,21 @@ This `main.rs` file incorporates three key features that are not necessarily rel
 ### Command Line Argument Parsing (`clap`)
 
 In this file, we define a [`clap`](https://docs.rs/clap/latest/clap/) `Args` struct.
+
+```rust
+// Define the command line arguments structure
+#[derive(Parser, Debug)]
+#[command(version = version(), about = "ratatui template with crossterm and tokio")]
+struct Args {
+  /// App tick rate
+  #[arg(short, long, default_value_t = 1000)]
+  app_tick_rate: u64,
+  /// Render tick rate
+  #[arg(short, long, default_value_t = 50)]
+  render_tick_rate: u64,
+}
+```
+
 This allows us to pass command line arguments to our terminal user interface if we need to.
 
 ![](https://user-images.githubusercontent.com/1813121/252718163-ab1945d1-7d44-4b5b-928d-1164ac99f2c9.png)
@@ -59,7 +74,7 @@ In addtion to command line arguments, we typically want the version of the comma
 This `version()` function (defined in `src/utils.rs`) uses a environment variable called `RATATUI_TEMPLATE_GIT_INFO` to get the version number with the git commit hash.
 `RATATUI_TEMPLATE_GIT_INFO` is populated in `./build.rs` when building with `cargo`.
 
-![](https://user-images.githubusercontent.com/1813121/252718003-b9b24daf-8bfd-428b-adc3-4a9e2a5b7376.png)
+![](https://user-images.githubusercontent.com/1813121/253160580-dc537c49-4191-4821-874a-9efc73cfe098.png)
 
 You can configure what the version string should look like by modifying the string template code in `utils::version()`.
 
@@ -117,4 +132,4 @@ In the screenshot below, I added a `None.unwrap()` into a function that is calle
 ![](https://user-images.githubusercontent.com/1813121/252723080-18c15640-c75f-42b3-8aeb-d4e6ce323430.png)
 
 `utils::initialize_panic_handler()` also calls `TerminalHandler::new().exit()` to reset the terminal state back to the way it was before the user started the TUI program.
-We'll learn more about the `TerminalHandler` in the next sections.
+We'll learn more about the `TerminalHandler` in the next section.

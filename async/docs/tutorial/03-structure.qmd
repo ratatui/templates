@@ -2,7 +2,56 @@
 title: "`event.rs`"
 ---
 
-Here's the `EventHandler` code:
+Finally we get to the `EventHandler` code.
+
+All terminal user interfaces need to have one main render loop like so:
+
+```rust
+fn main_render_loop()  {
+  let th = TerminalHandler::new();
+  th.enter();
+  loop {
+    th.terminal.draw(|f| render_app(f))?;
+  }
+  th.exit();
+  Ok(())
+}
+```
+
+While we are in the "raw mode", i.e. after we call `th.enter()`, any key presses in that terminal window are sent to `stdin`.
+We have to read these key presses from `stdin` if we want to act on them.
+
+There's a number of different ways to do that.
+`crossterm` has a `event` module that implements features to read these key presses for us.
+
+```rust
+  fn main_render_loop(&mut self)  {
+    let tui = TerminalHandler::new();
+    loop {
+      if event::poll(Duration::from_millis(250))? {
+        if let Event::Key(key) = event::read()? {
+          match key.code {
+            KeyCode::Char('j') => self.increment(),
+            KeyCode::Char('k') => self.decrement(),
+            KeyCode::Char('q') => break,
+            _ => (),
+          }
+        }
+      };
+      tui.terminal.draw(|f| render_app(f))?;
+    }
+    Ok(())
+  }
+```
+
+This in my opinion conflates the key input handling with app state updates all in the draw loop.
+The practical issue with this approach is we block the draw loop for 250ms waiting for a key press.
+Pressing an holding a key will result in faster draws than waiting and doing nothing.
+
+In terms of architecture, the code could get complicated to reason about.
+For example, we may even want key presses to mean _different_ things depending on the state of the app (when you are focused on an input field, you may want to enter the letter `"j"` but when focused on a list of items, you may want to scroll down.)
+
+In this section, I want to introduce the `EventHandler` struct:
 
 ```rust
 use anyhow::Result;
@@ -109,101 +158,87 @@ impl EventHandler {
 }
 ```
 
-### Explanation
+This struct spawns a tokio task, which does 3 things
 
-All terminal user interfaces have at the very least one main loop.
-In our example, this is the `run_app` function:
+1. Sends a `AppTick` event at every `app_tick_rate` interval
+1. Sends a `RenderTick` event at every `render_tick_rate` interval
+1. Sends a `Key` event whenever a key is pressed.
 
-```rust
-fn render_app(frame: &mut Frame<CrosstermBackend<Stdout>>) {
-  let greeting = Paragraph::new("Hello World! (press 'q' to quit)");
-  frame.render_widget(greeting, frame.size());
-}
+With this `EventHandler` implemented, we can use `tokio` to create a separate "task" that handles any key asynchronously in our `main` loop.
 
-fn run_app(terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result<()> {
-  loop {
-    terminal.draw(|f| render_app(f))?;
-  }
-  Ok(())
-}
-```
-
-The instance of the `ratatui::Terminal` struct has a `draw` method that takes an argument that implements `FnOnce`^[FnOnce is a trait in Rust that represents a function pointer/closure that can be called exactly once and may consume the variables it captures.].
-
-The `render_app` function that we pass in takes a reference to `ratatui::Frame` and we can use that frame to draw to it.
-`ratatui` then uses the content of `Frame` to decide how it wants to render the contents to the terminal^[`ratatui` uses a double frame painting method, i.e. it keeps a reference to the old frame and the current frame in memory. When drawing, it compares the two frames and only inserts the characters in screen buffer where there are differences. This is the most efficient way to do it because it minimizes IO writes. This is an implementation detail of `ratatui` and is not necessarily something we need to be concerned about.].
-
-While we are in the "raw mode", i.e. after we call `enable_raw_mode()`, any key presses in that terminal window are sent to `stdin`.
-We have to read these key presses from `stdin` if we want to act on them.
-
-There's a number of different ways to do that.
-`crossterm` has a `event` module that implements features to read these key presses for us.
-We will use that to call `poll` and if the `q` key is pressed we will exit.
+In addition to using the `EventHandler`, we are also going to introduce the `Command` pattern, i.e. the concept of "reified method calls" from <http://gameprogrammingpatterns.com/command.html>.
+These are also typically called `Action`s or `Message`s.
 
 ```rust
-fn render_app(...) {
-  ...
+pub enum Action {
+  Quit,
+  Tick,
+  RenderTick,
+  Increment,
+  Decrement,
+  Noop,
 }
 
-fn should_quit() -> Result<bool> {
-  if event::poll(Duration::from_millis(250))? {
-    if let Event::Key(key) = event::read()? {
-      return Ok(KeyCode::Char('q') == key.code);
+impl App {
+  pub async fn run(&mut self) -> Result<()> {
+    let th = TerminalHandler::new();
+    th.enter();
+    let mut events = EventHandler::new(app_tick_rate, render_tick_rate);
+    loop {
+      let event = events.next().await;
+      let action = self.handle_events(event);
+      self.dispatch(action);
+      th.terminal.draw(|f| render_app(f))?;
+    };
+    th.exit();
+    Ok(())
+  }
+
+  fn handle_events(&mut self, event: Option<Event>) -> Action {
+    match event {
+      Some(Event::Quit) => Action::Quit,
+      Some(Event::AppTick) => Action::Tick,
+      Some(Event::RenderTick) => Action::RenderTick,
+      Some(Event::Key(key_event)) => self.handle_key_events(key_event),
+      Some(Event::Mouse(mouse_event)) => self.handle_mouse_events(mouse_event),
+      Some(Event::Resize(x, y)) => Action::Resize(x, y),
+      Some(_) => Action::Noop,
+      None => Action::Noop,
     }
   }
-  Ok(false)
-}
 
-fn run_app(terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result<()> {
-  loop {
-    terminal.draw(|f| render_app(f))?;
-    if should_quit()? {
-      break;
-    }
-  }
-  Ok(())
-}
-```
-
-When we `break` out of `run_app`'s `loop`, as we saw in the `main` function, we end up calling `restore_terminal()` which resets the terminal state back to what it was before we started the application.
-
-There you have it, the very basics of getting a TUI up and running.
-
-In the previous section, we had a function called `should_quit` that used `crossterm::event::poll()` and `event::read()` to decide when we want to quit.
-
-In real world apps, we may have a lot more key events that we want to act on.
-For example, if we wanted to add a vertical scroll bar, we might want change the state of the scrollbar like this:
-
-```rust {source-line-numbers="9-14" .numberLines}
-fn run_app(terminal: &mut Terminal<CrosstermBackend<Stdout>>, mut app: App) -> Result<()> {
-  let mut last_tick = Instant::now();
-  loop {
-    terminal.draw(|f| render_app(f))?;
-    if event::poll(timeout)? {
-      if let Event::Key(key) = event::read()? {
+  fn handle_key_events(&mut self, event: Option<Event>) -> Action {
+    if let Some(key) = event {
         match key.code {
-          KeyCode::Char('q') => return Ok(()),
-          KeyCode::Char('j') => {
-            app.vertical_scroll = app.vertical_scroll.saturating_add(1);
-            app.vertical_scroll_state = app
-              .vertical_scroll_state
-              .position(app.vertical_scroll);
-          }
-          KeyCode::Char('k') => {
-            app.vertical_scroll = app.vertical_scroll.saturating_sub(1);
-            app.vertical_scroll_state = app
-              .vertical_scroll_state
-              .position(app.vertical_scroll);
-          }
+          KeyCode::Char('q') => Action::Quit,
+          KeyCode::Char('j') => Action::Increment,
+          KeyCode::Char('k') => Action::Decrement
           _ => {}
-        }
       }
     }
   }
+
+  fn dispatch(&mut self, action: Action) {
+    match action {
+      Action::Quit => self.should_quit = true,
+      Action::Tick => self.tick(),
+      Action::Increment => self.increment(),
+      Action::Decrement => self.decrement(),
+  }
+
+}
 ```
 
-But in addition to changing the state of the scroll bar, we may also want to do additional things (e.g. scroll down a table).
-This code could get more complicated.
-We may even want key presses to mean _different_ things depending on the state of the app (when you are focused on an input field, you may want to enter the letter `"j"` but when focused on a list of items, you may want to scroll down.)
+The advantage of this is that the business logic of the `App` struct can be tested without having to create an instance of a `TerminalHandler` or `EventHandler`, e.g.:
 
-Additionally, if any block of code takes a while to run, the app would block after pressing a key, which is not a pleasant user experience.
+```rust
+mod tests {
+  #[test]
+  fn test_app() {
+    let mut app = App::new();
+    let old_counter = app.counter;
+    app.dispatch(Action::Increment);
+    assert!(app.counter = old_counter += 1);
+  }
+}
+```

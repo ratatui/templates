@@ -2,6 +2,10 @@
 title: "`app.rs`"
 ---
 
+Finally, putting all the pieces together, we get the `App` struct.
+
+In this particular example, the draw loop and the event loop happen in separate `tokio` tasks, and the `main` loop is only responsible for dispatching actions.
+
 ```rust
 use std::sync::Arc;
 
@@ -153,3 +157,5 @@ impl App {
   }
 }
 ```
+
+In the next section, we will discuss how `components` are structured.
