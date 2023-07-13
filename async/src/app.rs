@@ -9,7 +9,8 @@ use tracing::debug;
 
 use crate::{
   components::{home::Home, Component},
-  terminal::{EventHandler, TerminalHandler},
+  event::EventHandler,
+  terminal::TerminalHandler,
   trace_dbg,
 };
 

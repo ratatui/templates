@@ -1,5 +1,5 @@
 ---
-title: "`terminal.rs` TerminalHandler"
+title: "`terminal.rs`"
 ---
 
 In this section of the tutorial, we are going to discuss the basic components of the `TerminalHandler`.
@@ -14,7 +14,7 @@ fn setup_terminal() -> Result<Terminal<CrosstermBackend<Stdout>>> {
   Terminal::new(CrosstermBackend::new(stdout))
 }
 
-fn restore_terminal(terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result<()> {
+fn teardown_terminal(terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result<()> {
   let mut stdout = io::stdout();
   crossterm::terminal::disable_raw_mode()?;
   crossterm::execute!(stdout, LeaveAlternateScreen, DisableMouseCapture, ShowCursor)?;
@@ -24,12 +24,12 @@ fn restore_terminal(terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result
 fn main() -> Result<()> {
   let mut terminal = setup_terminal()?;
   run_app(&mut terminal)?;
-  restore_terminal(&mut terminal)?;
+  teardown_terminal(&mut terminal)?;
   Ok(())
 }
 ```
 
-You can use `termion` or `wezterm` instead here, and you'll have to change the implementation of `setup_terminal` and `restore_terminal`.
+You can use `termion` or `wezterm` instead here, and you'll have to change the implementation of `setup_terminal` and `teardown_terminal`.
 
 I personally like to use `crossterm` so that I can run the TUI on windows as well.
 
@@ -40,6 +40,8 @@ The second screen buffer, called the alternate screen, is used for running inter
 
 Here's a 8 minute talk on Terminal User Interfaces I gave at JuliaCon2020: <https://www.youtube.com/watch?v=-TASx67pphw> that might be worth watching for more information about how terminal user interfaces work.
 :::
+
+We can reorganize the setup and teardown functions into an `enter()` and `exit()` methods on a `TerminalHandler` struct.
 
 ```rust
 use anyhow::Result;
