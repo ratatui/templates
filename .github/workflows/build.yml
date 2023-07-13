@@ -1,19 +1,17 @@
+# Test the builds for the template
 #
-#  project administrative file
+# When you got this file through:
+#   cargo generate --git https://github.com/tui-rs-revival/rust-tui-template --name <project-name>
+# you can deleted it safely. (Above directories also.)
 #
-#  When you got this file through
-#     cargo generate --git https://github.com/tui-rs-revival/rust-tui-template --name <project-name>
-#  you can deleted it safely. (Above directories also.)
-#
-#  By the way: Enjoy the template files   :-)
-#
-#
-name: 'Build Template'
+# By the way: Enjoy the template :-)
+
+name: "Build Template"
 on:
   workflow_dispatch:
   schedule:
     # Run once a week at 6pm on Saturday (UTC)
-    - cron: '0 18 * * 6'
+    - cron: "0 18 * * 6"
   push:
     paths-ignore:
       - "**.md"
@@ -38,4 +36,3 @@ jobs:
           mv $PROJECT_NAME ${{ runner.temp }}/
           cd ${{ runner.temp }}/$PROJECT_NAME
           cargo check
-
