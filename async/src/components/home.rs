@@ -12,7 +12,7 @@ use tracing::trace;
 use tui_input::{backend::crossterm::EventHandler, Input};
 
 use super::{logger::Logger, Component, Frame};
-use crate::app::Action;
+use crate::action::Action;
 
 #[derive(Default, Copy, Clone, PartialEq, Eq)]
 pub enum Mode {

@@ -8,32 +8,12 @@ use tokio::{
 use tokio_util::sync::CancellationToken;
 
 use crate::{
+  action::Action,
   components::{home::Home, Component},
   event::EventHandler,
   terminal::TerminalHandler,
   trace_dbg,
 };
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Action {
-  Quit,
-  Resume,
-  Suspend,
-  Tick,
-  RenderTick,
-  Resize(u16, u16),
-  ToggleShowLogger,
-  ScheduleIncrementCounter,
-  ScheduleDecrementCounter,
-  AddToCounter(usize),
-  SubtractFromCounter(usize),
-  EnterNormal,
-  EnterInsert,
-  EnterProcessing,
-  ExitProcessing,
-  Update,
-  Noop,
-}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Message {

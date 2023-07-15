@@ -2,7 +2,7 @@ use anyhow::Result;
 use crossterm::event::{KeyEvent, MouseEvent};
 use ratatui::layout::Rect;
 
-use crate::{app::Action, event::Event, terminal::Frame};
+use crate::{action::Action, event::Event, terminal::Frame};
 
 pub mod home;
 pub mod logger;
