@@ -1,10 +1,9 @@
+use std::sync::Arc;
+
 use anyhow::Result;
 use crossterm::event::{Event as CrosstermEvent, KeyEvent, KeyEventKind, MouseEvent};
 use futures::{FutureExt, StreamExt};
-use tokio::{
-  sync::{mpsc, oneshot},
-  task::JoinHandle,
-};
+use tokio::{sync::mpsc, task::JoinHandle};
 
 #[derive(Clone, Copy, Debug)]
 pub enum Event {
@@ -22,7 +21,7 @@ pub enum Event {
 pub struct EventHandler {
   _tx: mpsc::UnboundedSender<Event>,
   rx: mpsc::UnboundedReceiver<Event>,
-  stop_tx: Option<oneshot::Sender<()>>,
+  stop_notifier: Arc<tokio::sync::Notify>,
   task: Option<JoinHandle<()>>,
 }
 
@@ -34,7 +33,8 @@ impl EventHandler {
     let (tx, rx) = mpsc::unbounded_channel();
     let _tx = tx.clone();
 
-    let (stop_tx, mut stop_rx) = oneshot::channel::<()>();
+    let stop_notifier = Arc::new(tokio::sync::Notify::new());
+    let _stop_notifier = stop_notifier.clone();
 
     let task = tokio::spawn(async move {
       let mut reader = crossterm::event::EventStream::new();
@@ -44,10 +44,10 @@ impl EventHandler {
         let app_delay = app_interval.tick();
         let render_delay = render_interval.tick();
         let crossterm_event = reader.next().fuse();
-        if stop_rx.try_recv().ok().is_some() {
-          break;
-        }
         tokio::select! {
+          _ = _stop_notifier.notified() => {
+            break;
+          }
           maybe_event = crossterm_event => {
             match maybe_event {
               Some(Ok(evt)) => {
@@ -79,7 +79,7 @@ impl EventHandler {
       }
     });
 
-    Self { _tx, rx, stop_tx: Some(stop_tx), task: Some(task) }
+    Self { _tx, rx, stop_notifier, task: Some(task) }
   }
 
   pub async fn next(&mut self) -> Option<Event> {
@@ -87,11 +87,9 @@ impl EventHandler {
   }
 
   pub async fn stop(&mut self) -> Result<()> {
-    if let Some(stop_tx) = self.stop_tx.take() {
-      stop_tx.send(()).unwrap()
-    }
+    self.stop_notifier.notify_waiters();
     if let Some(handle) = self.task.take() {
-      handle.await.unwrap()
+      handle.await.unwrap();
     }
     Ok(())
   }
