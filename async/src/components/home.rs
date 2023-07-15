@@ -25,8 +25,6 @@ pub enum Mode {
 #[derive(Default)]
 pub struct Home {
   pub logger: Logger,
-  pub should_quit: bool,
-  pub should_suspend: bool,
   pub show_logger: bool,
   pub counter: usize,
   pub ticker: usize,
@@ -68,8 +66,6 @@ impl Home {
 
 impl Component for Home {
   fn init(&mut self) -> anyhow::Result<()> {
-    self.should_quit = false;
-    self.should_suspend = false;
     Ok(())
   }
 
@@ -103,9 +99,6 @@ impl Component for Home {
 
   fn dispatch(&mut self, action: Action) -> Option<Action> {
     match action {
-      Action::Quit => self.should_quit = true,
-      Action::Suspend => self.should_suspend = true,
-      Action::Resume => self.should_suspend = false,
       Action::Tick => self.tick(),
       Action::ToggleShowLogger => self.show_logger = !self.show_logger,
       Action::ScheduleIncrementCounter => self.increment(1),

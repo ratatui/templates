@@ -25,12 +25,14 @@ pub enum Message {
 pub struct App {
   pub tick_rate: (u64, u64),
   pub home: Arc<Mutex<Home>>,
+  pub should_quit: bool,
+  pub should_suspend: bool,
 }
 
 impl App {
   pub fn new(tick_rate: (u64, u64)) -> Result<Self> {
     let home = Arc::new(Mutex::new(Home::new()));
-    Ok(Self { tick_rate, home })
+    Ok(Self { tick_rate, home, should_quit: false, should_suspend: false })
   }
 
   pub fn spawn_tui_task(&mut self) -> (JoinHandle<()>, mpsc::UnboundedSender<Message>) {
@@ -104,19 +106,26 @@ impl App {
     loop {
       let mut maybe_action = action_rx.recv().await;
       while maybe_action.is_some() {
-        let action = maybe_action.unwrap();
+        let action = maybe_action.take().unwrap();
         if action == Action::RenderTick {
           tui_tx.send(Message::Render).unwrap_or_default();
         } else if action != Action::Tick {
           trace_dbg!(action);
         }
-        if let Some(_action) = self.home.lock().await.dispatch(action) {
-          action_tx.send(_action)?
-        };
-        maybe_action = action_rx.try_recv().ok();
+        match action {
+          Action::Quit => self.should_quit = true,
+          Action::Suspend => self.should_suspend = true,
+          Action::Resume => self.should_suspend = false,
+          _ => {
+            if let Some(_action) = self.home.lock().await.dispatch(action) {
+              action_tx.send(_action)?
+            };
+            maybe_action = action_rx.try_recv().ok();
+          },
+        }
       }
 
-      if self.home.lock().await.should_suspend {
+      if self.should_suspend {
         tui_tx.send(Message::Suspend).unwrap_or_default();
         event_handler_cancellation_token.cancel();
         tui_task.await?;
@@ -124,7 +133,7 @@ impl App {
         (tui_task, tui_tx) = self.spawn_tui_task();
         (event_task, event_handler_cancellation_token) = self.spawn_event_task(action_tx.clone());
         action_tx.send(Action::Resume)?;
-      } else if self.home.lock().await.should_quit {
+      } else if self.should_quit {
         tui_tx.send(Message::Stop).unwrap_or_default();
         event_handler_cancellation_token.cancel();
         tui_task.await?;
