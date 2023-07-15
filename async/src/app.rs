@@ -121,7 +121,7 @@ impl App {
         if action == Action::RenderTick {
           tui_tx.send(Message::Render).unwrap_or(());
         } else if action != Action::Tick {
-          trace_dbg!(action.clone());
+          trace_dbg!(action);
         }
         if let Some(a) = self.home.lock().await.dispatch(action) {
           action_tx.send(a)?
