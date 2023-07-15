@@ -1,9 +1,8 @@
-use std::sync::Arc;
-
 use anyhow::Result;
 use crossterm::event::{Event as CrosstermEvent, KeyEvent, KeyEventKind, MouseEvent};
 use futures::{FutureExt, StreamExt};
 use tokio::{sync::mpsc, task::JoinHandle};
+use tokio_util::sync::CancellationToken;
 
 #[derive(Clone, Copy, Debug)]
 pub enum Event {
@@ -21,7 +20,7 @@ pub enum Event {
 pub struct EventHandler {
   _tx: mpsc::UnboundedSender<Event>,
   rx: mpsc::UnboundedReceiver<Event>,
-  stop_notifier: Arc<tokio::sync::Notify>,
+  stop_cancellation_token: CancellationToken,
   task: Option<JoinHandle<()>>,
 }
 
@@ -33,8 +32,8 @@ impl EventHandler {
     let (tx, rx) = mpsc::unbounded_channel();
     let _tx = tx.clone();
 
-    let stop_notifier = Arc::new(tokio::sync::Notify::new());
-    let _stop_notifier = stop_notifier.clone();
+    let stop_cancellation_token = CancellationToken::new();
+    let _stop_cancellation_token = stop_cancellation_token.clone();
 
     let task = tokio::spawn(async move {
       let mut reader = crossterm::event::EventStream::new();
@@ -45,7 +44,7 @@ impl EventHandler {
         let render_delay = render_interval.tick();
         let crossterm_event = reader.next().fuse();
         tokio::select! {
-          _ = _stop_notifier.notified() => {
+          _ = _stop_cancellation_token.cancelled() => {
             break;
           }
           maybe_event = crossterm_event => {
@@ -79,7 +78,7 @@ impl EventHandler {
       }
     });
 
-    Self { _tx, rx, stop_notifier, task: Some(task) }
+    Self { _tx, rx, stop_cancellation_token, task: Some(task) }
   }
 
   pub async fn next(&mut self) -> Option<Event> {
@@ -87,7 +86,7 @@ impl EventHandler {
   }
 
   pub async fn stop(&mut self) -> Result<()> {
-    self.stop_notifier.notify_waiters();
+    self.stop_cancellation_token.cancel();
     if let Some(handle) = self.task.take() {
       handle.await.unwrap();
     }

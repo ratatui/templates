@@ -2,9 +2,10 @@ use std::sync::Arc;
 
 use anyhow::{anyhow, Context, Result};
 use tokio::{
-  sync::{mpsc, Mutex, Notify},
+  sync::{mpsc, Mutex},
   task::JoinHandle,
 };
+use tokio_util::sync::CancellationToken;
 use tracing::debug;
 
 use crate::{
@@ -81,16 +82,16 @@ impl App {
     (tui_task, tui_tx)
   }
 
-  pub fn spawn_event_task(&mut self, tx: mpsc::UnboundedSender<Action>) -> (JoinHandle<()>, Arc<Notify>) {
+  pub fn spawn_event_task(&mut self, tx: mpsc::UnboundedSender<Action>) -> (JoinHandle<()>, CancellationToken) {
     let home = self.home.clone();
     let (app_tick_rate, render_tick_rate) = self.tick_rate;
-    let stop_event_notify = Arc::new(tokio::sync::Notify::new());
-    let notify = stop_event_notify.clone();
+    let stop_event_cancellation_token = CancellationToken::new();
+    let cancellation_token = stop_event_cancellation_token.clone();
     let event_task = tokio::spawn(async move {
       let mut events = EventHandler::new(app_tick_rate, render_tick_rate);
       loop {
         tokio::select! {
-          _ = notify.notified() => {
+          _ = cancellation_token.cancelled() => {
             events.stop().await.unwrap();
             break;
           }
@@ -101,7 +102,7 @@ impl App {
         }
       }
     });
-    (event_task, stop_event_notify)
+    (event_task, stop_event_cancellation_token)
   }
 
   pub async fn run(&mut self) -> Result<()> {
@@ -112,7 +113,7 @@ impl App {
     self.home.lock().await.init()?;
 
     let (mut tui_task, mut tui_tx) = self.spawn_tui_task();
-    let (mut event_task, mut stop_event_notify) = self.spawn_event_task(action_tx.clone());
+    let (mut event_task, mut stop_event_cancellation_token) = self.spawn_event_task(action_tx.clone());
 
     loop {
       let mut maybe_action = action_rx.recv().await;
@@ -131,7 +132,7 @@ impl App {
 
       if self.home.lock().await.should_suspend {
         tui_tx.send(Message::Stop).unwrap_or(());
-        stop_event_notify.notify_waiters();
+        stop_event_cancellation_token.cancel();
         tui_task.await?;
         event_task.await?;
         let tui = TerminalHandler::new().context(anyhow!("Unable to create TUI")).unwrap();
@@ -139,11 +140,11 @@ impl App {
                         // TODO: figure out appropriate behaviour on Windows.
         debug!("resuming");
         (tui_task, tui_tx) = self.spawn_tui_task();
-        (event_task, stop_event_notify) = self.spawn_event_task(action_tx.clone());
+        (event_task, stop_event_cancellation_token) = self.spawn_event_task(action_tx.clone());
         action_tx.send(Action::Resume)?;
       } else if self.home.lock().await.should_quit {
         tui_tx.send(Message::Stop).unwrap_or(());
-        stop_event_notify.notify_waiters();
+        stop_event_cancellation_token.cancel();
         tui_task.await?;
         event_task.await?;
         break;
