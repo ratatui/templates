@@ -6,7 +6,6 @@ use tokio::{
   task::JoinHandle,
 };
 use tokio_util::sync::CancellationToken;
-use tracing::debug;
 
 use crate::{
   components::{home::Home, Component},
@@ -40,6 +39,7 @@ pub enum Action {
 pub enum Message {
   Render,
   Stop,
+  Suspend,
 }
 
 pub struct App {
@@ -63,7 +63,14 @@ impl App {
       tui.enter().unwrap();
       loop {
         match tui_rx.recv().await {
-          Some(Message::Stop) => break,
+          Some(Message::Stop) => {
+            tui.exit().unwrap_or_default();
+            break;
+          },
+          Some(Message::Suspend) => {
+            tui.suspend().unwrap_or_default();
+            break;
+          },
           Some(Message::Render) => {
             let mut h = home.lock().await;
             tui
@@ -76,7 +83,6 @@ impl App {
           None => {},
         }
       }
-      tui.exit().unwrap();
     });
 
     (tui_task, tui_tx)
@@ -85,8 +91,8 @@ impl App {
   pub fn spawn_event_task(&mut self, tx: mpsc::UnboundedSender<Action>) -> (JoinHandle<()>, CancellationToken) {
     let home = self.home.clone();
     let (app_tick_rate, render_tick_rate) = self.tick_rate;
-    let stop_event_cancellation_token = CancellationToken::new();
-    let cancellation_token = stop_event_cancellation_token.clone();
+    let event_handler_cancellation_token = CancellationToken::new();
+    let cancellation_token = event_handler_cancellation_token.clone();
     let event_task = tokio::spawn(async move {
       let mut events = EventHandler::new(app_tick_rate, render_tick_rate);
       loop {
@@ -102,7 +108,7 @@ impl App {
         }
       }
     });
-    (event_task, stop_event_cancellation_token)
+    (event_task, event_handler_cancellation_token)
   }
 
   pub async fn run(&mut self) -> Result<()> {
@@ -113,38 +119,34 @@ impl App {
     self.home.lock().await.init()?;
 
     let (mut tui_task, mut tui_tx) = self.spawn_tui_task();
-    let (mut event_task, mut stop_event_cancellation_token) = self.spawn_event_task(action_tx.clone());
+    let (mut event_task, mut event_handler_cancellation_token) = self.spawn_event_task(action_tx.clone());
 
     loop {
       let mut maybe_action = action_rx.recv().await;
       while maybe_action.is_some() {
         let action = maybe_action.unwrap();
         if action == Action::RenderTick {
-          tui_tx.send(Message::Render).unwrap_or(());
+          tui_tx.send(Message::Render).unwrap_or_default();
         } else if action != Action::Tick {
           trace_dbg!(action);
         }
-        if let Some(a) = self.home.lock().await.dispatch(action) {
-          action_tx.send(a)?
+        if let Some(_action) = self.home.lock().await.dispatch(action) {
+          action_tx.send(_action)?
         };
         maybe_action = action_rx.try_recv().ok();
       }
 
       if self.home.lock().await.should_suspend {
-        tui_tx.send(Message::Stop).unwrap_or(());
-        stop_event_cancellation_token.cancel();
+        tui_tx.send(Message::Suspend).unwrap_or_default();
+        event_handler_cancellation_token.cancel();
         tui_task.await?;
         event_task.await?;
-        let tui = TerminalHandler::new().context(anyhow!("Unable to create TUI")).unwrap();
-        tui.suspend()?; // Blocks here till process resumes on Linux and Mac.
-                        // TODO: figure out appropriate behaviour on Windows.
-        debug!("resuming");
         (tui_task, tui_tx) = self.spawn_tui_task();
-        (event_task, stop_event_cancellation_token) = self.spawn_event_task(action_tx.clone());
+        (event_task, event_handler_cancellation_token) = self.spawn_event_task(action_tx.clone());
         action_tx.send(Action::Resume)?;
       } else if self.home.lock().await.should_quit {
-        tui_tx.send(Message::Stop).unwrap_or(());
-        stop_event_cancellation_token.cancel();
+        tui_tx.send(Message::Stop).unwrap_or_default();
+        event_handler_cancellation_token.cancel();
         tui_task.await?;
         event_task.await?;
         break;
