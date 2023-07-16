@@ -16,18 +16,18 @@ use crate::{
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Message {
+enum Message {
   Render,
   Stop,
   Suspend,
 }
 
-pub struct TuiTask {
+struct TuiTask {
   task: JoinHandle<()>,
   tx: mpsc::UnboundedSender<Message>,
 }
 
-pub struct EventTask {
+struct EventTask {
   task: JoinHandle<()>,
   cancellation_token: CancellationToken,
 }
@@ -45,7 +45,7 @@ impl App {
     Ok(Self { tick_rate, home, should_quit: false, should_suspend: false })
   }
 
-  pub fn spawn_tui_task(&mut self) -> TuiTask {
+  fn spawn_tui_task(&mut self) -> TuiTask {
     let home = self.home.clone();
 
     let (tx, mut rx) = mpsc::unbounded_channel::<Message>();
@@ -80,7 +80,7 @@ impl App {
     TuiTask { task, tx }
   }
 
-  pub fn spawn_event_task(&mut self, tx: mpsc::UnboundedSender<Action>) -> EventTask {
+  fn spawn_event_task(&mut self, tx: mpsc::UnboundedSender<Action>) -> EventTask {
     let home = self.home.clone();
     let (app_tick_rate, render_tick_rate) = self.tick_rate;
     let cancellation_token = CancellationToken::new();
