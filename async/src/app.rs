@@ -27,27 +27,8 @@ struct TuiTask {
   tx: mpsc::UnboundedSender<Message>,
 }
 
-struct EventTask {
-  task: JoinHandle<()>,
-  cancellation_token: CancellationToken,
-}
-
-pub struct App {
-  pub tick_rate: (u64, u64),
-  pub home: Arc<Mutex<Home>>,
-  pub should_quit: bool,
-  pub should_suspend: bool,
-}
-
-impl App {
-  pub fn new(tick_rate: (u64, u64)) -> Result<Self> {
-    let home = Arc::new(Mutex::new(Home::new()));
-    Ok(Self { tick_rate, home, should_quit: false, should_suspend: false })
-  }
-
-  fn spawn_tui_task(&mut self) -> TuiTask {
-    let home = self.home.clone();
-
+impl TuiTask {
+  fn new(home: Arc<Mutex<Home>>) -> Self {
     let (tx, mut rx) = mpsc::unbounded_channel::<Message>();
 
     let task = tokio::spawn(async move {
@@ -76,8 +57,41 @@ impl App {
         }
       }
     });
+    Self { task, tx }
+  }
 
-    TuiTask { task, tx }
+  fn suspend(&self) -> Result<()> {
+    self.tx.send(Message::Suspend)?;
+    Ok(())
+  }
+
+  fn stop(&self) -> Result<()> {
+    self.tx.send(Message::Stop)?;
+    Ok(())
+  }
+
+  fn render(&self) -> Result<()> {
+    self.tx.send(Message::Render)?;
+    Ok(())
+  }
+}
+
+struct EventTask {
+  task: JoinHandle<()>,
+  cancellation_token: CancellationToken,
+}
+
+pub struct App {
+  pub tick_rate: (u64, u64),
+  pub home: Arc<Mutex<Home>>,
+  pub should_quit: bool,
+  pub should_suspend: bool,
+}
+
+impl App {
+  pub fn new(tick_rate: (u64, u64)) -> Result<Self> {
+    let home = Arc::new(Mutex::new(Home::new()));
+    Ok(Self { tick_rate, home, should_quit: false, should_suspend: false })
   }
 
   fn spawn_event_task(&mut self, tx: mpsc::UnboundedSender<Action>) -> EventTask {
@@ -110,7 +124,7 @@ impl App {
 
     self.home.lock().await.init()?;
 
-    let mut tui = self.spawn_tui_task();
+    let mut tui = TuiTask::new(self.home.clone());
     let mut event = self.spawn_event_task(action_tx.clone());
 
     loop {
@@ -118,7 +132,7 @@ impl App {
       while maybe_action.is_some() {
         let action = maybe_action.take().unwrap();
         if action == Action::RenderTick {
-          tui.tx.send(Message::Render).unwrap_or_default();
+          tui.render()?;
         } else if action != Action::Tick {
           trace_dbg!(action);
         }
@@ -136,15 +150,15 @@ impl App {
       }
 
       if self.should_suspend {
-        tui.tx.send(Message::Suspend).unwrap_or_default();
+        tui.suspend()?;
         event.cancellation_token.cancel();
         tui.task.await?;
         event.task.await?;
-        tui = self.spawn_tui_task();
+        tui = TuiTask::new(self.home.clone());
         event = self.spawn_event_task(action_tx.clone());
         action_tx.send(Action::Resume)?;
       } else if self.should_quit {
-        tui.tx.send(Message::Stop).unwrap_or_default();
+        tui.stop()?;
         event.cancellation_token.cancel();
         tui.task.await?;
         event.task.await?;
