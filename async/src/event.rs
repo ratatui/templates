@@ -1,8 +1,18 @@
+use std::sync::Arc;
+
 use anyhow::Result;
 use crossterm::event::{Event as CrosstermEvent, KeyEvent, KeyEventKind, MouseEvent};
 use futures::{FutureExt, StreamExt};
-use tokio::{sync::mpsc, task::JoinHandle};
+use tokio::{
+  sync::{mpsc, Mutex},
+  task::JoinHandle,
+};
 use tokio_util::sync::CancellationToken;
+
+use crate::{
+  action::Action,
+  components::{home::Home, Component},
+};
 
 #[derive(Clone, Copy, Debug)]
 pub enum Event {
@@ -91,5 +101,38 @@ impl EventHandler {
       handle.await.unwrap();
     }
     Ok(())
+  }
+}
+
+pub struct EventHandlerTask {
+  pub task: JoinHandle<()>,
+  cancellation_token: CancellationToken,
+}
+
+impl EventHandlerTask {
+  pub fn new(home: Arc<Mutex<Home>>, tick_rate: (u64, u64), tx: mpsc::UnboundedSender<Action>) -> EventHandlerTask {
+    let (app_tick_rate, render_tick_rate) = tick_rate;
+    let cancellation_token = CancellationToken::new();
+    let _cancellation_token = cancellation_token.clone();
+    let task = tokio::spawn(async move {
+      let mut events = EventHandler::new(app_tick_rate, render_tick_rate);
+      loop {
+        tokio::select! {
+          _ = _cancellation_token.cancelled() => {
+            events.stop().await.unwrap();
+            break;
+          }
+          event = events.next() => {
+            let action = home.lock().await.handle_events(event);
+            tx.send(action).unwrap();
+          }
+        }
+      }
+    });
+    Self { task, cancellation_token }
+  }
+
+  pub fn stop(&mut self) {
+    self.cancellation_token.cancel();
   }
 }

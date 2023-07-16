@@ -1,10 +1,18 @@
-use anyhow::Result;
+use std::sync::Arc;
+
+use anyhow::{anyhow, Context, Result};
 use crossterm::{
   cursor,
   event::{DisableMouseCapture, EnableMouseCapture},
   terminal::{EnterAlternateScreen, LeaveAlternateScreen},
 };
 use ratatui::{backend::CrosstermBackend, terminal::Terminal, Frame as TuiFrame};
+use tokio::{
+  sync::{mpsc, Mutex},
+  task::JoinHandle,
+};
+
+use crate::components::{home::Home, Component};
 
 pub type Frame<'a> = TuiFrame<'a, CrosstermBackend<std::io::Stderr>>;
 
@@ -39,6 +47,67 @@ impl TerminalHandler {
 
   pub fn resume(&self) -> Result<()> {
     self.enter()?;
+    Ok(())
+  }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Message {
+  Render,
+  Stop,
+  Suspend,
+}
+
+pub struct TerminalHandlerTask {
+  pub task: JoinHandle<()>,
+  tx: mpsc::UnboundedSender<Message>,
+}
+
+impl TerminalHandlerTask {
+  pub fn new(home: Arc<Mutex<Home>>) -> Self {
+    let (tx, mut rx) = mpsc::unbounded_channel::<Message>();
+
+    let task = tokio::spawn(async move {
+      let mut tui = TerminalHandler::new().context(anyhow!("Unable to create TUI")).unwrap();
+      tui.enter().unwrap();
+      loop {
+        match rx.recv().await {
+          Some(Message::Stop) => {
+            tui.exit().unwrap_or_default();
+            break;
+          },
+          Some(Message::Suspend) => {
+            tui.suspend().unwrap_or_default();
+            break;
+          },
+          Some(Message::Render) => {
+            let mut h = home.lock().await;
+            tui
+              .terminal
+              .draw(|f| {
+                h.render(f, f.size());
+              })
+              .unwrap();
+          },
+          None => {},
+        }
+      }
+    });
+    Self { task, tx }
+  }
+
+  pub fn suspend(&self) -> Result<()> {
+    self.tx.send(Message::Suspend)?;
+    Ok(())
+  }
+
+  pub fn stop(&self) -> Result<()> {
+    self.tx.send(Message::Stop)?;
+    Ok(())
+  }
+
+  pub fn render(&self) -> Result<()> {
+    self.tx.send(Message::Render)?;
     Ok(())
   }
 }
