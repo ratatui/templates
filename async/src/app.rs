@@ -22,6 +22,16 @@ pub enum Message {
   Suspend,
 }
 
+pub struct TuiTask {
+  task: JoinHandle<()>,
+  tx: mpsc::UnboundedSender<Message>,
+}
+
+pub struct EventTask {
+  task: JoinHandle<()>,
+  cancellation_token: CancellationToken,
+}
+
 pub struct App {
   pub tick_rate: (u64, u64),
   pub home: Arc<Mutex<Home>>,
@@ -35,16 +45,16 @@ impl App {
     Ok(Self { tick_rate, home, should_quit: false, should_suspend: false })
   }
 
-  pub fn spawn_tui_task(&mut self) -> (JoinHandle<()>, mpsc::UnboundedSender<Message>) {
+  pub fn spawn_tui_task(&mut self) -> TuiTask {
     let home = self.home.clone();
 
-    let (tui_tx, mut tui_rx) = mpsc::unbounded_channel::<Message>();
+    let (tx, mut rx) = mpsc::unbounded_channel::<Message>();
 
-    let tui_task = tokio::spawn(async move {
+    let task = tokio::spawn(async move {
       let mut tui = TerminalHandler::new().context(anyhow!("Unable to create TUI")).unwrap();
       tui.enter().unwrap();
       loop {
-        match tui_rx.recv().await {
+        match rx.recv().await {
           Some(Message::Stop) => {
             tui.exit().unwrap_or_default();
             break;
@@ -67,19 +77,19 @@ impl App {
       }
     });
 
-    (tui_task, tui_tx)
+    TuiTask { task, tx }
   }
 
-  pub fn spawn_event_task(&mut self, tx: mpsc::UnboundedSender<Action>) -> (JoinHandle<()>, CancellationToken) {
+  pub fn spawn_event_task(&mut self, tx: mpsc::UnboundedSender<Action>) -> EventTask {
     let home = self.home.clone();
     let (app_tick_rate, render_tick_rate) = self.tick_rate;
-    let event_handler_cancellation_token = CancellationToken::new();
-    let cancellation_token = event_handler_cancellation_token.clone();
-    let event_task = tokio::spawn(async move {
+    let cancellation_token = CancellationToken::new();
+    let _cancellation_token = cancellation_token.clone();
+    let task = tokio::spawn(async move {
       let mut events = EventHandler::new(app_tick_rate, render_tick_rate);
       loop {
         tokio::select! {
-          _ = cancellation_token.cancelled() => {
+          _ = _cancellation_token.cancelled() => {
             events.stop().await.unwrap();
             break;
           }
@@ -90,7 +100,7 @@ impl App {
         }
       }
     });
-    (event_task, event_handler_cancellation_token)
+    EventTask { task, cancellation_token }
   }
 
   pub async fn run(&mut self) -> Result<()> {
@@ -100,15 +110,15 @@ impl App {
 
     self.home.lock().await.init()?;
 
-    let (mut tui_task, mut tui_tx) = self.spawn_tui_task();
-    let (mut event_task, mut event_handler_cancellation_token) = self.spawn_event_task(action_tx.clone());
+    let mut tui = self.spawn_tui_task();
+    let mut event = self.spawn_event_task(action_tx.clone());
 
     loop {
       let mut maybe_action = action_rx.recv().await;
       while maybe_action.is_some() {
         let action = maybe_action.take().unwrap();
         if action == Action::RenderTick {
-          tui_tx.send(Message::Render).unwrap_or_default();
+          tui.tx.send(Message::Render).unwrap_or_default();
         } else if action != Action::Tick {
           trace_dbg!(action);
         }
@@ -126,18 +136,18 @@ impl App {
       }
 
       if self.should_suspend {
-        tui_tx.send(Message::Suspend).unwrap_or_default();
-        event_handler_cancellation_token.cancel();
-        tui_task.await?;
-        event_task.await?;
-        (tui_task, tui_tx) = self.spawn_tui_task();
-        (event_task, event_handler_cancellation_token) = self.spawn_event_task(action_tx.clone());
+        tui.tx.send(Message::Suspend).unwrap_or_default();
+        event.cancellation_token.cancel();
+        tui.task.await?;
+        event.task.await?;
+        tui = self.spawn_tui_task();
+        event = self.spawn_event_task(action_tx.clone());
         action_tx.send(Action::Resume)?;
       } else if self.should_quit {
-        tui_tx.send(Message::Stop).unwrap_or_default();
-        event_handler_cancellation_token.cancel();
-        tui_task.await?;
-        event_task.await?;
+        tui.tx.send(Message::Stop).unwrap_or_default();
+        event.cancellation_token.cancel();
+        tui.task.await?;
+        event.task.await?;
         break;
       }
     }
