@@ -44,7 +44,7 @@ impl Home {
   }
 
   pub fn increment(&mut self, i: usize) {
-    let tx = self.action_tx.as_ref().unwrap().clone();
+    let tx = self.action_tx.clone().unwrap();
     tokio::task::spawn(async move {
       tx.send(Action::EnterProcessing).unwrap();
       tokio::time::sleep(Duration::from_secs(5)).await;
@@ -54,7 +54,7 @@ impl Home {
   }
 
   pub fn decrement(&mut self, i: usize) {
-    let tx = self.action_tx.as_ref().unwrap().clone();
+    let tx = self.action_tx.clone().unwrap();
     tokio::task::spawn(async move {
       tx.send(Action::EnterProcessing).unwrap();
       tokio::time::sleep(Duration::from_secs(5)).await;
