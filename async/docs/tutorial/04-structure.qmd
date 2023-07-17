@@ -1,168 +1,217 @@
 ---
-title: "`app.rs`"
+title: "`action.rs`"
 ---
 
-Finally, putting all the pieces together, we get the `App` struct.
-
-In this particular example, the draw loop and the event loop happen in separate `tokio` tasks, and the `main` loop is only responsible for dispatching actions.
+Now that we have created a `TerminalHandler` and `EventHandler`, we are also going to introduce the `Command` pattern, i.e. the concept of "reified method calls" from <http://gameprogrammingpatterns.com/command.html>.
+These are also typically called `Action`s or `Message`s.
 
 ```rust
-use std::sync::Arc;
+pub enum Action {
+  Quit,
+  Tick,
+  RenderTick,
+  Increment,
+  Decrement,
+  Noop,
+}
+```
 
-use anyhow::{anyhow, Context, Result};
-use tokio::{
-  sync::{mpsc, Mutex},
-  task::JoinHandle,
-};
-use tokio_util::sync::CancellationToken;
+::: callout-tip
 
-use crate::{
-  action::Action,
-  components::{home::Home, Component},
-  event::EventHandler,
-  terminal::TerminalHandler,
-  trace_dbg,
-};
+You can attach payloads to enums in rust.
+For example, in the following `Action` enum, `AddToCounter(usize)` and `SubtractFromCounter(usize)` have a `usize` payload which can be used to represent the value to add to or subtract from the counter as a payload.
 
+```rust
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Message {
-  Render,
-  Stop,
+pub enum Action {
+  Quit,
+  Resume,
   Suspend,
+  Tick,
+  RenderTick,
+  Resize(u16, u16),
+  ToggleShowLogger,
+  ScheduleIncrementCounter,
+  ScheduleDecrementCounter,
+  AddToCounter(usize),
+  SubtractFromCounter(usize),
+  EnterNormal,
+  EnterInsert,
+  EnterProcessing,
+  ExitProcessing,
+  Update,
+  Noop,
 }
+```
 
-pub struct TuiTask {
-  task: JoinHandle<()>,
-  tx: mpsc::UnboundedSender<Message>,
-}
+:::
 
-pub struct EventTask {
-  task: JoinHandle<()>,
-  cancellation_token: CancellationToken,
-}
+Let's define a simple `impl App` such that every `Event` from the `EventHandler` is mapped to an `Action` from the enum.
 
-pub struct App {
-  pub tick_rate: (u64, u64),
-  pub home: Arc<Mutex<Home>>,
-  pub should_quit: bool,
-  pub should_suspend: bool,
-}
-
+```rust
 impl App {
-  pub fn new(tick_rate: (u64, u64)) -> Result<Self> {
-    let home = Arc::new(Mutex::new(Home::new()));
-    Ok(Self { tick_rate, home, should_quit: false, should_suspend: false })
-  }
-
-  pub fn spawn_tui_task(&mut self) -> TuiTask {
-    let home = self.home.clone();
-
-    let (tx, mut rx) = mpsc::unbounded_channel::<Message>();
-
-    let task = tokio::spawn(async move {
-      let mut tui = TerminalHandler::new().context(anyhow!("Unable to create TUI")).unwrap();
-      tui.enter().unwrap();
-      loop {
-        match rx.recv().await {
-          Some(Message::Stop) => {
-            tui.exit().unwrap_or_default();
-            break;
-          },
-          Some(Message::Suspend) => {
-            tui.suspend().unwrap_or_default();
-            break;
-          },
-          Some(Message::Render) => {
-            let mut h = home.lock().await;
-            tui
-              .terminal
-              .draw(|f| {
-                h.render(f, f.size());
-              })
-              .unwrap();
-          },
-          None => {},
-        }
-      }
-    });
-
-    TuiTask { task, tx }
-  }
-
-  pub fn spawn_event_task(&mut self, tx: mpsc::UnboundedSender<Action>) -> EventTask {
-    let home = self.home.clone();
-    let (app_tick_rate, render_tick_rate) = self.tick_rate;
-    let cancellation_token = CancellationToken::new();
-    let _cancellation_token = cancellation_token.clone();
-    let task = tokio::spawn(async move {
-      let mut events = EventHandler::new(app_tick_rate, render_tick_rate);
-      loop {
-        tokio::select! {
-          _ = _cancellation_token.cancelled() => {
-            events.stop().await.unwrap();
-            break;
-          }
-          event = events.next() => {
-            let action = home.lock().await.handle_events(event);
-            tx.send(action).unwrap();
-          }
-        }
-      }
-    });
-    EventTask { task, cancellation_token }
-  }
-
   pub async fn run(&mut self) -> Result<()> {
-    let (action_tx, mut action_rx) = mpsc::unbounded_channel();
-
-    self.home.lock().await.action_tx = Some(action_tx.clone());
-
-    self.home.lock().await.init()?;
-
-    let mut tui = self.spawn_tui_task();
-    let mut event = self.spawn_event_task(action_tx.clone());
-
+    let th = TerminalHandler::new();
+    th.enter();
+    let mut events = EventHandler::new(app_tick_rate, render_tick_rate);
     loop {
-      let mut maybe_action = action_rx.recv().await;
-      while maybe_action.is_some() {
-        let action = maybe_action.take().unwrap();
-        if action == Action::RenderTick {
-          tui.tx.send(Message::Render).unwrap_or_default();
-        } else if action != Action::Tick {
-          trace_dbg!(action);
-        }
-        match action {
-          Action::Quit => self.should_quit = true,
-          Action::Suspend => self.should_suspend = true,
-          Action::Resume => self.should_suspend = false,
-          _ => {
-            if let Some(_action) = self.home.lock().await.dispatch(action) {
-              action_tx.send(_action)?
-            };
-            maybe_action = action_rx.try_recv().ok();
-          },
-        }
-      }
+      let event = events.next().await;
+      let action = self.handle_events(event);
+      self.dispatch(action);
+      th.terminal.draw(|f| render_app(f))?;
+    };
+    th.exit();
+    Ok(())
+  }
 
-      if self.should_suspend {
-        tui.tx.send(Message::Suspend).unwrap_or_default();
-        event.cancellation_token.cancel();
-        tui.task.await?;
-        event.task.await?;
-        tui = self.spawn_tui_task();
-        event = self.spawn_event_task(action_tx.clone());
-        action_tx.send(Action::Resume)?;
-      } else if self.should_quit {
-        tui.tx.send(Message::Stop).unwrap_or_default();
-        event.cancellation_token.cancel();
-        tui.task.await?;
-        event.task.await?;
-        break;
+  fn handle_events(&mut self, event: Option<Event>) -> Action {
+    match event {
+      Some(Event::Quit) => Action::Quit,
+      Some(Event::AppTick) => Action::Tick,
+      Some(Event::RenderTick) => Action::RenderTick,
+      Some(Event::Key(key_event)) => self.handle_key_events(key_event),
+      Some(Event::Mouse(mouse_event)) => self.handle_mouse_events(mouse_event),
+      Some(Event::Resize(x, y)) => Action::Resize(x, y),
+      Some(_) => Action::Noop,
+      None => Action::Noop,
+    }
+  }
+
+  fn handle_key_events(&mut self, event: Option<Event>) -> Action {
+    if let Some(key) = event {
+        match key.code {
+          KeyCode::Char('q') => Action::Quit,
+          KeyCode::Char('j') => Action::Increment,
+          KeyCode::Char('k') => Action::Decrement
+          _ => {}
       }
     }
-    Ok(())
+  }
+
+  fn dispatch(&mut self, action: Action) {
+    match action {
+      Action::Quit => self.should_quit = true,
+      Action::Tick => self.tick(),
+      Action::Increment => self.increment(),
+      Action::Decrement => self.decrement(),
+  }
+
+}
+```
+
+We use `handle_events(event) -> Action` to take a `Event` and map it to a `Action`.
+We use `dispatch(action)` to take an `Action` and modify the state of the app.
+
+One advantage of this approach is that we can modify `handle_key_events()` to use a key configuration if we'd like, so that users can define their own map from key to action.
+
+Another advantage of this is that the business logic of the `App` struct can be tested without having to create an instance of a `TerminalHandler` or `EventHandler`, e.g.:
+
+```rust
+mod tests {
+  #[test]
+  fn test_app() {
+    let mut app = App::new();
+    let old_counter = app.counter;
+    app.dispatch(Action::Increment);
+    assert!(app.counter = old_counter += 1);
   }
 }
 ```
 
-In the next section, we will discuss how `components` are structured.
+In the test above, we did not create an instance of the `TerminalHandler` or the `EventHandler`, and did not call the `run` function, but we are still able to test the business logic of our application.
+Using "dispatching" on `Action`s gets us one step closer to making our application a "state machine", which improves understanding and testability.
+
+If we wanted to be purist about it, we would make our `AppState` immutable, and we would have an `dispatch` function like so:
+
+```rust
+fn dispatch(app_state::AppState, action::Action) -> new_app_state::State {
+  let mut state = app_state.clone();
+  state.counter += 1;
+  // ...
+  state
+}
+```
+
+In rare occasions, we may also want to choose a future action during `dispatch`.
+
+```rust
+fn dispatch(app_state::AppState, action::Action) -> (new_app_state::State, Option<action::Action>) {
+  let mut state = app_state.clone();
+  state.counter += 1;
+  // ...
+  (state, None)
+}
+// OR
+fn dispatch(app_state::AppState, action::Action) -> (new_app_state::State, Option<action::Action>) {
+  let mut state = app_state.clone();
+  state.counter += 1;
+  // ...
+  (state, Some(Action::Tick))
+}
+```
+
+::: callout-note
+In `Charm`, this function is called an `Update`. Here's an example from their documentation:
+
+```go
+func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+    switch msg := msg.(type) {
+
+    // Is it a key press?
+    case tea.KeyMsg:
+
+        // Cool, what was the actual key pressed?
+        switch msg.String() {
+
+        // These keys should exit the program.
+        case "ctrl+c", "q":
+            return m, tea.Quit
+
+        // The "up" and "k" keys move the cursor up
+        case "up", "k":
+            if m.cursor > 0 {
+                m.cursor--
+            }
+
+        // The "down" and "j" keys move the cursor down
+        case "down", "j":
+            if m.cursor < len(m.choices)-1 {
+                m.cursor++
+            }
+
+        // The "enter" key and the spacebar (a literal space) toggle
+        // the selected state for the item that the cursor is pointing at.
+        case "enter", " ":
+            _, ok := m.selected[m.cursor]
+            if ok {
+                delete(m.selected, m.cursor)
+            } else {
+                m.selected[m.cursor] = struct{}{}
+            }
+        }
+    }
+
+    // Return the updated model to the Bubble Tea runtime for processing.
+    // Note that we're not returning a command.
+    return m, nil
+}
+```
+
+:::
+
+Writing code to follow this architecture in rust (in my opinion) requires more upfront design, mostly because you have to make your `AppState` struct `Clone`-friendly.
+If I were in an exploratory or prototype stage of a TUI, I wouldn't want to do that and would only be interested in refactoring it this way once I got a handle on the design.
+
+My workaround for this (as you saw earlier) is to make `dispatch` a method that takes a `&mut self`:
+
+```rust
+impl App {
+  fn dispatch(&mut self, action: Action) -> Option<Action> {
+    self.counter += 1
+    None
+  }
+}
+```
+
+You are free to reorganize the code as you see fit!
+

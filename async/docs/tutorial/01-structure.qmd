@@ -46,7 +46,12 @@ async fn main() -> Result<()> {
 In essence, the `main` function creates an instance of `App` and calls `app.run()`, which runs the "draw update loop".
 We will talk more about this in a later section.
 
-This `main.rs` file incorporates three key features that are not necessarily related to Terminal User Interfaces, but in my opinion, essential for any Terminal User Interface (TUI) program:
+This `main.rs` file incorporates some key features that are not necessarily related to `ratatui`, but in my opinion, essential for any Terminal User Interface (TUI) program:
+
+- Command Line Argument Parsing (`clap`)
+- XDG Base Directory Specification
+- Logging
+- Panic Handler
 
 ### Command Line Argument Parsing (`clap`)
 
@@ -112,18 +117,20 @@ export RUST_LOG=debug
 
 This puts the log files in the `RATATUI_TEMPLATE_DATA` folder, i.e. `.data` folder in the current directory, and sets the log level to `RUST_LOG`, i.e. `debug` when I am prototyping and developing using `cargo run`.
 
-![](https://user-images.githubusercontent.com/1813121/252722210-0ba65d74-12d7-4908-a02b-53778feea183.png)
+In addition to add a log file to the `.data` folder, `initialize_logging()` also sets up `tui-logger` with `tracing`, so that you can add a `tui-logger` widget to show the logs to your users on a key press.
+
+![Top half is a Iterm2 terminal with the TUI showing a Horizontal split with tui-logger widget. Bottom half is a ITerm2 terminal showing the output of running `tail -f` on the log file.](https://user-images.githubusercontent.com/1813121/254093932-46d8c6fd-c572-4675-bcaf-45a36eed51ff.png)
 
 Using the `RATATUI_TEMPLATE_CONFIG` environment variable also allows me to have configuration data that I can use for testing when development that doesn't affect my local user configuration for the same program.
 
 ### Panic Handler
 
-Finally `initialize_panic_handler()`, which is also in `src/utils.rs`, is used to define a callback when the application panics.
+Finally, let's discuss the `initialize_panic_handler()` function, which is also defined in `src/utils.rs`, and is used to define a callback when the application panics.
 Your application may panic for a number of reasons (e.g. when you call `.unwrap()` on a `None`).
-And you want to:
+And when this happens, you want to be a good citizen and:
 
-a) Provide a useful stacktrace so that they can report errors back to you.
-b) Be a good citizen and not leave the users terminal state in a botched condition, resetting it back to the way it was.
+a) provide a useful stacktrace so that they can report errors back to you.
+b) not leave the users terminal state in a botched condition, resetting it back to the way it was.
 
 `utils::initialize_panic_handler()` uses [`better_panic`](https://docs.rs/better-panic/latest/better_panic/) to provide a prettier backtrace by default.
 

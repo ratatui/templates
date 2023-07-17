@@ -1,0 +1,278 @@
+---
+title: "`app.rs`"
+---
+
+Finally, putting all the pieces together, we are almost ready to get the `App` struct.
+Before we do, we should discuss the process of a TUI.
+
+Most TUIs are single process, single threaded applications.
+
+```svgbob
+ ,-------------.
+ |Get Key Event|
+ `-----+-------'
+       |
+       |
+ ,-----v------.
+ |Update State|
+ `-----+------'
+       |
+       |
+   ,---v---.
+   | Draw  |
+   `-------'
+```
+
+When an application is structured like this, the TUI is blocking at each step:
+
+1. Waiting for a Event.
+  - If no key or mouse event in 250ms, send `Tick`.
+2. Update the state of the app based on `event` or `action`.
+3. `draw` the state of the app to the terminal using `ratatui`.
+
+This works perfectly fine for small applications, and this is what I recommend starting out with.
+For _most_ TUIs, you'll never need to graduate from this process methodology.
+
+Usually, `draw` and `getting key events` are fast enough that it doesn't matter.
+But if you do need to do a computationally demanding or I/O intensive task while updating state (e.g. reading a database, computing math or making a web request), your app may "hang" while it is doing so.
+
+Let's say a user presses `j` to scroll down a list.
+And every time the user presses `j` you want to check the web for additional items to add to the list.
+
+What should happen when a user presses and holds `j`?
+It is up to you to decide how you would like your TUI application to behave in that instance.
+
+You may decide that the desired behavior for your app is to hang while downloading new elements for the list, and all key presses while the app hangs are received and handled "instantly" after the download completes.
+
+Alternatively, you may decide you want the app to update in the background, and a user should be able to scroll through the existing list while the app is downloading new elements.
+
+In my experience, the trade-off is here is usually complexity for the developer vs ergonomics for the user.
+
+Let's say we weren't worried about complexity, and were interested in performing a computationally demanding or I/O intensive task in the background.
+And let's also say we were interested in showing an indicator that a task is running in the background.
+
+One way to handle this is we add more `Action` elements.
+A key press should trigger `Action::StartDownloadInBackground`.
+And when the download is complete `Action::DownloadComplete` should be dispatched.
+
+This means that we'll have to start a "task" when dispatching on `Action::StartDownloadInBackground` and send a `Action::DownloadComplete` from that "task" when it is completed.
+
+In order to do this, we'll have to use a channel that can send and receive `Action`s, and use this channel in different parts of our application.
+
+First, are going to define two another structs that handle `tokio` tasks associated with the `EventHandler` and `TerminalHandler`.
+
+### `EventHandlerTask`
+
+The `EventHandlerTask` creates a `tokio` task that runs a loop that
+
+1. Reads any `Event` created by the `EventHandler`,
+2. Passes over the `Event` to the `Home` component by calling `handle_events` function,
+3. `handle_events` returns an instance of the `Action` enum,
+4. `action` is sent over the `Action` channel.
+
+```rust
+pub struct EventHandlerTask {
+  pub task: JoinHandle<()>,
+  cancellation_token: CancellationToken,
+}
+
+impl EventHandlerTask {
+  pub fn new(home: Arc<Mutex<Home>>, tick_rate: (u64, u64), tx: mpsc::UnboundedSender<Action>) -> EventHandlerTask {
+    let (app_tick_rate, render_tick_rate) = tick_rate;
+    let cancellation_token = CancellationToken::new();
+    let _cancellation_token = cancellation_token.clone();
+    let task = tokio::spawn(async move {
+      let mut events = EventHandler::new(app_tick_rate, render_tick_rate);
+      loop {
+        tokio::select! {
+          _ = _cancellation_token.cancelled() => {
+            events.stop().await.unwrap();
+            break;
+          }
+          event = events.next() => {
+            let action = home.lock().await.handle_events(event);
+            tx.send(action).unwrap();
+          }
+        }
+      }
+    });
+    Self { task, cancellation_token }
+  }
+
+  pub fn stop(&mut self) {
+    self.cancellation_token.cancel();
+  }
+}
+```
+
+### `TerminalHandlerTask` (optional)
+
+The `TerminalHandlerTask` starts a `tokio` task that receives a `Message` that tells the `TerminalHandler` to either `exit()`, `suspend()`, or `draw()` the contents of the `Home` component.
+
+```rust
+pub struct TerminalHandlerTask {
+  pub task: JoinHandle<()>,
+  tx: mpsc::UnboundedSender<Message>,
+}
+
+impl TerminalHandlerTask {
+  pub fn new(home: Arc<Mutex<Home>>) -> Self {
+    let (tx, mut rx) = mpsc::unbounded_channel::<Message>();
+
+    let task = tokio::spawn(async move {
+      let mut tui = TerminalHandler::new().context(anyhow!("Unable to create TUI")).unwrap();
+      tui.enter().unwrap();
+      loop {
+        match rx.recv().await {
+          Some(Message::Stop) => {
+            tui.exit().unwrap_or_default();
+            break;
+          },
+          Some(Message::Suspend) => {
+            tui.suspend().unwrap_or_default();
+            break;
+          },
+          Some(Message::Render) => {
+            let mut h = home.lock().await;
+            tui
+              .terminal
+              .draw(|f| {
+                h.render(f, f.size());
+              })
+              .unwrap();
+          },
+          None => {},
+        }
+      }
+    });
+    Self { task, tx }
+  }
+
+  pub fn suspend(&self) -> Result<()> {
+    self.tx.send(Message::Suspend)?;
+    Ok(())
+  }
+
+  pub fn stop(&self) -> Result<()> {
+    self.tx.send(Message::Stop)?;
+    Ok(())
+  }
+
+  pub fn render(&self) -> Result<()> {
+    self.tx.send(Message::Render)?;
+    Ok(())
+  }
+}
+```
+
+This second "task" for the `TerminalHandler` is not strictly necessary for our purposes.
+If you wanted to minimize complexity, you can replace this `TerminalHandlerTask` with `TerminalHandler` and use blocking calls for drawing.
+
+You could also remove the `RenderTick` from the `EventHandler` and loop inside the `TerminalHandlerTask` to draw at a render tick rate.
+I like this approach because I'm able to choose to stop or suspend rendering based on key events or signals.
+
+### `App`
+
+When the `TerminalHandlerTask` receives a `Message` enum, it calls a function in `TerminalHandler`:
+
+```svgbob
++-------------------------------------------------------------------+
+| tokio::spawn                                                      |
+|                                                                   |
+|                                    +----------------------------+ |
+|                                    | TerminalHandler            | |
+| +---------------------+            +----------------------------+ |
+| | (loop)              |            |                            | |
+| | - Message::Stop     |----------->| - exit()                   | |
+| | - Message::Suspend  |----------->| - suspend()                | |
+| | - Message::Render   |----------->| - draw(|f| home.render(f)) | |
+| +---------------------+            +----------------------------+ |
+|                                                                   |
++-------------------------------------------------------------------+
+```
+
+And `EventHandlerTask` generates a `RenderTick` action when sends a `Message::Render` object on the `tui_tx` channel.
+
+Now that we have those two tasks set up, we can create a `app.rs` like so:
+
+```rust
+use std::sync::Arc;
+
+use anyhow::Result;
+use tokio::sync::{mpsc, Mutex};
+
+use crate::{
+  action::Action,
+  components::{home::Home, Component},
+  event::EventHandlerTask,
+  terminal::TerminalHandlerTask,
+  trace_dbg,
+};
+
+pub struct App {
+  pub tick_rate: (u64, u64),
+  pub home: Arc<Mutex<Home>>,
+  pub should_quit: bool,
+  pub should_suspend: bool,
+}
+
+impl App {
+  pub fn new(tick_rate: (u64, u64)) -> Result<Self> {
+    let home = Arc::new(Mutex::new(Home::new()));
+    Ok(Self { tick_rate, home, should_quit: false, should_suspend: false })
+  }
+
+  pub async fn run(&mut self) -> Result<()> {
+    let (action_tx, mut action_rx) = mpsc::unbounded_channel();
+
+    self.home.lock().await.action_tx = Some(action_tx.clone());
+
+    self.home.lock().await.init()?;
+
+    let mut tui = TerminalHandlerTask::new(self.home.clone());
+    let mut event = EventHandlerTask::new(self.home.clone(), self.tick_rate, action_tx.clone());
+
+    loop {
+      let mut maybe_action = action_rx.recv().await;
+      while maybe_action.is_some() {
+        let action = maybe_action.take().unwrap();
+        if action == Action::RenderTick {
+          tui.render()?;
+        } else if action != Action::Tick {
+          trace_dbg!(action);
+        }
+        match action {
+          Action::Quit => self.should_quit = true,
+          Action::Suspend => self.should_suspend = true,
+          Action::Resume => self.should_suspend = false,
+          _ => {
+            if let Some(_action) = self.home.lock().await.dispatch(action) {
+              action_tx.send(_action)?
+            };
+            maybe_action = action_rx.try_recv().ok();
+          },
+        }
+      }
+
+      if self.should_suspend {
+        tui.suspend()?;
+        event.stop();
+        tui.task.await?;
+        event.task.await?;
+        tui = TerminalHandlerTask::new(self.home.clone());
+        event = EventHandlerTask::new(self.home.clone(), self.tick_rate, action_tx.clone());
+        action_tx.send(Action::Resume)?;
+      } else if self.should_quit {
+        tui.stop()?;
+        event.stop();
+        tui.task.await?;
+        event.task.await?;
+        break;
+      }
+    }
+    Ok(())
+  }
+}
+```
+
+We use the `dispatch` function to take an `Action` and modify the state of `Home` or any of the sub components.

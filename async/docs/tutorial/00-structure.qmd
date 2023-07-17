@@ -9,18 +9,19 @@ $ tree
 .
 ├── build.rs
 └── src
+   ├── action.rs
    ├── app.rs
    ├── components
    │  ├── home.rs
    │  ├── logger.rs
    │  └── mod.rs
+   ├── event.rs
    ├── lib.rs
    ├── main.rs
-   ├── event.rs
    ├── terminal.rs
    └── utils.rs
 ```
 
 Once you have setup the project initially, you shouldn't need to change the contents of anything outside of the `components` folder.
 
-Let's discuss the contents of the files outside of the `components` folder first in the following sections.
+Let's discuss the contents of the files in the `src` folder first.

@@ -82,7 +82,7 @@ pub enum Event {
 pub struct EventHandler {
   _tx: mpsc::UnboundedSender<Event>,
   rx: mpsc::UnboundedReceiver<Event>,
-  stop_tx: Option<oneshot::Sender<()>>,
+  stop_cancellation_token: CancellationToken,
   task: Option<JoinHandle<()>>,
 }
 
@@ -94,7 +94,8 @@ impl EventHandler {
     let (tx, rx) = mpsc::unbounded_channel();
     let _tx = tx.clone();
 
-    let (stop_tx, mut stop_rx) = oneshot::channel::<()>();
+    let stop_cancellation_token = CancellationToken::new();
+    let _stop_cancellation_token = stop_cancellation_token.clone();
 
     let task = tokio::spawn(async move {
       let mut reader = crossterm::event::EventStream::new();
@@ -104,10 +105,10 @@ impl EventHandler {
         let app_delay = app_interval.tick();
         let render_delay = render_interval.tick();
         let crossterm_event = reader.next().fuse();
-        if stop_rx.try_recv().ok().is_some() {
-          break;
-        }
         tokio::select! {
+          _ = _stop_cancellation_token.cancelled() => {
+            break;
+          }
           maybe_event = crossterm_event => {
             match maybe_event {
               Some(Ok(evt)) => {
@@ -139,7 +140,7 @@ impl EventHandler {
       }
     });
 
-    Self { _tx, rx, stop_tx: Some(stop_tx), task: Some(task) }
+    Self { _tx, rx, stop_cancellation_token, task: Some(task) }
   }
 
   pub async fn next(&mut self) -> Option<Event> {
@@ -147,11 +148,9 @@ impl EventHandler {
   }
 
   pub async fn stop(&mut self) -> Result<()> {
-    if let Some(stop_tx) = self.stop_tx.take() {
-      stop_tx.send(()).unwrap()
-    }
+    self.stop_cancellation_token.cancel();
     if let Some(handle) = self.task.take() {
-      handle.await.unwrap()
+      handle.await.unwrap();
     }
     Ok(())
   }
@@ -166,79 +165,3 @@ This struct spawns a tokio task, which does 3 things
 
 With this `EventHandler` implemented, we can use `tokio` to create a separate "task" that handles any key asynchronously in our `main` loop.
 
-In addition to using the `EventHandler`, we are also going to introduce the `Command` pattern, i.e. the concept of "reified method calls" from <http://gameprogrammingpatterns.com/command.html>.
-These are also typically called `Action`s or `Message`s.
-
-```rust
-pub enum Action {
-  Quit,
-  Tick,
-  RenderTick,
-  Increment,
-  Decrement,
-  Noop,
-}
-
-impl App {
-  pub async fn run(&mut self) -> Result<()> {
-    let th = TerminalHandler::new();
-    th.enter();
-    let mut events = EventHandler::new(app_tick_rate, render_tick_rate);
-    loop {
-      let event = events.next().await;
-      let action = self.handle_events(event);
-      self.dispatch(action);
-      th.terminal.draw(|f| render_app(f))?;
-    };
-    th.exit();
-    Ok(())
-  }
-
-  fn handle_events(&mut self, event: Option<Event>) -> Action {
-    match event {
-      Some(Event::Quit) => Action::Quit,
-      Some(Event::AppTick) => Action::Tick,
-      Some(Event::RenderTick) => Action::RenderTick,
-      Some(Event::Key(key_event)) => self.handle_key_events(key_event),
-      Some(Event::Mouse(mouse_event)) => self.handle_mouse_events(mouse_event),
-      Some(Event::Resize(x, y)) => Action::Resize(x, y),
-      Some(_) => Action::Noop,
-      None => Action::Noop,
-    }
-  }
-
-  fn handle_key_events(&mut self, event: Option<Event>) -> Action {
-    if let Some(key) = event {
-        match key.code {
-          KeyCode::Char('q') => Action::Quit,
-          KeyCode::Char('j') => Action::Increment,
-          KeyCode::Char('k') => Action::Decrement
-          _ => {}
-      }
-    }
-  }
-
-  fn dispatch(&mut self, action: Action) {
-    match action {
-      Action::Quit => self.should_quit = true,
-      Action::Tick => self.tick(),
-      Action::Increment => self.increment(),
-      Action::Decrement => self.decrement(),
-  }
-
-}
-```
-
-The advantage of this is that the business logic of the `App` struct can be tested without having to create an instance of a `TerminalHandler` or `EventHandler`, e.g.:
-
-```rust
-mod tests {
-  #[test]
-  fn test_app() {
-    let mut app = App::new();
-    let old_counter = app.counter;
-    app.dispatch(Action::Increment);
-    assert!(app.counter = old_counter += 1);
-  }
-}
-```
