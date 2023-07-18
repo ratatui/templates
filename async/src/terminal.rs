@@ -1,4 +1,7 @@
-use std::sync::Arc;
+use std::{
+  ops::{Deref, DerefMut},
+  sync::Arc,
+};
 
 use anyhow::{anyhow, Context, Result};
 use crossterm::{
@@ -16,11 +19,11 @@ use crate::components::{home::Home, Component};
 
 pub type Frame<'a> = ratatui::Frame<'a, Backend<std::io::Stderr>>;
 
-pub struct Terminal {
+pub struct Tui {
   pub terminal: ratatui::Terminal<Backend<std::io::Stderr>>,
 }
 
-impl Terminal {
+impl Tui {
   pub fn new() -> Result<Self> {
     let terminal = ratatui::Terminal::new(Backend::new(std::io::stderr()))?;
     Ok(Self { terminal })
@@ -51,6 +54,26 @@ impl Terminal {
   }
 }
 
+impl Deref for Tui {
+  type Target = ratatui::Terminal<Backend<std::io::Stderr>>;
+
+  fn deref(&self) -> &Self::Target {
+    &self.terminal
+  }
+}
+
+impl DerefMut for Tui {
+  fn deref_mut(&mut self) -> &mut Self::Target {
+    &mut self.terminal
+  }
+}
+
+impl Drop for Tui {
+  fn drop(&mut self) {
+    self.exit().unwrap();
+  }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Message {
   Render,
@@ -68,7 +91,7 @@ impl TerminalHandler {
     let (tx, mut rx) = mpsc::unbounded_channel::<Message>();
 
     let task = tokio::spawn(async move {
-      let mut t = Terminal::new().context(anyhow!("Unable to create terminal")).unwrap();
+      let mut t = Tui::new().context(anyhow!("Unable to create terminal")).unwrap();
       t.enter().unwrap();
       loop {
         match rx.recv().await {
@@ -82,11 +105,10 @@ impl TerminalHandler {
           },
           Some(Message::Render) => {
             let mut h = home.lock().await;
-            t.terminal
-              .draw(|f| {
-                h.render(f, f.size());
-              })
-              .unwrap();
+            t.draw(|f| {
+              h.render(f, f.size());
+            })
+            .unwrap();
           },
           None => {},
         }
