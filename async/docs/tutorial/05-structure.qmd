@@ -172,7 +172,7 @@ loop {
 |   +-----------------------------+                                              |
 |   | (loop)                      |                                              |
 |   | - Event::Quit               |----> Action::Quit                            |
-|   | - Event::RenderTick         |----> Action::RenderTick ( Message::Render )  |
+|   | - Event::RenderTick         |----> Action::RenderTick -> Message::Render   |
 |   | - Event::AppTick            |----> Action::Tick                            |
 |   | - Event::Key(KeyEvent)      |----> home.handle_key_event(evt)              |
 |   | - ...                       |                                              |
@@ -232,6 +232,7 @@ impl App {
         terminal = TerminalHandler::new(self.home.clone());
         event = EventHandler::new(self.home.clone(), self.tick_rate, action_tx.clone());
         action_tx.send(Action::Resume)?;
+        action_tx.send(Action::RenderTick)?;
       } else if self.should_quit {
         terminal.stop()?;
         event.stop();
@@ -246,3 +247,5 @@ impl App {
 ```
 
 We use the `dispatch` function to take an `Action` and modify the state of `Home` or any of the sub components.
+
+In the next sections, we will talk about the `Home` component.

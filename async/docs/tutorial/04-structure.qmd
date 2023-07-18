@@ -139,14 +139,7 @@ fn dispatch(app_state::AppState, action::Action) -> (new_app_state::State, Optio
   let mut state = app_state.clone();
   state.counter += 1;
   // ...
-  (state, None)
-}
-// OR
-fn dispatch(app_state::AppState, action::Action) -> (new_app_state::State, Option<action::Action>) {
-  let mut state = app_state.clone();
-  state.counter += 1;
-  // ...
-  (state, Some(Action::Tick))
+  (state, Action::Tick)
 }
 ```
 

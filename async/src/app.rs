@@ -27,16 +27,14 @@ impl App {
   pub async fn run(&mut self) -> Result<()> {
     let (action_tx, mut action_rx) = mpsc::unbounded_channel();
 
-    self.home.lock().await.action_tx = Some(action_tx.clone());
-
-    self.home.lock().await.init()?;
+    self.home.lock().await.init(action_tx.clone())?;
 
     let mut terminal = TerminalHandler::new(self.home.clone());
     let mut event = EventHandler::new(self.tick_rate, self.home.clone(), action_tx.clone());
 
     loop {
       if let Some(action) = action_rx.recv().await {
-        if action != Action::Tick {
+        if action != Action::Tick && action != Action::RenderTick {
           trace_dbg!(action);
         }
         match action {

@@ -12,9 +12,10 @@ In short, the `ratatui` library is largely handles just drawing to the terminal.
 Additionally, the library does not provide any input handling nor any event system.
 The responsibility of getting keyboard input events, modifying the state of your application based on those events and figuring out which widgets best reflect the view of the state of your application is on you.
 
-The `tui-rs-revival` project has added a template that covers the basics: <https://github.com/tui-rs-revival/rust-tui-template>.
+The `tui-rs-revival` project has added a template that covers the basics, and you find that here: <https://github.com/tui-rs-revival/rust-tui-template>.
 
-This project's template takes an opinionated view on how to organize a `ratatui` project, and organizes the project in a _particular_ fashion.
+I wanted to take another stab at a template, one that uses `tokio` and organizes the code a little differently.
+This is an opinionated view on how to organize a `ratatui` project.
 
 ::: {.callout .callout-tip}
 Since `ratatui` is a immediate mode rendering based library, there are _multiple_ ways to organize your code, and there's no real "right" answer.

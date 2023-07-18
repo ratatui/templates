@@ -119,7 +119,7 @@ This puts the log files in the `RATATUI_TEMPLATE_DATA` folder, i.e. `.data` fold
 
 In addition to add a log file to the `.data` folder, `initialize_logging()` also sets up `tui-logger` with `tracing`, so that you can add a `tui-logger` widget to show the logs to your users on a key press.
 
-![Top half is a Iterm2 terminal with the TUI showing a Horizontal split with tui-logger widget. Bottom half is a ITerm2 terminal showing the output of running `tail -f` on the log file.](https://user-images.githubusercontent.com/1813121/254093932-46d8c6fd-c572-4675-bcaf-45a36eed51ff.png)
+![Top half is a Iterm2 terminal with the TUI showing a Vertical split with tui-logger widget. Bottom half is a ITerm2 terminal showing the output of running `tail -f` on the log file.](https://user-images.githubusercontent.com/1813121/254093932-46d8c6fd-c572-4675-bcaf-45a36eed51ff.png)
 
 Using the `RATATUI_TEMPLATE_CONFIG` environment variable also allows me to have configuration data that I can use for testing when development that doesn't affect my local user configuration for the same program.
 

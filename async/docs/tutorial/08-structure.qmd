@@ -1,3 +1,11 @@
+---
+title: "`components/logger.rs`"
+---
+
+Here's an example of a simpler `Logger` component that is used instead the `Home` component.
+This `Logger` shows log output in the terminal user interface.
+
+```rust
 use anyhow::Result;
 use log::LevelFilter;
 use ratatui::{
@@ -40,3 +48,4 @@ impl Component for Logger {
     f.render_widget(w, rect);
   }
 }
+```
