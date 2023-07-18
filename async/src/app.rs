@@ -35,15 +35,12 @@ impl App {
     let mut event = EventHandlerTask::new(self.home.clone(), self.tick_rate, action_tx.clone());
 
     loop {
-      let mut maybe_action = action_rx.recv().await;
-      while maybe_action.is_some() {
-        let action = maybe_action.take().unwrap();
-        if action == Action::RenderTick {
-          tui.render()?;
-        } else if action != Action::Tick {
+      if let Some(action) = action_rx.recv().await {
+        if action != Action::Tick {
           trace_dbg!(action);
         }
         match action {
+          Action::RenderTick => tui.render()?,
           Action::Quit => self.should_quit = true,
           Action::Suspend => self.should_suspend = true,
           Action::Resume => self.should_suspend = false,
@@ -51,7 +48,6 @@ impl App {
             if let Some(_action) = self.home.lock().await.dispatch(action) {
               action_tx.send(_action)?
             };
-            maybe_action = action_rx.try_recv().ok();
           },
         }
       }

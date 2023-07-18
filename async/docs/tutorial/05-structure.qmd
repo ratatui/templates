@@ -191,7 +191,55 @@ When the `TerminalHandlerTask` receives a `Message` enum, it calls a function in
 +-------------------------------------------------------------------+
 ```
 
-And `EventHandlerTask` generates a `RenderTick` action when sends a `Message::Render` object on the `tui_tx` channel.
+`EventHandlerTask` basically sends events off to the `Home` component to handle, which returns an `Action`.
+This action is sent on the `Action` channel:
+
+```rust
+loop {
+  tokio::select! {
+    event = events.next() => {
+      let action = home.lock().await.handle_events(event);
+      tx.send(action).unwrap();
+    }
+  }
+}
+```
+
+In the `main` thread, any `Action` received on the `Action` channel is passed to `home.dispatch(action)` to update the state of the app.
+
+```rust
+loop {
+  if let Some(action) = action_rx.recv().await; {
+    match action {
+      Action::RenderTick => tui.render(),
+      Action::Quit => self.should_quit = true,
+      _ => {
+        self.home.lock().await.dispatch(action);
+      },
+    }
+  }
+
+  if self.should_quit {
+    break;
+  }
+}
+```
+
+```svgbob
++--------------------------------------------------------------------------------+
+| tokio::spawn                                                                   |
+|                                                                                |
+|   +-----------------------------+                                              |
+|   | (loop)                      |                                              |
+|   | - Event::Quit               |----> Action::Quit                            |
+|   | - Event::RenderTick         |----> Action::RenderTick ( Message::Render )  |
+|   | - Event::AppTick            |----> Action::Tick                            |
+|   | - Event::Key(KeyEvent)      |----> home.handle_key_event(evt)              |
+|   | - ...                       |                                              |
+|   +-----------------------------+                                              |
+|                                                                                |
++--------------------------------------------------------------------------------+
+```
 
 Now that we have those two tasks set up, we can create a `app.rs` like so:
 
