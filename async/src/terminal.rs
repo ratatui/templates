@@ -6,7 +6,7 @@ use crossterm::{
   event::{DisableMouseCapture, EnableMouseCapture},
   terminal::{EnterAlternateScreen, LeaveAlternateScreen},
 };
-use ratatui::{backend::CrosstermBackend, terminal::Terminal as RatatuiTerminal, Frame as TuiFrame};
+use ratatui::backend::CrosstermBackend as Backend;
 use tokio::{
   sync::{mpsc, Mutex},
   task::JoinHandle,
@@ -14,15 +14,15 @@ use tokio::{
 
 use crate::components::{home::Home, Component};
 
-pub type Frame<'a> = TuiFrame<'a, CrosstermBackend<std::io::Stderr>>;
+pub type Frame<'a> = ratatui::Frame<'a, Backend<std::io::Stderr>>;
 
 pub struct Terminal {
-  pub terminal: RatatuiTerminal<CrosstermBackend<std::io::Stderr>>,
+  pub terminal: ratatui::Terminal<Backend<std::io::Stderr>>,
 }
 
 impl Terminal {
   pub fn new() -> Result<Self> {
-    let terminal = RatatuiTerminal::new(CrosstermBackend::new(std::io::stderr()))?;
+    let terminal = ratatui::Terminal::new(Backend::new(std::io::stderr()))?;
     Ok(Self { terminal })
   }
 

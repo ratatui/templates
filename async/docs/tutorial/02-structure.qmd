@@ -29,7 +29,7 @@ fn main() -> Result<()> {
 }
 ```
 
-You can use `termion` or `wezterm` instead here, and you'll have to change the implementation of `setup_terminal` and `teardown_terminal`.
+You can use `termion` or `termwiz` instead here, and you'll have to change the implementation of `setup_terminal` and `teardown_terminal`.
 
 I personally like to use `crossterm` so that I can run the TUI on windows as well.
 
