@@ -1,8 +1,7 @@
 use std::path::PathBuf;
 
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use better_panic::Settings;
-use colored::Colorize;
 use directories::ProjectDirs;
 use tracing::error;
 use tracing_subscriber::{
@@ -26,34 +25,30 @@ pub fn initialize_panic_handler() {
   }));
 }
 
-pub fn get_data_dir() -> PathBuf {
+pub fn get_data_dir() -> Result<PathBuf> {
   let directory = if let Ok(s) = std::env::var("RATATUI_TEMPLATE_DATA") {
     PathBuf::from(s)
   } else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "ratatui-template") {
     proj_dirs.data_local_dir().to_path_buf()
   } else {
-    let s = "Error".red().bold();
-    eprintln!("{s}: Unable to find data directory for ratatui-template");
-    std::process::exit(libc::EXIT_FAILURE)
+    return Err(anyhow!("Unable to find data directory for ratatui-template"));
   };
-  directory
+  Ok(directory)
 }
 
-pub fn get_config_dir() -> PathBuf {
+pub fn get_config_dir() -> Result<PathBuf> {
   let directory = if let Ok(s) = std::env::var("RATATUI_TEMPLATE_CONFIG") {
     PathBuf::from(s)
   } else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "ratatui-template") {
     proj_dirs.config_local_dir().to_path_buf()
   } else {
-    let s = "Error".red().bold();
-    eprintln!("{s}: Unable to find data directory for ratatui-template");
-    std::process::exit(libc::EXIT_FAILURE)
+    return Err(anyhow!("Unable to find config directory for ratatui-template"));
   };
-  directory
+  Ok(directory)
 }
 
 pub fn initialize_logging() -> Result<()> {
-  let directory = get_data_dir();
+  let directory = get_data_dir()?;
   std::fs::create_dir_all(directory.clone()).context(format!("{directory:?} could not be created"))?;
   let log_path = directory.join("ratatui-template.log");
   let log_file = std::fs::File::create(log_path)?;
@@ -112,8 +107,8 @@ pub fn version() -> String {
   let commit_hash = env!("RATATUI_TEMPLATE_GIT_INFO");
 
   // let current_exe_path = PathBuf::from(clap::crate_name!()).display().to_string();
-  let config_dir_path = get_config_dir().display().to_string();
-  let data_dir_path = get_data_dir().display().to_string();
+  let config_dir_path = get_config_dir().unwrap().display().to_string();
+  let data_dir_path = get_data_dir().unwrap().display().to_string();
 
   format!(
     "\
