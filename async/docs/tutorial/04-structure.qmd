@@ -2,14 +2,13 @@
 title: "`action.rs`"
 ---
 
-Now that we have created a `TerminalHandler` and `EventHandler`, we are also going to introduce the `Command` pattern, i.e. the concept of "reified method calls" from <http://gameprogrammingpatterns.com/command.html>.
+Now that we have created a `Tui` and `EventHandler`, we are also going to introduce the `Command` pattern, i.e. the concept of "reified method calls" from <http://gameprogrammingpatterns.com/command.html>.
 These are also typically called `Action`s or `Message`s.
 
 ```rust
 pub enum Action {
   Quit,
   Tick,
-  RenderTick,
   Increment,
   Decrement,
   Noop,
@@ -19,27 +18,15 @@ pub enum Action {
 ::: callout-tip
 
 You can attach payloads to enums in rust.
-For example, in the following `Action` enum, `AddToCounter(usize)` and `SubtractFromCounter(usize)` have a `usize` payload which can be used to represent the value to add to or subtract from the counter as a payload.
+For example, in the following `Action` enum, `Increment(usize)` and `Decrement(usize)` have a `usize` payload which can be used to represent the value to add to or subtract from the counter as a payload.
 
 ```rust
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Action {
   Quit,
-  Resume,
-  Suspend,
   Tick,
-  RenderTick,
-  Resize(u16, u16),
-  ToggleShowLogger,
-  ScheduleIncrementCounter,
-  ScheduleDecrementCounter,
-  AddToCounter(usize),
-  SubtractFromCounter(usize),
-  EnterNormal,
-  EnterInsert,
-  EnterProcessing,
-  ExitProcessing,
-  Update,
+  Increment(usize),
+  Decrement(usize),
   Noop,
 }
 ```
@@ -49,18 +36,31 @@ pub enum Action {
 Let's define a simple `impl App` such that every `Event` from the `EventHandler` is mapped to an `Action` from the enum.
 
 ```rust
+#[derive(Default)]
+struct App {
+  counter: i64,
+  should_quit: bool,
+}
+
 impl App {
+  pub fn new() -> Self {
+    Self::default()
+  }
+
   pub async fn run(&mut self) -> Result<()> {
-    let th = TerminalHandler::new();
-    th.enter();
-    let mut events = EventHandler::new(app_tick_rate, render_tick_rate);
+    let t = Tui::new();
+    t.enter();
+    let mut events = EventHandler::new(tick_rate);
     loop {
       let event = events.next().await;
       let action = self.handle_events(event);
       self.dispatch(action);
-      th.terminal.draw(|f| render_app(f))?;
+      t.terminal.draw(|f| self.render(f))?;
+      if self.should_quit {
+        break
+      }
     };
-    th.exit();
+    t.exit();
     Ok(())
   }
 
@@ -68,23 +68,18 @@ impl App {
     match event {
       Some(Event::Quit) => Action::Quit,
       Some(Event::AppTick) => Action::Tick,
-      Some(Event::RenderTick) => Action::RenderTick,
-      Some(Event::Key(key_event)) => self.handle_key_events(key_event),
-      Some(Event::Mouse(mouse_event)) => self.handle_mouse_events(mouse_event),
-      Some(Event::Resize(x, y)) => Action::Resize(x, y),
+      Some(Event::Key(key_event)) => {
+        if let Some(key) = event {
+            match key.code {
+              KeyCode::Char('q') => Action::Quit,
+              KeyCode::Char('j') => Action::Increment,
+              KeyCode::Char('k') => Action::Decrement
+              _ => {}
+          }
+        }
+      },
       Some(_) => Action::Noop,
       None => Action::Noop,
-    }
-  }
-
-  fn handle_key_events(&mut self, event: Option<Event>) -> Action {
-    if let Some(key) = event {
-        match key.code {
-          KeyCode::Char('q') => Action::Quit,
-          KeyCode::Char('j') => Action::Increment,
-          KeyCode::Char('k') => Action::Decrement
-          _ => {}
-      }
     }
   }
 
@@ -96,6 +91,22 @@ impl App {
       Action::Decrement => self.decrement(),
   }
 
+  fn increment(&mut self) {
+    self.counter += 1;
+  }
+
+  fn decrement(&mut self) {
+    self.counter -= 1;
+  }
+
+  fn render(&mut self, f: &mut Frame<'_>) {
+    f.render_widget(
+      Paragraph::new(format!(
+        "Press j or k to increment or decrement.\n\nCounter: {}",
+        self.counter
+      ))
+    )
+  }
 }
 ```
 
@@ -104,7 +115,7 @@ We use `dispatch(action)` to take an `Action` and modify the state of the app.
 
 One advantage of this approach is that we can modify `handle_key_events()` to use a key configuration if we'd like, so that users can define their own map from key to action.
 
-Another advantage of this is that the business logic of the `App` struct can be tested without having to create an instance of a `TerminalHandler` or `EventHandler`, e.g.:
+Another advantage of this is that the business logic of the `App` struct can be tested without having to create an instance of a `Tui` or `EventHandler`, e.g.:
 
 ```rust
 mod tests {
@@ -113,12 +124,12 @@ mod tests {
     let mut app = App::new();
     let old_counter = app.counter;
     app.dispatch(Action::Increment);
-    assert!(app.counter = old_counter += 1);
+    assert!(app.counter == old_counter + 1);
   }
 }
 ```
 
-In the test above, we did not create an instance of the `TerminalHandler` or the `EventHandler`, and did not call the `run` function, but we are still able to test the business logic of our application.
+In the test above, we did not create an instance of the `Tui` or the `EventHandler`, and did not call the `run` function, but we are still able to test the business logic of our application.
 Using "dispatching" on `Action`s gets us one step closer to making our application a "state machine", which improves understanding and testability.
 
 If we wanted to be purist about it, we would make our `AppState` immutable, and we would have an `dispatch` function like so:
@@ -144,7 +155,7 @@ fn dispatch(app_state::AppState, action::Action) -> (new_app_state::State, Optio
 ```
 
 ::: callout-note
-In `Charm`, this function is called an `Update`. Here's an example from their documentation:
+In [`Charm`'s `bubbletea`](https://github.com/charmbracelet/bubbletea), this function is called an `Update`. Here's an example of what that might look like:
 
 ```go
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -152,44 +163,21 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
     // Is it a key press?
     case tea.KeyMsg:
-
-        // Cool, what was the actual key pressed?
-        switch msg.String() {
-
         // These keys should exit the program.
-        case "ctrl+c", "q":
+        case "q":
             return m, tea.Quit
 
-        // The "up" and "k" keys move the cursor up
-        case "up", "k":
-            if m.cursor > 0 {
-                m.cursor--
-            }
+        case "k":
+            m.counter--
 
-        // The "down" and "j" keys move the cursor down
-        case "down", "j":
-            if m.cursor < len(m.choices)-1 {
-                m.cursor++
-            }
-
-        // The "enter" key and the spacebar (a literal space) toggle
-        // the selected state for the item that the cursor is pointing at.
-        case "enter", " ":
-            _, ok := m.selected[m.cursor]
-            if ok {
-                delete(m.selected, m.cursor)
-            } else {
-                m.selected[m.cursor] = struct{}{}
-            }
-        }
+        case "j":
+            m.counter++
     }
 
-    // Return the updated model to the Bubble Tea runtime for processing.
     // Note that we're not returning a command.
     return m, nil
 }
 ```
-
 :::
 
 Writing code to follow this architecture in rust (in my opinion) requires more upfront design, mostly because you have to make your `AppState` struct `Clone`-friendly.
@@ -208,3 +196,28 @@ impl App {
 
 You are free to reorganize the code as you see fit!
 
+You can also add more actions as required.
+For example, here's all the actions in the template:
+
+```rust {filename="action.rs"}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Action {
+  Quit,
+  Resume,
+  Suspend,
+  Tick,
+  RenderTick,
+  Resize(u16, u16),
+  ToggleShowLogger,
+  ScheduleIncrementCounter,
+  ScheduleDecrementCounter,
+  Increment(usize),
+  Decrement(usize),
+  EnterNormal,
+  EnterInsert,
+  EnterProcessing,
+  ExitProcessing,
+  Update,
+  Noop,
+}
+```

@@ -6,7 +6,7 @@ In this section, let's just cover the contents of `main.rs`, `build.rs` and `uti
 
 The `main.rs` file is the entry point of the application. Here's the complete file:
 
-```rust
+```rust {filename="main.rs"}
 use anyhow::Result;
 use clap::Parser;
 use ratatui_template::{
@@ -43,7 +43,30 @@ async fn main() -> Result<()> {
 }
 ```
 
-In essence, the `main` function creates an instance of `App` and calls `app.run()`, which runs the "draw update loop".
+::: callout
+You'll notice that `main.rs` has `use ratatui_template::{...}`. `ratatui_template` will be something you end up renaming based on your project.
+
+The contents that are imported on this line are from the `lib.rs` file:
+
+```rust
+pub mod app;
+
+pub mod action;
+
+pub mod components;
+
+pub mod event;
+
+pub mod terminal;
+
+pub mod utils;
+```
+
+We will cover these modules in more detail in the next sections.
+
+:::
+
+In essence, the `main` function creates an instance of `App` and calls `app.run()`, which runs the "get event -> update state -> render" loop.
 We will talk more about this in a later section.
 
 This `main.rs` file incorporates some key features that are not necessarily related to `ratatui`, but in my opinion, essential for any Terminal User Interface (TUI) program:
@@ -138,5 +161,5 @@ In the screenshot below, I added a `None.unwrap()` into a function that is calle
 
 ![](https://user-images.githubusercontent.com/1813121/252723080-18c15640-c75f-42b3-8aeb-d4e6ce323430.png)
 
-`utils::initialize_panic_handler()` also calls `TerminalHandler::new().exit()` to reset the terminal state back to the way it was before the user started the TUI program.
-We'll learn more about the `TerminalHandler` in the next section.
+`utils::initialize_panic_handler()` also calls `Tui::new().exit()` to reset the terminal state back to the way it was before the user started the TUI program.
+We'll learn more about the `Tui` in the next section.

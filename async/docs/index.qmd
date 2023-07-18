@@ -5,6 +5,11 @@ title: Introduction
 [`ratatui`](https://github.com/tui-rs-revival/ratatui) is a Rust library to build rich terminal user interfaces (TUIs) and dashboards.
 It is a community fork of the original [`tui-rs`](https://github.com/fdehau/tui-rs) created to maintain and improve the project.
 
+This [project](https://github.com/kdheepak/ratatui-template) is an opinionated template for getting up and running with `ratatui`.
+This documentation is a walk-through of why the code is structured the way it is, so you can modify it as you need.
+
+## Background
+
 `ratatui` is based on the principle of immediate rendering with intermediate buffers.
 This means that at each new frame you have to build all widgets that are supposed to be part of the UI.
 In short, the `ratatui` library is largely handles just drawing to the terminal.
@@ -40,31 +45,6 @@ git clone https://github.com/kdheepak/ratatui-template your-project-name-here
 ```
 
 I also recommend renaming the `ratatui-template` and `RATATUI_TEMPLATE` in all files with the name of your project.
-Here's a short Python script that does that:
-
-```bash
-cd your-project-name-here
-
-python3 <<EOF
-import os
-import re
-
-for root, _, filenames in os.walk('.'):
-    if ".git" in root or "target" in root or "docs" in root:
-        continue
-
-    for filename in filenames:
-        f = os.path.join(root, filename)
-        with open(f, 'r') as file:
-            content = file.read()
-
-        content = re.sub(r'ratatui-template', 'your-project-name-here', content)
-        content = re.sub(r'RATATUI_TEMPLATE', 'YOUR_PROJECT_NAME_HERE', content)
-
-        with open(f, 'w') as file:
-            file.write(content)
-EOF
-```
 
 Here's a diff of the changes you should expect:
 

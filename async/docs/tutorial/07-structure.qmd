@@ -2,9 +2,14 @@
 title: "`components/home.rs`"
 ---
 
-Here's an example of the `Home` component:
+Here's an example of the `Home` component that moves over code from `App` and also adds state:
 
-```rust
+1. `show_logger` is a `bool` that tracks whether or not the `Logger` `Component` should be rendered or not
+1. `ticker` is a counter that increments every `AppTick`.
+
+This `Home` component also adds fields for `logger: Logger` and `input: Input`, and stores a reference to `action_tx: mpsc::UnboundedSender<Action>`
+
+```rust {filename="components/home.rs"}
 use std::time::Duration;
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
@@ -55,7 +60,7 @@ impl Home {
     tokio::task::spawn(async move {
       tx.send(Action::EnterProcessing).unwrap();
       tokio::time::sleep(Duration::from_secs(5)).await;
-      tx.send(Action::AddToCounter(i)).unwrap();
+      tx.send(Action::Increment(i)).unwrap();
       tx.send(Action::ExitProcessing).unwrap();
     });
   }
@@ -65,7 +70,7 @@ impl Home {
     tokio::task::spawn(async move {
       tx.send(Action::EnterProcessing).unwrap();
       tokio::time::sleep(Duration::from_secs(5)).await;
-      tx.send(Action::SubtractFromCounter(i)).unwrap();
+      tx.send(Action::Decrement(i)).unwrap();
       tx.send(Action::ExitProcessing).unwrap();
     });
   }
@@ -111,8 +116,8 @@ impl Component for Home {
       Action::ToggleShowLogger => self.show_logger = !self.show_logger,
       Action::ScheduleIncrementCounter => self.increment(1),
       Action::ScheduleDecrementCounter => self.decrement(1),
-      Action::AddToCounter(i) => self.counter = self.counter.saturating_add(i),
-      Action::SubtractFromCounter(i) => self.counter = self.counter.saturating_sub(i),
+      Action::Increment(i) => self.counter = self.counter.saturating_add(i),
+      Action::Decrement(i) => self.counter = self.counter.saturating_sub(i),
       Action::EnterNormal => {
         self.mode = Mode::Normal;
       },
@@ -197,25 +202,25 @@ The `render` function can also optionally draw a `Logger` component.
 
 ![](https://user-images.githubusercontent.com/1813121/254134679-02334184-fc4f-4f52-8957-61c950cdb770.png)
 
-The `Home` component has a couple of methods `increment` and `decrement` that show an example of how you can use `tokio::task::spawn` to run a long running computationally demanding or I/O intensive task while still updating the state of the application using actions:
+The `Home` component has a couple of methods `increment` and `decrement` that we saw earlier, but this time additional `Action`s are sent on the `action_tx` channel to track the start and end of the increment.
 
 ```rust
-  pub fn increment(&mut self, i: usize) {
+  pub fn schedule_increment(&mut self, i: usize) {
     let tx = self.action_tx.clone().unwrap();
     tokio::task::spawn(async move {
       tx.send(Action::EnterProcessing).unwrap();
       tokio::time::sleep(Duration::from_secs(5)).await;
-      tx.send(Action::AddToCounter(i)).unwrap();
+      tx.send(Action::Increment(i)).unwrap();
       tx.send(Action::ExitProcessing).unwrap();
     });
   }
 
-  pub fn decrement(&mut self, i: usize) {
+  pub fn schedule_decrement(&mut self, i: usize) {
     let tx = self.action_tx.clone().unwrap();
     tokio::task::spawn(async move {
       tx.send(Action::EnterProcessing).unwrap();
       tokio::time::sleep(Duration::from_secs(5)).await;
-      tx.send(Action::SubtractFromCounter(i)).unwrap();
+      tx.send(Action::Decrement(i)).unwrap();
       tx.send(Action::ExitProcessing).unwrap();
     });
   }
@@ -228,10 +233,10 @@ When a `Action` is sent on the action channel, it is received in the `main` thre
     match action {
       Action::Tick => self.tick(),
       Action::ToggleShowLogger => self.show_logger = !self.show_logger,
-      Action::ScheduleIncrementCounter => self.increment(1),
-      Action::ScheduleDecrementCounter => self.decrement(1),
-      Action::AddToCounter(i) => self.counter = self.counter.saturating_add(i),
-      Action::SubtractFromCounter(i) => self.counter = self.counter.saturating_sub(i),
+      Action::ScheduleIncrementCounter => self.schedule_increment(1),
+      Action::ScheduleDecrementCounter => self.schedule_decrement(1),
+      Action::Increment(i) => self.increment(i),
+      Action::Decrement(i) => self.decrement(i),
       Action::EnterNormal => {
         self.mode = Mode::Normal;
       },
@@ -252,3 +257,13 @@ When a `Action` is sent on the action channel, it is received in the `main` thre
 ```
 
 This way, you can have `Action` affect multiple components by propagating the actions down all of them.
+
+When the `Mode` is switched to `Insert`, all events are handled off the `Input` widget from the excellent [`tui-input` crate](https://github.com/sayanarijit/tui-input).
+
+![](https://user-images.githubusercontent.com/1813121/254444604-de8cfcfa-eeec-417a-a8b0-92a7ccb5fcb5.gif)
+
+Hitting the `l` key toggles the `Logger` view:
+
+![](https://user-images.githubusercontent.com/1813121/254452502-879beb8a-77dd-4475-bb55-1b15a443c747.gif)
+
+You can see how the `Logger` is set up in the next section.

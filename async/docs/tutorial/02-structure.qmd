@@ -2,9 +2,9 @@
 title: "`terminal.rs`"
 ---
 
-In this section of the tutorial, we are going to discuss the basic components of the `TerminalHandler`.
+In this section of the tutorial, we are going to discuss the basic components of the `Tui` struct.
 
-This following functions show how you can do a basic setup and teardown of a terminal application using `crossterm`.
+You'll find most people setup and teardown of a terminal application using `crossterm` like so:
 
 ```rust
 fn setup_terminal() -> Result<Terminal<CrosstermBackend<Stdout>>> {
@@ -41,26 +41,26 @@ The second screen buffer, called the alternate screen, is used for running inter
 Here's a 8 minute talk on Terminal User Interfaces I gave at JuliaCon2020: <https://www.youtube.com/watch?v=-TASx67pphw> that might be worth watching for more information about how terminal user interfaces work.
 :::
 
-We can reorganize the setup and teardown functions into an `enter()` and `exit()` methods on a `TerminalHandler` struct.
+We can reorganize the setup and teardown functions into an `enter()` and `exit()` methods on a `Tui` struct.
 
-```rust
+```rust {filename="terminal.rs"}
 use anyhow::Result;
 use crossterm::{
   cursor,
   event::{DisableMouseCapture, EnableMouseCapture},
   terminal::{EnterAlternateScreen, LeaveAlternateScreen},
 };
-use ratatui::{backend::CrosstermBackend, terminal::Terminal, Frame as TuiFrame};
+use ratatui::backend::CrosstermBackend as Backend;
 
-pub type Frame<'a> = TuiFrame<'a, CrosstermBackend<std::io::Stderr>>;
+pub type Frame<'a> = ratatui::Frame<'a, Backend<std::io::Stderr>>;
 
-pub struct TerminalHandler {
-  pub terminal: Terminal<CrosstermBackend<std::io::Stderr>>,
+pub struct Tui {
+  pub terminal: ratatui::Terminal<Backend<std::io::Stderr>>,
 }
 
-impl TerminalHandler {
+impl Tui {
   pub fn new() -> Result<Self> {
-    let terminal = Terminal::new(CrosstermBackend::new(std::io::stderr()))?;
+    let terminal = Terminal::new(Backend::new(std::io::stderr()))?;
     Ok(Self { terminal })
   }
 
@@ -90,6 +90,11 @@ impl TerminalHandler {
 }
 ```
 
-Feel free to modify this if you want to use `termion` or `wezterm`.
+::: callout-note
+This is the same `Tui` struct we used in `initialize_panic_handler()`. We call `Tui::exit()` before printing the stacktrace.
+:::
+
+Feel free to modify this as you need for use with `termion` or `wezterm`.
 
 The type alias to `Frame` is only to make the `components` folder easier to work with, and is not strictly required.
+

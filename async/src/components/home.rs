@@ -43,24 +43,32 @@ impl Home {
     self.ticker = self.ticker.saturating_add(1);
   }
 
-  pub fn increment(&mut self, i: usize) {
+  pub fn schedule_increment(&mut self, i: usize) {
     let tx = self.action_tx.clone().unwrap();
     tokio::spawn(async move {
       tx.send(Action::EnterProcessing).unwrap();
       tokio::time::sleep(Duration::from_secs(5)).await;
-      tx.send(Action::AddToCounter(i)).unwrap();
+      tx.send(Action::Increment(i)).unwrap();
       tx.send(Action::ExitProcessing).unwrap();
     });
   }
 
-  pub fn decrement(&mut self, i: usize) {
+  pub fn schedule_decrement(&mut self, i: usize) {
     let tx = self.action_tx.clone().unwrap();
     tokio::spawn(async move {
       tx.send(Action::EnterProcessing).unwrap();
       tokio::time::sleep(Duration::from_secs(5)).await;
-      tx.send(Action::SubtractFromCounter(i)).unwrap();
+      tx.send(Action::Decrement(i)).unwrap();
       tx.send(Action::ExitProcessing).unwrap();
     });
+  }
+
+  pub fn increment(&mut self, i: usize) {
+    self.counter = self.counter.saturating_add(i);
+  }
+
+  pub fn decrement(&mut self, i: usize) {
+    self.counter = self.counter.saturating_sub(i);
   }
 }
 
@@ -79,8 +87,8 @@ impl Component for Home {
           KeyCode::Char('c') if key.modifiers.contains(KeyModifiers::CONTROL) => Action::Quit,
           KeyCode::Char('z') if key.modifiers.contains(KeyModifiers::CONTROL) => Action::Suspend,
           KeyCode::Char('l') => Action::ToggleShowLogger,
-          KeyCode::Char('j') => Action::ScheduleIncrementCounter,
-          KeyCode::Char('k') => Action::ScheduleDecrementCounter,
+          KeyCode::Char('j') => Action::ScheduleIncrement,
+          KeyCode::Char('k') => Action::ScheduleDecrement,
           KeyCode::Char('/') => Action::EnterInsert,
           _ => Action::Tick,
         }
@@ -102,10 +110,10 @@ impl Component for Home {
     match action {
       Action::Tick => self.tick(),
       Action::ToggleShowLogger => self.show_logger = !self.show_logger,
-      Action::ScheduleIncrementCounter => self.increment(1),
-      Action::ScheduleDecrementCounter => self.decrement(1),
-      Action::AddToCounter(i) => self.counter = self.counter.saturating_add(i),
-      Action::SubtractFromCounter(i) => self.counter = self.counter.saturating_sub(i),
+      Action::ScheduleIncrement => self.schedule_increment(1),
+      Action::ScheduleDecrement => self.schedule_decrement(1),
+      Action::Increment(i) => self.increment(i),
+      Action::Decrement(i) => self.decrement(i),
       Action::EnterNormal => {
         self.mode = Mode::Normal;
       },
