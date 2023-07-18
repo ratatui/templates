@@ -9,17 +9,17 @@ use tracing_subscriber::{
   self, filter::EnvFilter, prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt, Layer,
 };
 
-use crate::terminal::TerminalHandler;
+use crate::terminal::Terminal;
 
 pub fn initialize_panic_handler() {
   std::panic::set_hook(Box::new(|panic_info| {
-    match TerminalHandler::new() {
-      Ok(tui) => {
-        if let Err(r) = tui.exit() {
-          error!("Unable to exit Tui: {r:?}");
+    match Terminal::new() {
+      Ok(t) => {
+        if let Err(r) = t.exit() {
+          error!("Unable to exit Terminal: {r:?}");
         }
       },
-      Err(r) => error!("Unable to exit Tui: {r:?}"),
+      Err(r) => error!("Unable to exit Terminal: {r:?}"),
     }
     Settings::auto().most_recent_first(false).lineno_suffix(true).create_panic_handler()(panic_info);
     std::process::exit(libc::EXIT_FAILURE);

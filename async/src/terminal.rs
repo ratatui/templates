@@ -6,7 +6,7 @@ use crossterm::{
   event::{DisableMouseCapture, EnableMouseCapture},
   terminal::{EnterAlternateScreen, LeaveAlternateScreen},
 };
-use ratatui::{backend::CrosstermBackend, terminal::Terminal, Frame as TuiFrame};
+use ratatui::{backend::CrosstermBackend, terminal::Terminal as RatatuiTerminal, Frame as TuiFrame};
 use tokio::{
   sync::{mpsc, Mutex},
   task::JoinHandle,
@@ -16,13 +16,13 @@ use crate::components::{home::Home, Component};
 
 pub type Frame<'a> = TuiFrame<'a, CrosstermBackend<std::io::Stderr>>;
 
-pub struct TerminalHandler {
-  pub terminal: Terminal<CrosstermBackend<std::io::Stderr>>,
+pub struct Terminal {
+  pub terminal: RatatuiTerminal<CrosstermBackend<std::io::Stderr>>,
 }
 
-impl TerminalHandler {
+impl Terminal {
   pub fn new() -> Result<Self> {
-    let terminal = Terminal::new(CrosstermBackend::new(std::io::stderr()))?;
+    let terminal = RatatuiTerminal::new(CrosstermBackend::new(std::io::stderr()))?;
     Ok(Self { terminal })
   }
 
@@ -58,32 +58,31 @@ enum Message {
   Suspend,
 }
 
-pub struct TerminalHandlerTask {
+pub struct TerminalHandler {
   pub task: JoinHandle<()>,
   tx: mpsc::UnboundedSender<Message>,
 }
 
-impl TerminalHandlerTask {
+impl TerminalHandler {
   pub fn new(home: Arc<Mutex<Home>>) -> Self {
     let (tx, mut rx) = mpsc::unbounded_channel::<Message>();
 
     let task = tokio::spawn(async move {
-      let mut tui = TerminalHandler::new().context(anyhow!("Unable to create TUI")).unwrap();
-      tui.enter().unwrap();
+      let mut t = Terminal::new().context(anyhow!("Unable to create terminal")).unwrap();
+      t.enter().unwrap();
       loop {
         match rx.recv().await {
           Some(Message::Stop) => {
-            tui.exit().unwrap_or_default();
+            t.exit().unwrap_or_default();
             break;
           },
           Some(Message::Suspend) => {
-            tui.suspend().unwrap_or_default();
+            t.suspend().unwrap_or_default();
             break;
           },
           Some(Message::Render) => {
             let mut h = home.lock().await;
-            tui
-              .terminal
+            t.terminal
               .draw(|f| {
                 h.render(f, f.size());
               })

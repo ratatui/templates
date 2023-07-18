@@ -6,8 +6,8 @@ use tokio::sync::{mpsc, Mutex};
 use crate::{
   action::Action,
   components::{home::Home, Component},
-  event::EventHandlerTask,
-  terminal::TerminalHandlerTask,
+  event::EventHandler,
+  terminal::TerminalHandler,
   trace_dbg,
 };
 
@@ -31,8 +31,8 @@ impl App {
 
     self.home.lock().await.init()?;
 
-    let mut tui = TerminalHandlerTask::new(self.home.clone());
-    let mut event = EventHandlerTask::new(self.home.clone(), self.tick_rate, action_tx.clone());
+    let mut terminal = TerminalHandler::new(self.home.clone());
+    let mut event = EventHandler::new(self.tick_rate, self.home.clone(), action_tx.clone());
 
     loop {
       if let Some(action) = action_rx.recv().await {
@@ -40,7 +40,7 @@ impl App {
           trace_dbg!(action);
         }
         match action {
-          Action::RenderTick => tui.render()?,
+          Action::RenderTick => terminal.render()?,
           Action::Quit => self.should_quit = true,
           Action::Suspend => self.should_suspend = true,
           Action::Resume => self.should_suspend = false,
@@ -51,19 +51,19 @@ impl App {
           },
         }
       }
-
       if self.should_suspend {
-        tui.suspend()?;
+        terminal.suspend()?;
         event.stop();
-        tui.task.await?;
+        terminal.task.await?;
         event.task.await?;
-        tui = TerminalHandlerTask::new(self.home.clone());
-        event = EventHandlerTask::new(self.home.clone(), self.tick_rate, action_tx.clone());
+        terminal = TerminalHandler::new(self.home.clone());
+        event = EventHandler::new(self.tick_rate, self.home.clone(), action_tx.clone());
         action_tx.send(Action::Resume)?;
+        action_tx.send(Action::RenderTick)?;
       } else if self.should_quit {
-        tui.stop()?;
+        terminal.stop()?;
         event.stop();
-        tui.task.await?;
+        terminal.task.await?;
         event.task.await?;
         break;
       }
