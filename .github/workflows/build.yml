@@ -1,5 +1,4 @@
 # Test the builds for the template
-#
 
 name: "Build Template"
 on:

@@ -1,9 +1,4 @@
-#
-# cargo-generate.toml
-#   documented at https://cargo-generate.github.io/cargo-generate/
-#
+# configuration for https://cargo-generate.github.io/cargo-generate/
+
 [template]
-ignore = [
-  "README.md",
-  ".github/",
-]
+ignore = ["README.md", ".github/"]
