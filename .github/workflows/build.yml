@@ -1,10 +1,4 @@
 # Test the builds for the template
-#
-# When you got this file through:
-#   cargo generate --git https://github.com/tui-rs-revival/rust-tui-template --name <project-name>
-# you can deleted it safely. (Above directories also.)
-#
-# By the way: Enjoy the template :-)
 
 name: "Build Template"
 on:
