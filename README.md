@@ -1,8 +1,8 @@
 # rust-tui-template
 
-A template for bootstrapping a Rust [**TUI**](https://en.wikipedia.org/wiki/Text-based_user_interface) application with [`ratatui`](https://github.com/tui-rs-revival/ratatui) & [`crossterm`](https://github.com/crossterm-rs/crossterm).
+A template for bootstrapping a Rust [**TUI**](https://en.wikipedia.org/wiki/Text-based_user_interface) application with [`ratatui`](https://github.com/ratatui-org/ratatui) & [`crossterm`](https://github.com/crossterm-rs/crossterm).
 
-<img src="https://raw.githubusercontent.com/tui-rs-revival/ratatui/master/assets/demo.gif" width="600">
+<img src="https://raw.githubusercontent.com/ratatui-org/ratatui/master/assets/demo.gif" width="600">
 
 ### ratatui
 
@@ -43,7 +43,7 @@ cargo install cargo-generate
 2. Clone this repository via `cargo-generate`:
 
 ```sh
-cargo generate --git https://github.com/tui-rs-revival/rust-tui-template --name <project-name>
+cargo generate --git https://github.com/ratatui-org/rust-tui-template --name <project-name>
 ```
 
 ## See also
