@@ -1,0 +1,22 @@
+---
+title: Frequently asked questions
+---
+
+# When should I use `tokio` or `async`/`await`?
+
+`ratatui` isn't a native `async` library.
+As a user, there's really only 1 point of interface with `ratatui` and that's the `terminal.draw(|f| ui(f))` functionality (rendering of widgets happens in `ui(f)`).
+Everything else in your code is your own to do as you wish.
+
+Should `terminal.draw(|f| ui(f))` be `async`?
+Possibly.
+Rendering to the terminal buffer is relatively fast, especially using the double buffer technique that only renders diffs.
+
+Can we make it `async` ourselves?
+Yes, we can.
+That's covered in the material in this documentation.
+
+The only other part related to `ratatui` that is beneficial to be `async` is reading the key event inputs from `stdin`, and that can be made `async` with `crossterm`'s event stream.
+
+So the real question (in my mind usually) is what other apps of your app require `async` or benefit from being `async`?
+If the answer is not much, maybe it is simpler to not use `async` and avoiding `tokio`.
