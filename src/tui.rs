@@ -4,8 +4,16 @@ use crate::ui;
 use crossterm::event::{DisableMouseCapture, EnableMouseCapture};
 use crossterm::terminal::{self, EnterAlternateScreen, LeaveAlternateScreen};
 use std::io;
+use std::panic;
 use tui::backend::Backend;
 use tui::Terminal;
+
+fn reset_terminal() -> std::result::Result<(), Box<dyn std::error::Error>> {
+    terminal::disable_raw_mode()?;
+    crossterm::execute!(io::stdout(), LeaveAlternateScreen, DisableMouseCapture)?;
+
+    Ok(())
+}
 
 /// Representation of a terminal user interface.
 ///
@@ -31,6 +39,13 @@ impl<B: Backend> Tui<B> {
     pub fn init(&mut self) -> AppResult<()> {
         terminal::enable_raw_mode()?;
         crossterm::execute!(io::stderr(), EnterAlternateScreen, EnableMouseCapture)?;
+
+        let original_hook = panic::take_hook();
+        panic::set_hook(Box::new(move |panic| {
+            reset_terminal().unwrap();
+            original_hook(panic);
+        }));
+
         self.terminal.hide_cursor()?;
         self.terminal.clear()?;
         Ok(())
