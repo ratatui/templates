@@ -8,13 +8,6 @@ use std::panic;
 use tui::backend::Backend;
 use tui::Terminal;
 
-fn reset_terminal() -> std::result::Result<(), Box<dyn std::error::Error>> {
-    terminal::disable_raw_mode()?;
-    crossterm::execute!(io::stdout(), LeaveAlternateScreen, DisableMouseCapture)?;
-
-    Ok(())
-}
-
 /// Representation of a terminal user interface.
 ///
 /// It is responsible for setting up the terminal,
@@ -40,10 +33,12 @@ impl<B: Backend> Tui<B> {
         terminal::enable_raw_mode()?;
         crossterm::execute!(io::stderr(), EnterAlternateScreen, EnableMouseCapture)?;
 
-        let original_hook = panic::take_hook();
+        // Define a custom panic hook to reset the terminal properties.
+        // This way, you won't have your terminal messed up if an unexpected error happens.
+        let panic_hook = panic::take_hook();
         panic::set_hook(Box::new(move |panic| {
-            reset_terminal().unwrap();
-            original_hook(panic);
+            Self::reset().expect("failed to reset the terminal");
+            panic_hook(panic);
         }));
 
         self.terminal.hide_cursor()?;
@@ -60,12 +55,21 @@ impl<B: Backend> Tui<B> {
         Ok(())
     }
 
+    /// Resets the terminal interface.
+    ///
+    /// This function is also used for the panic hook to revert
+    /// the terminal properties if unexpected errors occur.
+    fn reset() -> AppResult<()> {
+        terminal::disable_raw_mode()?;
+        crossterm::execute!(io::stdout(), LeaveAlternateScreen, DisableMouseCapture)?;
+        Ok(())
+    }
+
     /// Exits the terminal interface.
     ///
     /// It disables the raw mode and reverts back the terminal properties.
     pub fn exit(&mut self) -> AppResult<()> {
-        terminal::disable_raw_mode()?;
-        crossterm::execute!(io::stderr(), LeaveAlternateScreen, DisableMouseCapture)?;
+        Self::reset()?;
         self.terminal.show_cursor()?;
         Ok(())
     }
