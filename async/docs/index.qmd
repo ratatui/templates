@@ -5,8 +5,9 @@ title: Introduction
 [`ratatui`](https://github.com/tui-rs-revival/ratatui) is a Rust library to build rich terminal user interfaces (TUIs) and dashboards.
 It is a community fork of the original [`tui-rs`](https://github.com/fdehau/tui-rs) created to maintain and improve the project.
 
-This [project](https://github.com/kdheepak/ratatui-template) is an opinionated template for getting up and running with `ratatui`.
-This documentation is a walk-through of why the code is structured the way it is, so you can modify it as you need.
+The [source code of this project](https://github.com/kdheepak/ratatui-template) is an opinionated template for getting up and running with `ratatui`.
+You can pick and choose the pieces of this `ratatui-template` to suit your needs and sensibilities.
+This rest of this documentation is a walk-through of why the code is structured the way it is, so that you are aided in modifying it as you require.
 
 ## Background
 
