@@ -22,17 +22,9 @@ pub trait Component {
     }
   }
   fn handle_key_events(&mut self, key: KeyEvent) -> Action {
-    self.on_key_event(key)
-  }
-  #[allow(unused_variables)]
-  fn on_key_event(&mut self, key: KeyEvent) -> Action {
     Action::Noop
   }
   fn handle_mouse_events(&mut self, mouse: MouseEvent) -> Action {
-    self.on_mouse_event(mouse)
-  }
-  #[allow(unused_variables)]
-  fn on_mouse_event(&mut self, mouse: MouseEvent) -> Action {
     Action::Noop
   }
   #[allow(unused_variables)]

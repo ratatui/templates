@@ -78,7 +78,7 @@ impl Component for Home {
     Ok(())
   }
 
-  fn on_key_event(&mut self, key: KeyEvent) -> Action {
+  fn handle_key_events(&mut self, key: KeyEvent) -> Action {
     match self.mode {
       Mode::Normal | Mode::Processing => {
         match key.code {
