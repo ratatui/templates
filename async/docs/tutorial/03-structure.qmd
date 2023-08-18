@@ -264,6 +264,7 @@ pub struct EventHandler {
   _tx: mpsc::UnboundedSender<Event>,
   rx: mpsc::UnboundedReceiver<Event>,
   task: Option<JoinHandle<()>>,
+  stop_cancellation_token: CancellationToken,
 }
 
 impl EventHandler {
@@ -273,6 +274,9 @@ impl EventHandler {
     let (tx, rx) = mpsc::unbounded_channel();
     let _tx = tx.clone();
 
+    let stop_cancellation_token = CancellationToken::new();
+    let _stop_cancellation_token = stop_cancellation_token.clone();
+
     let task = tokio::spawn(async move {
       let mut reader = crossterm::event::EventStream::new();
       let mut interval = tokio::time::interval(tick_rate);
@@ -280,6 +284,9 @@ impl EventHandler {
         let delay = interval.tick();
         let crossterm_event = reader.next().fuse();
         tokio::select! {
+          _ = _stop_cancellation_token.cancelled() => {
+            break;
+          }
           maybe_event = crossterm_event => {
             match maybe_event {
               Some(Ok(evt)) => {
@@ -305,7 +312,7 @@ impl EventHandler {
       }
     });
 
-    Self { _tx, rx, task: Some(task) }
+    Self { _tx, rx, task: Some(task), stop_cancellation_token }
   }
 
   pub async fn next(&mut self) -> Option<Event> {
