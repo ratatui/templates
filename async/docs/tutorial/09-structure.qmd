@@ -117,7 +117,7 @@ impl<'de> Deserialize<'de> for KeyMap {
 ```
 
 Now all we need to do is implement a `parse_key_event` function.
-[You can check the source code for an example of this implementation](https://github.com/ratatui-org/ratatui-async-template/blob/e5eaf8cdcd97aa296aff442620badf6183a58e62/src/config.rs#L62-L138).
+[You can check the source code for an example of this implementation](https://github.com/ratatui-org/ratatui-async-template/blob/main/src/config.rs#L62-L138).
 
 With that implementation complete, we can add a `HashMap` to store a map of `KeyEvent`s and `Action` in the `Home` component:
 
