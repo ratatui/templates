@@ -49,129 +49,46 @@ You can start by git cloning the project:
 git clone https://github.com/kdheepak/ratatui-async-template your-project-name-here
 ```
 
-I also recommend renaming the `ratatui-async-template` and `RATATUI_ASYNC_TEMPLATE` in all files with the name of your project.
+I also recommend renaming both `ratatui-async-template` and `RATATUI_ASYNC_TEMPLATE` in all files with the name of your project.
 
-Here's a diff of the changes you should expect:
+```bash
+$ rg -i 'ratatui.async.template'
 
-```diff
-diff --git a/.envrc b/.envrc
-index c3df7c8..2adc637 100644
---- a/.envrc
-+++ b/.envrc
-@@ -1,3 +1,3 @@
--export RATATUI_ASYNC_TEMPLATE_CONFIG=`pwd`/.config
--export RATATUI_ASYNC_TEMPLATE_DATA=`pwd`/.data
-+export YOUR_PROJECT_NAME_HERE_CONFIG=`pwd`/.config
-+export YOUR_PROJECT_NAME_HERE_DATA=`pwd`/.data
- export RUST_LOG=debug
+Cargo.toml
+2:name = "ratatui-async-template"
+62:name = "ratatui-async-template"
 
-diff --git a/Cargo.lock b/Cargo.lock
-index 27cb77c..a6b58d4 100644
---- a/Cargo.lock
-+++ b/Cargo.lock
-@@ -768,7 +768,7 @@ dependencies = [
- ]
+build.rs
+45:println!("cargo:rustc-env=RATATUI_ASYNC_TEMPLATE_GIT_INFO={}", git_describe);
 
- [[package]]
--name = "ratatui-async-template"
-+name = "your-project-name-here"
- version = "0.1.0"
- dependencies = [
-  "anyhow",
+src/main.rs
+3:use ratatui_async_template::{
 
-diff --git a/Cargo.toml b/Cargo.toml
-index e7bf63d..95b9980 100644
---- a/Cargo.toml
-+++ b/Cargo.toml
-@@ -1,5 +1,5 @@
- [package]
--name = "ratatui-async-template"
-+name = "your-project-name-here"
- version = "0.1.0"
- edition = "2021"
- authors = ["Dheepak Krishnamurthy"]
-@@ -54,5 +54,5 @@ lto = true
- strip = true
+src/utils.rs
+29:let directory = if let Ok(s) = std::env::var("RATATUI_ASYNC_TEMPLATE_DATA") {
+31:} else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "ratatui-async-template") {
+34:return Err(anyhow!("Unable to find data directory for ratatui-async-template"));
+40:let directory = if let Ok(s) = std::env::var("RATATUI_ASYNC_TEMPLATE_CONFIG") {
+42:} else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "ratatui-async-template") {
+45:return Err(anyhow!("Unable to find config directory for ratatui-async-template"));
+53:let log_path = directory.join("ratatui-async-template.log");
+107:let commit_hash = env!("RATATUI_ASYNC_TEMPLATE_GIT_INFO");
 
- [[bin]]
--name = "ratatui-async-template"
-+name = "your-project-name-here"
- path = "src/main.rs"
-
-diff --git a/build.rs b/build.rs
-index b206e27..8485fac 100644
---- a/build.rs
-+++ b/build.rs
-@@ -42,5 +42,5 @@ fn main() {
-     }
-   }
-
--  println!("cargo:rustc-env=RATATUI_ASYNC_TEMPLATE_GIT_INFO={}", git_describe);
-+  println!("cargo:rustc-env=YOUR_PROJECT_NAME_HERE_GIT_INFO={}", git_describe);
- }
-
-diff --git a/src/utils.rs b/src/utils.rs
-index 21e3adb..05ce270 100644
---- a/src/utils.rs
-+++ b/src/utils.rs
-@@ -27,26 +27,26 @@ pub fn initialize_panic_handler() {
- }
-
- pub fn get_data_dir() -> PathBuf {
--  let directory = if let Ok(s) = std::env::var("RATATUI_ASYNC_TEMPLATE_DATA") {
-+  let directory = if let Ok(s) = std::env::var("YOUR_PROJECT_NAME_HERE_DATA") {
-     PathBuf::from(s)
--  } else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "ratatui-async-template") {
-+  } else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "your-project-name-here") {
-     proj_dirs.data_local_dir().to_path_buf()
-   } else {
-     let s = "Error".red().bold();
--    eprintln!("{s}: Unable to find data directory for ratatui-async-template");
-+    eprintln!("{s}: Unable to find data directory for your-project-name-here");
-     std::process::exit(libc::EXIT_FAILURE)
-   };
-   directory
- }
-
- pub fn get_config_dir() -> PathBuf {
--  let directory = if let Ok(s) = std::env::var("RATATUI_ASYNC_TEMPLATE_CONFIG") {
-+  let directory = if let Ok(s) = std::env::var("YOUR_PROJECT_NAME_HERE_CONFIG") {
-     PathBuf::from(s)
--  } else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "ratatui-async-template") {
-+  } else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "your-project-name-here") {
-     proj_dirs.config_local_dir().to_path_buf()
-   } else {
-     let s = "Error".red().bold();
--    eprintln!("{s}: Unable to find data directory for ratatui-async-template");
-+    eprintln!("{s}: Unable to find data directory for your-project-name-here");
-     std::process::exit(libc::EXIT_FAILURE)
-   };
-   directory
-@@ -55,7 +55,7 @@ pub fn get_config_dir() -> PathBuf {
- pub fn initialize_logging() -> Result<()> {
-   let directory = get_data_dir();
-   std::fs::create_dir_all(directory.clone()).context(format!("{directory:?} could not be created"))?;
--  let log_path = directory.join("ratatui-async-template.log");
-+  let log_path = directory.join("your-project-name-here.log");
-   let log_file = std::fs::File::create(log_path)?;
-   let file_subscriber = tracing_subscriber::fmt::layer()
-     .with_file(true)
-@@ -109,7 +109,7 @@ macro_rules! trace_dbg {
- pub fn version() -> String {
-   let author = clap::crate_authors!();
-
--  let commit_hash = env!("RATATUI_ASYNC_TEMPLATE_GIT_INFO");
-+  let commit_hash = env!("YOUR_PROJECT_NAME_HERE_GIT_INFO");
-
-   // let current_exe_path = PathBuf::from(clap::crate_name!()).display().to_string();
-   let config_dir_path = get_config_dir().display().to_string();
+.github/workflows/cd.yml
+17:file: target/release/ratatui-async-template
+21:file: target/release/ratatui-async-template.exe
+25:file: target/release/ratatui-async-template
+65:name: ratatui-async-template-${{ matrix.os }}
+67:target/release/ratatui-async-template${{ matrix.os == 'windows-latest' && '.exe' || '' }}
+87:asset_path: ./target/release/ratatui-async-template${{ matrix.os == 'windows-latest' && '.exe' || [... 0 more matches]
+88:asset_name: ratatui-async-template-${{ matrix.os }}
 ```
-
 
 Here's some other changes you probably want to make:
 
 ```bash
 $ rg "dheepak"
+
 LICENSE
 1:Copyright (c) 2023 Dheepak Krishnamurthy
 
@@ -181,12 +98,4 @@ Cargo.toml
 src/utils.rs
 32:} else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "ratatui-async-template") {
 45:} else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "ratatui-async-template") {
-
-docs/index.qmd
-38:git clone https://github.com/kdheepak/ratatui-async-template your-project-name-here
-106:authors = ["Dheepak Krishnamurthy"]
-138:-  } else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "ratatui-async-template") {
-139:+  } else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "your-project-name-here") {
-154:-  } else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "ratatui-async-template") {
-155:+  } else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "your-project-name-here") {
 ```
