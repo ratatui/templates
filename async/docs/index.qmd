@@ -1,6 +1,10 @@
 ---
-title: Introduction
+title: Home
 ---
+
+{{< include ../README.md >}}
+
+## Introduction
 
 [`ratatui`](https://github.com/ratatui-org/ratatui) is a Rust library to build rich terminal user interfaces (TUIs) and dashboards.
 It is a community fork of the original [`tui-rs`](https://github.com/fdehau/tui-rs) created to maintain and improve the project.
