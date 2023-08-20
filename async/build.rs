@@ -42,5 +42,5 @@ fn main() {
     }
   }
 
-  println!("cargo:rustc-env=RATATUI_TEMPLATE_GIT_INFO={}", git_describe);
+  println!("cargo:rustc-env=RATATUI_ASYNC_TEMPLATE_GIT_INFO={}", git_describe);
 }

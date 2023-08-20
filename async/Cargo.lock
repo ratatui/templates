@@ -978,7 +978,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "ratatui-template"
+name = "ratatui-async-template"
 version = "0.1.0"
 dependencies = [
  "anyhow",

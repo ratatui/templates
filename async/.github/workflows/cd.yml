@@ -14,15 +14,15 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            file: target/release/ratatui-template
+            file: target/release/ratatui-async-template
             args: --best --lzma
             strip: true
           - os: windows-latest
-            file: target/release/ratatui-template.exe
+            file: target/release/ratatui-async-template.exe
             args: -9
             strip: false
           - os: macos-latest
-            file: target/release/ratatui-template
+            file: target/release/ratatui-async-template
             args: --best
             strip: true
 
@@ -62,9 +62,9 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
         with:
-          name: ratatui-template-${{ matrix.os }}
+          name: ratatui-async-template-${{ matrix.os }}
           path: |
-            target/release/ratatui-template${{ matrix.os == 'windows-latest' && '.exe' || '' }}
+            target/release/ratatui-async-template${{ matrix.os == 'windows-latest' && '.exe' || '' }}
 
       - name: Create Release
         id: create_release
@@ -84,6 +84,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./target/release/ratatui-template${{ matrix.os == 'windows-latest' && '.exe' || '' }}
-          asset_name: ratatui-template-${{ matrix.os }}
+          asset_path: ./target/release/ratatui-async-template${{ matrix.os == 'windows-latest' && '.exe' || '' }}
+          asset_name: ratatui-async-template-${{ matrix.os }}
           asset_content_type: application/octet-stream

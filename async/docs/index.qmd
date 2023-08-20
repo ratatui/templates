@@ -2,11 +2,11 @@
 title: Introduction
 ---
 
-[`ratatui`](https://github.com/tui-rs-revival/ratatui) is a Rust library to build rich terminal user interfaces (TUIs) and dashboards.
+[`ratatui`](https://github.com/ratatui-org/ratatui) is a Rust library to build rich terminal user interfaces (TUIs) and dashboards.
 It is a community fork of the original [`tui-rs`](https://github.com/fdehau/tui-rs) created to maintain and improve the project.
 
-The [source code of this project](https://github.com/kdheepak/ratatui-template) is an opinionated template for getting up and running with `ratatui`.
-You can pick and choose the pieces of this `ratatui-template` to suit your needs and sensibilities.
+The [source code of this project](https://github.com/ratatui-org/ratatui-async-template) is an opinionated template for getting up and running with `ratatui`.
+You can pick and choose the pieces of this `ratatui-async-template` to suit your needs and sensibilities.
 This rest of this documentation is a walk-through of why the code is structured the way it is, so that you are aided in modifying it as you require.
 
 ## Background
@@ -18,7 +18,7 @@ In short, the `ratatui` library is largely handles just drawing to the terminal.
 Additionally, the library does not provide any input handling nor any event system.
 The responsibility of getting keyboard input events, modifying the state of your application based on those events and figuring out which widgets best reflect the view of the state of your application is on you.
 
-The `tui-rs-revival` project has added a template that covers the basics, and you find that here: <https://github.com/tui-rs-revival/rust-tui-template>.
+The `ratatui-org` project has added a template that covers the basics, and you find that here: <https://github.com/ratatui-org/rust-tui-template>.
 
 I wanted to take another stab at a template, one that uses `tokio` and organizes the code a little differently.
 This is an opinionated view on how to organize a `ratatui` project.
@@ -33,8 +33,8 @@ This project also adds commonly used dependencies like logging, command line arg
 As part of this documentation, we'll walk through some of the different ways you may choose to organize your code and project in order to build a functioning terminal user interface.
 You can pick and choose the parts you like.
 
-- <https://github.com/tui-rs-revival/rust-tui-template>
-- <https://github.com/tui-rs-revival/ratatui/tree/main/examples>
+- <https://github.com/ratatui-org/rust-tui-template>
+- <https://github.com/ratatui-org/ratatui/tree/main/examples>
 - <https://github.com/veeso/tui-realm/>
 
 ## Usage
@@ -42,10 +42,10 @@ You can pick and choose the parts you like.
 You can start by git cloning the project:
 
 ```bash
-git clone https://github.com/kdheepak/ratatui-template your-project-name-here
+git clone https://github.com/kdheepak/ratatui-async-template your-project-name-here
 ```
 
-I also recommend renaming the `ratatui-template` and `RATATUI_TEMPLATE` in all files with the name of your project.
+I also recommend renaming the `ratatui-async-template` and `RATATUI_ASYNC_TEMPLATE` in all files with the name of your project.
 
 Here's a diff of the changes you should expect:
 
@@ -55,8 +55,8 @@ index c3df7c8..2adc637 100644
 --- a/.envrc
 +++ b/.envrc
 @@ -1,3 +1,3 @@
--export RATATUI_TEMPLATE_CONFIG=`pwd`/.config
--export RATATUI_TEMPLATE_DATA=`pwd`/.data
+-export RATATUI_ASYNC_TEMPLATE_CONFIG=`pwd`/.config
+-export RATATUI_ASYNC_TEMPLATE_DATA=`pwd`/.data
 +export YOUR_PROJECT_NAME_HERE_CONFIG=`pwd`/.config
 +export YOUR_PROJECT_NAME_HERE_DATA=`pwd`/.data
  export RUST_LOG=debug
@@ -69,7 +69,7 @@ index 27cb77c..a6b58d4 100644
  ]
 
  [[package]]
--name = "ratatui-template"
+-name = "ratatui-async-template"
 +name = "your-project-name-here"
  version = "0.1.0"
  dependencies = [
@@ -81,7 +81,7 @@ index e7bf63d..95b9980 100644
 +++ b/Cargo.toml
 @@ -1,5 +1,5 @@
  [package]
--name = "ratatui-template"
+-name = "ratatui-async-template"
 +name = "your-project-name-here"
  version = "0.1.0"
  edition = "2021"
@@ -90,7 +90,7 @@ index e7bf63d..95b9980 100644
  strip = true
 
  [[bin]]
--name = "ratatui-template"
+-name = "ratatui-async-template"
 +name = "your-project-name-here"
  path = "src/main.rs"
 
@@ -102,7 +102,7 @@ index b206e27..8485fac 100644
      }
    }
 
--  println!("cargo:rustc-env=RATATUI_TEMPLATE_GIT_INFO={}", git_describe);
+-  println!("cargo:rustc-env=RATATUI_ASYNC_TEMPLATE_GIT_INFO={}", git_describe);
 +  println!("cargo:rustc-env=YOUR_PROJECT_NAME_HERE_GIT_INFO={}", git_describe);
  }
 
@@ -114,15 +114,15 @@ index 21e3adb..05ce270 100644
  }
 
  pub fn get_data_dir() -> PathBuf {
--  let directory = if let Ok(s) = std::env::var("RATATUI_TEMPLATE_DATA") {
+-  let directory = if let Ok(s) = std::env::var("RATATUI_ASYNC_TEMPLATE_DATA") {
 +  let directory = if let Ok(s) = std::env::var("YOUR_PROJECT_NAME_HERE_DATA") {
      PathBuf::from(s)
--  } else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "ratatui-template") {
+-  } else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "ratatui-async-template") {
 +  } else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "your-project-name-here") {
      proj_dirs.data_local_dir().to_path_buf()
    } else {
      let s = "Error".red().bold();
--    eprintln!("{s}: Unable to find data directory for ratatui-template");
+-    eprintln!("{s}: Unable to find data directory for ratatui-async-template");
 +    eprintln!("{s}: Unable to find data directory for your-project-name-here");
      std::process::exit(libc::EXIT_FAILURE)
    };
@@ -130,15 +130,15 @@ index 21e3adb..05ce270 100644
  }
 
  pub fn get_config_dir() -> PathBuf {
--  let directory = if let Ok(s) = std::env::var("RATATUI_TEMPLATE_CONFIG") {
+-  let directory = if let Ok(s) = std::env::var("RATATUI_ASYNC_TEMPLATE_CONFIG") {
 +  let directory = if let Ok(s) = std::env::var("YOUR_PROJECT_NAME_HERE_CONFIG") {
      PathBuf::from(s)
--  } else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "ratatui-template") {
+-  } else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "ratatui-async-template") {
 +  } else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "your-project-name-here") {
      proj_dirs.config_local_dir().to_path_buf()
    } else {
      let s = "Error".red().bold();
--    eprintln!("{s}: Unable to find data directory for ratatui-template");
+-    eprintln!("{s}: Unable to find data directory for ratatui-async-template");
 +    eprintln!("{s}: Unable to find data directory for your-project-name-here");
      std::process::exit(libc::EXIT_FAILURE)
    };
@@ -147,7 +147,7 @@ index 21e3adb..05ce270 100644
  pub fn initialize_logging() -> Result<()> {
    let directory = get_data_dir();
    std::fs::create_dir_all(directory.clone()).context(format!("{directory:?} could not be created"))?;
--  let log_path = directory.join("ratatui-template.log");
+-  let log_path = directory.join("ratatui-async-template.log");
 +  let log_path = directory.join("your-project-name-here.log");
    let log_file = std::fs::File::create(log_path)?;
    let file_subscriber = tracing_subscriber::fmt::layer()
@@ -156,7 +156,7 @@ index 21e3adb..05ce270 100644
  pub fn version() -> String {
    let author = clap::crate_authors!();
 
--  let commit_hash = env!("RATATUI_TEMPLATE_GIT_INFO");
+-  let commit_hash = env!("RATATUI_ASYNC_TEMPLATE_GIT_INFO");
 +  let commit_hash = env!("YOUR_PROJECT_NAME_HERE_GIT_INFO");
 
    // let current_exe_path = PathBuf::from(clap::crate_name!()).display().to_string();
@@ -175,14 +175,14 @@ Cargo.toml
 5:authors = ["Dheepak Krishnamurthy"]
 
 src/utils.rs
-32:} else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "ratatui-template") {
-45:} else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "ratatui-template") {
+32:} else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "ratatui-async-template") {
+45:} else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "ratatui-async-template") {
 
 docs/index.qmd
-38:git clone https://github.com/kdheepak/ratatui-template your-project-name-here
+38:git clone https://github.com/kdheepak/ratatui-async-template your-project-name-here
 106:authors = ["Dheepak Krishnamurthy"]
-138:-  } else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "ratatui-template") {
+138:-  } else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "ratatui-async-template") {
 139:+  } else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "your-project-name-here") {
-154:-  } else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "ratatui-template") {
+154:-  } else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "ratatui-async-template") {
 155:+  } else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "your-project-name-here") {
 ```

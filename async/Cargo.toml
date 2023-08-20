@@ -1,5 +1,5 @@
 [package]
-name = "ratatui-template"
+name = "ratatui-async-template"
 version = "0.1.0"
 edition = "2021"
 authors = ["Dheepak Krishnamurthy"]
@@ -59,5 +59,5 @@ lto = true
 strip = true
 
 [[bin]]
-name = "ratatui-template"
+name = "ratatui-async-template"
 path = "src/main.rs"

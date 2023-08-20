@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
-use ratatui_template::{
+use ratatui_async_template::{
   app::App,
   utils::{initialize_logging, initialize_panic_handler, version},
 };

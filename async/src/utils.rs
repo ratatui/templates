@@ -26,23 +26,23 @@ pub fn initialize_panic_handler() {
 }
 
 pub fn get_data_dir() -> Result<PathBuf> {
-  let directory = if let Ok(s) = std::env::var("RATATUI_TEMPLATE_DATA") {
+  let directory = if let Ok(s) = std::env::var("RATATUI_ASYNC_TEMPLATE_DATA") {
     PathBuf::from(s)
-  } else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "ratatui-template") {
+  } else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "ratatui-async-template") {
     proj_dirs.data_local_dir().to_path_buf()
   } else {
-    return Err(anyhow!("Unable to find data directory for ratatui-template"));
+    return Err(anyhow!("Unable to find data directory for ratatui-async-template"));
   };
   Ok(directory)
 }
 
 pub fn get_config_dir() -> Result<PathBuf> {
-  let directory = if let Ok(s) = std::env::var("RATATUI_TEMPLATE_CONFIG") {
+  let directory = if let Ok(s) = std::env::var("RATATUI_ASYNC_TEMPLATE_CONFIG") {
     PathBuf::from(s)
-  } else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "ratatui-template") {
+  } else if let Some(proj_dirs) = ProjectDirs::from("com", "kdheepak", "ratatui-async-template") {
     proj_dirs.config_local_dir().to_path_buf()
   } else {
-    return Err(anyhow!("Unable to find config directory for ratatui-template"));
+    return Err(anyhow!("Unable to find config directory for ratatui-async-template"));
   };
   Ok(directory)
 }
@@ -50,7 +50,7 @@ pub fn get_config_dir() -> Result<PathBuf> {
 pub fn initialize_logging() -> Result<()> {
   let directory = get_data_dir()?;
   std::fs::create_dir_all(directory.clone()).context(format!("{directory:?} could not be created"))?;
-  let log_path = directory.join("ratatui-template.log");
+  let log_path = directory.join("ratatui-async-template.log");
   let log_file = std::fs::File::create(log_path)?;
   let file_subscriber = tracing_subscriber::fmt::layer()
     .with_file(true)
@@ -104,7 +104,7 @@ macro_rules! trace_dbg {
 pub fn version() -> String {
   let author = clap::crate_authors!();
 
-  let commit_hash = env!("RATATUI_TEMPLATE_GIT_INFO");
+  let commit_hash = env!("RATATUI_ASYNC_TEMPLATE_GIT_INFO");
 
   // let current_exe_path = PathBuf::from(clap::crate_name!()).display().to_string();
   let config_dir_path = get_config_dir().unwrap().display().to_string();
