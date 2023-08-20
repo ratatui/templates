@@ -16,6 +16,7 @@
 - Rename `ratatui-async-template` and `RATATUI_ASYNC_TEMPLATE` with your `app-name` and `APP_NAME` in the following files:
   - `src/main.rs`
   - `src/utils.rs`
+  - `src/config.rs`
   - `build.rs`
   - `Cargo.toml`
   - `README.md`
