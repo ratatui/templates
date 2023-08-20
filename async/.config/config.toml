@@ -1,0 +1,11 @@
+[keymap]
+"q" = "Quit"
+"j" = "ScheduleIncrement"
+"k" = "ScheduleDecrement"
+"l" = "ToggleShowLogger"
+"/" = "EnterInsert"
+"ESC" = "EnterNormal"
+"Enter" = "EnterNormal"
+"Ctrl-d" = "Quit"
+"Ctrl-c" = "Quit"
+"Ctrl-z" = "Suspend"

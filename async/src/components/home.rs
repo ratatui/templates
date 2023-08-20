@@ -1,6 +1,6 @@
-use std::time::Duration;
+use std::{collections::HashMap, time::Duration};
 
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::{
   layout::{Alignment, Constraint, Direction, Layout, Rect},
   style::{Color, Modifier, Style},
@@ -31,11 +31,17 @@ pub struct Home {
   pub mode: Mode,
   pub input: Input,
   pub action_tx: Option<mpsc::UnboundedSender<Action>>,
+  pub keymap: HashMap<KeyEvent, Action>,
 }
 
 impl Home {
   pub fn new() -> Self {
     Self::default()
+  }
+
+  pub fn keymap(mut self, keymap: HashMap<KeyEvent, Action>) -> Self {
+    self.keymap = keymap;
+    self
   }
 
   pub fn tick(&mut self) {
@@ -81,16 +87,10 @@ impl Component for Home {
   fn handle_key_events(&mut self, key: KeyEvent) -> Action {
     match self.mode {
       Mode::Normal | Mode::Processing => {
-        match key.code {
-          KeyCode::Char('q') => Action::Quit,
-          KeyCode::Char('d') if key.modifiers.contains(KeyModifiers::CONTROL) => Action::Quit,
-          KeyCode::Char('c') if key.modifiers.contains(KeyModifiers::CONTROL) => Action::Quit,
-          KeyCode::Char('z') if key.modifiers.contains(KeyModifiers::CONTROL) => Action::Suspend,
-          KeyCode::Char('l') => Action::ToggleShowLogger,
-          KeyCode::Char('j') => Action::ScheduleIncrement,
-          KeyCode::Char('k') => Action::ScheduleDecrement,
-          KeyCode::Char('/') => Action::EnterInsert,
-          _ => Action::Tick,
+        if let Some(action) = self.keymap.get(&key) {
+          *action
+        } else {
+          Action::Tick
         }
       },
       Mode::Insert => {

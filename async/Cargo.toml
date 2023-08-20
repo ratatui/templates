@@ -11,6 +11,7 @@ build = "build.rs"
 ratatui = {version = "0.21.0"}
 crossterm = { version = "0.26.1", default-features = false, features = [
   "event-stream",
+  "serde",
 ] }
 tokio = { version = "1.28.2", features = ["full"] }
 tokio-stream = "0.1.14"
@@ -48,6 +49,9 @@ libc = "0.2.146"
 tui-input = "0.7.1"
 signal-hook = "0.3.15"
 tokio-util = "0.7.8"
+serde = { version = "1.0.183", features = ["derive"] }
+serde_derive = "1.0.183"
+config = "0.13.3"
 
 [profile.release]
 codegen-units = 1

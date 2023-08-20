@@ -6,12 +6,14 @@ use tokio::sync::{mpsc, Mutex};
 use crate::{
   action::Action,
   components::{home::Home, Component},
+  config::Config,
   event::EventHandler,
   terminal::TerminalHandler,
   trace_dbg,
 };
 
 pub struct App {
+  pub config: Config,
   pub tick_rate: (u64, u64),
   pub home: Arc<Mutex<Home>>,
   pub should_quit: bool,
@@ -20,8 +22,11 @@ pub struct App {
 
 impl App {
   pub fn new(tick_rate: (u64, u64)) -> Result<Self> {
-    let home = Arc::new(Mutex::new(Home::new()));
-    Ok(Self { tick_rate, home, should_quit: false, should_suspend: false })
+    let h = Home::new();
+    let config = Config::new()?;
+    let h = h.keymap(config.keymap.0.clone());
+    let home = Arc::new(Mutex::new(h));
+    Ok(Self { tick_rate, home, should_quit: false, should_suspend: false, config })
   }
 
   pub async fn run(&mut self) -> Result<()> {

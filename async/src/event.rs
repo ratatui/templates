@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use crossterm::event::{Event as CrosstermEvent, KeyEvent, KeyEventKind, MouseEvent};
 use futures::{FutureExt, StreamExt};
+use serde_derive::{Deserialize, Serialize};
 use tokio::{
   sync::{mpsc, Mutex},
   task::JoinHandle,
@@ -13,7 +14,7 @@ use crate::{
   components::{home::Home, Component},
 };
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum Event {
   Quit,
   Error,
