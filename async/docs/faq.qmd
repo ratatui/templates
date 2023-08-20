@@ -7,7 +7,7 @@ title: FAQ
 `ratatui` isn't a native `async` library.
 So is it beneficial to use `tokio` or `async`/`await`?
 
-And as a user, there's really only 1 point of interface with `ratatui` and that's the `terminal.draw(|f| ui(f))` functionality (rendering of widgets happens in `ui(f)`).
+And as a user, there really is just one point of interface with the `ratatui` library and that's the `terminal.draw(|f| ui(f))` functionality, because the rendering of widgets happens in `ui(f)`.
 Everything else in your code is your own to do as you wish.
 
 Should `terminal.draw(|f| ui(f))` be `async`?
@@ -20,10 +20,10 @@ That's covered in the material in this documentation.
 
 The only other part related to `ratatui` that is beneficial to being `async` is reading the key event inputs from `stdin`, and that can be made `async` with `crossterm`'s event-stream.
 
-So the real question (in my mind usually) is what other parts of your app require `async` or benefit from being `async`?
+So the real question is what other parts of your app require `async` or benefit from being `async`?
 If the answer is not much, maybe it is simpler to not use `async` and avoiding `tokio`.
 
-Another canary would be, do you think your app would work better with 1 thread like this?
+Another way to think about it is, do you think your app would work better with 1 thread like this?
 
 ```svgbob
  ,-------------.
@@ -67,4 +67,4 @@ Or would it work with 3 threads / `tokio` tasks like this:
 `------------------´    ┊                                  ┊  `------------------´
 ```
 
-The former be without `async` and the latter is the approach described in this documentation with `tokio`.
+The former be done without `async` and the latter is the approach described in this documentation with `tokio`.

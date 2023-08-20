@@ -15,6 +15,7 @@ $ tree
    │  ├── home.rs
    │  ├── logger.rs
    │  └── mod.rs
+   ├── config.rs
    ├── event.rs
    ├── lib.rs
    ├── main.rs
