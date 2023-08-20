@@ -188,6 +188,46 @@ impl EventHandler {
 }
 ```
 
+## `diff`
+
+```diff
+  enum Event {
+    Key(crossterm::event::KeyEvent)
+  }
+
+  struct EventHandler {
+-   rx: std::sync::mpsc::Receiver<Event>,
++   rx: tokio::sync::mpsc::UnboundedReceiver<Event>,
+  }
+
+  impl EventHandler {
+    fn new() -> Self {
+      let tick_rate = std::time::Duration::from_millis(250);
+-     let (tx, rx) =  std::sync::mpsc::channel();
++     let (tx, mut rx) =  tokio::sync::mpsc::unbounded_channel();
+-     std::thread::spawn(move || {
++     tokio::spawn(async move {
+        loop {
+          if crossterm::event::poll(tick_rate)? {
+            match crossterm::event::read()? {
+              CrosstermEvent::Key(e) => tx.send(Event::Key(e)),
+              _ => unimplemented!(),
+            }?
+          }
+        }
+      })
+
+      EventHandler { rx }
+    }
+
+-   fn next(&self) -> Result<Event> {
++   async fn next(&self) -> Result<Event> {
+-     Ok(self.rx.recv()?)
++     Ok(self.rx.recv().await.ok()?)
+    }
+  }
+```
+
 :::
 
 Tokio is an asynchronous runtime for the Rust programming language.
