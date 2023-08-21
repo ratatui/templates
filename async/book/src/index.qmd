@@ -35,9 +35,13 @@ This project also adds commonly used dependencies like logging, command line arg
 As part of this documentation, we'll walk through some of the different ways you may choose to organize your code and project in order to build a functioning terminal user interface.
 You can pick and choose the parts you like.
 
-- <https://github.com/ratatui-org/rust-tui-template>
-- <https://github.com/ratatui-org/ratatui/tree/main/examples>
-- <https://github.com/veeso/tui-realm/>
+You may also want to check out the following links (roughly in order of increasing complexity):
+
+- <https://github.com/ratatui-org/ratatui/tree/main/examples>: Simple one-off examples to illustrate various widgets and features in `ratatui`.
+- <https://github.com/ratatui-org/rust-tui-template>: Starter kit for using `ratatui`
+- <https://github.com/ratatui-org/ratatui-book/tree/main/ratatui-book-tutorial-project>: Tutorial project that the user a simple interface to enter key-value pairs, which will printed in json.
+- <https://github.com/ratatui-org/ratatui-async-template>: Async tokio crossterm based opinionated starter kit for using `ratatui`.
+- <https://github.com/veeso/tui-realm/>: A framework for `tui.rs` to simplify the implementation of terminal user interfaces adding the possibility to work with re-usable components with properties and states.
 
 ## Usage
 
