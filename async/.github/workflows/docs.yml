@@ -43,11 +43,11 @@ jobs:
           command: install
           args: --version 0.7.7 mdbook-linkcheck
 
-      - run: mdbook build
+      - run: mdbook build book
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         if: ${{ github.ref == 'refs/heads/main' }}
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./book
+          publish_dir: ./book/book
