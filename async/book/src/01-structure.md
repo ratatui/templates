@@ -34,3 +34,5 @@ This `main.rs` file incorporates some key features that are not necessarily rela
 - XDG Base Directory Specification
 - Logging
 - Panic Handler
+
+These are described in more detail in the [`utils.rs` section](./10-structure.md).
