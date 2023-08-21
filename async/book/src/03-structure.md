@@ -224,6 +224,30 @@ impl EventHandler {
   }
 ```
 
+````admonish warning
+
+A lot of examples out there in the wild might use the following code for sending key presses:
+
+
+```rust
+  CrosstermEvent::Key(e) => tx.send(Event::Key(e)),
+```
+
+However, on Windows, when using `Crossterm`, this will send the same `Event::Key(e)` twice; one for when you press the key, i.e. `KeyEventKind::Press` and one for when you release the key, i.e. `KeyEventKind::Release`.
+On `MacOS` and `Linux` only `KeyEventKind::Press` kinds of `key` event is generated.
+
+To make the code work as expected across all platforms, you can do this instead:
+
+```rust
+  CrosstermEvent::Key(key) => {
+    if key.kind == KeyEventKind::Press {
+      event_tx.send(Event::Key(key)).unwrap();
+    }
+  },
+```
+
+````
+
 Tokio is an asynchronous runtime for the Rust programming language.
 It is one of the more popular runtimes for asynchronous programming in rust.
 You can learn more about here <https://tokio.rs/tokio/tutorial>.
