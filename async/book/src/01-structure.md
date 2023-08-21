@@ -75,7 +75,7 @@ Feel free to modify the `utils::get_config_dir()` and `utils::get_data_dir()` fu
 
 ### Logging
 
-The `utils::initialize_logging()` function is also defined in `src/utils.rs`.
+The `utils::initialize_logging()` function is defined in `src/utils.rs`.
 The log level is decided by the `RUST_LOG` environment variable (default = `log::LevelFilter::Info`).
 In addition, the location of the log files are decided by the `RATATUI_ASYNC_TEMPLATE_DATA` environment variable (default = `XDG_DATA_HOME (local)`).
 
