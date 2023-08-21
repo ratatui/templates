@@ -8,8 +8,12 @@ The `main.rs` file is the entry point of the application. Here's the complete `m
 {{#include ../../src/main.rs:all}}
 ```
 
+We'll describe below in more detail the different aspects of this file.
+
 ````admonish
-You'll notice that `main.rs` has `use ratatui_async_template::{...}`. `ratatui_async_template` will be something you end up renaming based on your project.
+You'll notice that `main.rs` has `use ratatui_async_template::{...}`.
+
+You will have to change `ratatui_async_template` what whatever you end up renaming your project.
 
 The contents that are imported on this line are from the `lib.rs` file:
 
