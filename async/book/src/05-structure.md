@@ -1,6 +1,4 @@
----
-title: "`app.rs`"
----
+# `app.rs`
 
 Finally, putting all the pieces together, we are almost ready to get the `App` struct.
 Before we do, we should discuss the process of a TUI.
@@ -26,7 +24,7 @@ Most TUIs are single process, single threaded applications.
 When an application is structured like this, the TUI is blocking at each step:
 
 1. Waiting for a Event.
-    - If no key or mouse event in 250ms, send `Tick`.
+   - If no key or mouse event in 250ms, send `Tick`.
 2. Update the state of the app based on `event` or `action`.
 3. `draw` the state of the app to the terminal using `ratatui`.
 
@@ -125,9 +123,9 @@ struct App {
 }
 ```
 
-::: callout-note
+```admonish note
 The only reason we are using an `Option<>` here for `action_tx` is that we are not initializing the action channel when creating the instance of the `App`.
-:::
+```
 
 This is what we want to do:
 

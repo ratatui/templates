@@ -1,6 +1,4 @@
----
-title: "`config.rs`"
----
+# `config.rs`
 
 At the moment, our keys are hard coded into the app.
 
@@ -39,7 +37,7 @@ impl Component for Home {
 If a user wants to press `Up` and `Down` arrow key to `ScheduleIncrement` and `ScheduleDecrement`, the only way for them to do it is having to make changes to the source code and recompile the app.
 It would be better to provide a way for users to set up a configuration file that maps key presses to actions.
 
-For example, assume we have the following `config.toml` file:
+For example, assume we want a user to be able to set up a keyevents-to-actions mapping in a `config.toml` file like below:
 
 ```toml
 [keymap]
@@ -121,13 +119,30 @@ Now all we need to do is implement a `parse_key_event` function.
 
 With that implementation complete, we can add a `HashMap` to store a map of `KeyEvent`s and `Action` in the `Home` component:
 
-
 ```rust {filename="components/home.rs"}
 #[derive(Default)]
 pub struct Home {
   ...
   pub keymap: HashMap<KeyEvent, Action>,
 }
+```
+
+Now we have to create an instance of `Config` and pass the keymap to `Home`:
+
+```rust
+impl App {
+  pub fn new(tick_rate: (u64, u64)) -> Result<Self> {
+    let h = Home::new();
+    let config = Config::new()?;
+    let h = h.keymap(config.keymap.0.clone());
+    let home = Arc::new(Mutex::new(h));
+    Ok(Self { tick_rate, home, should_quit: false, should_suspend: false, config })
+  }
+}
+```
+
+```admonish tip
+You can create different keyevent presses to map to different actions based on the mode of the app by adding more sections into the toml configuration file.
 ```
 
 And in the `handle_key_events` we get the `Action` that should to be performed from the `HashMap` directly.

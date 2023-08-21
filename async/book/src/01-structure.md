@@ -1,6 +1,4 @@
----
-title: "`main.rs`"
----
+# `main.rs`
 
 In this section, let's just cover the contents of `main.rs`, `build.rs` and `utils.rs`.
 
@@ -43,7 +41,7 @@ async fn main() -> Result<()> {
 }
 ```
 
-::: callout
+````admonish
 You'll notice that `main.rs` has `use ratatui_async_template::{...}`. `ratatui_async_template` will be something you end up renaming based on your project.
 
 The contents that are imported on this line are from the `lib.rs` file:
@@ -66,7 +64,7 @@ pub mod utils;
 
 We will cover these modules in more detail in the next sections.
 
-:::
+````
 
 In essence, the `main` function creates an instance of `App` and calls `app.run()`, which runs the "get event -> update state -> render" loop.
 We will talk more about this in a later section.

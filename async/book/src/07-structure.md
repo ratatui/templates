@@ -1,6 +1,4 @@
----
-title: "`components/home.rs`"
----
+# `components/home.rs`
 
 Here's an example of the `Home` component that moves over code from `App` and also adds state:
 

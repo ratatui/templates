@@ -1,6 +1,4 @@
----
-title: "`action.rs`"
----
+# `action.rs`
 
 Now that we have created a `Tui` and `EventHandler`, we are also going to introduce the `Command` pattern, i.e. the concept of "reified method calls" from <http://gameprogrammingpatterns.com/command.html>.
 These are also typically called `Action`s or `Message`s.
@@ -15,8 +13,7 @@ pub enum Action {
 }
 ```
 
-::: callout-tip
-
+````admonish tip
 You can attach payloads to enums in rust.
 For example, in the following `Action` enum, `Increment(usize)` and `Decrement(usize)` have a `usize` payload which can be used to represent the value to add to or subtract from the counter as a payload.
 
@@ -31,7 +28,7 @@ pub enum Action {
 }
 ```
 
-:::
+````
 
 Let's define a simple `impl App` such that every `Event` from the `EventHandler` is mapped to an `Action` from the enum.
 
@@ -154,7 +151,7 @@ fn dispatch(app_state::AppState, action::Action) -> (new_app_state::State, Optio
 }
 ```
 
-::: callout-note
+````admonish note
 In [`Charm`'s `bubbletea`](https://github.com/charmbracelet/bubbletea), this function is called an `Update`. Here's an example of what that might look like:
 
 ```go
@@ -178,7 +175,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
     return m, nil
 }
 ```
-:::
+
+````
 
 Writing code to follow this architecture in rust (in my opinion) requires more upfront design, mostly because you have to make your `AppState` struct `Clone`-friendly.
 If I were in an exploratory or prototype stage of a TUI, I wouldn't want to do that and would only be interested in refactoring it this way once I got a handle on the design.

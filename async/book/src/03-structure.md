@@ -1,6 +1,4 @@
----
-title: "`event.rs`"
----
+# `event.rs`
 
 In it's simplest form, most applications will have a `main` loop like this:
 
@@ -29,13 +27,13 @@ fn main() -> Result<()> {
 }
 ```
 
-::: callout-note
+```admonish note
 
 The `terminal.draw(|f| { ui(app, f); })` call is the only line in the code above that uses `ratatui` functionality.
 You can learn more about [`draw` from the official documentation](https://docs.rs/ratatui/latest/ratatui/terminal/struct.Terminal.html#method.draw).
 Essentially, `terminal.draw()` takes a callback that takes a [`Frame`](https://docs.rs/ratatui/latest/ratatui/terminal/struct.Frame.html) and expects the callback to render widgets to that frame, which is then drawn to the terminal using a double buffer technique.
 
-:::
+```
 
 While we are in the "raw mode", i.e. after we call `t.enter()`, any key presses in that terminal window are sent to `stdin`.
 We have to read these key presses from `stdin` if we want to act on them.
@@ -115,8 +113,6 @@ There are two ways to do this.
 We can either use OS threads or "green" threads, i.e. tasks, i.e. rust's `async`-`await` features + a future executor.
 
 Here's example code of reading key presses asynchronously using `std::thread` and `tokio::task`.
-
-::: {.panel-tabset}
 
 ## `std::thread`
 
@@ -227,8 +223,6 @@ impl EventHandler {
     }
   }
 ```
-
-:::
 
 Tokio is an asynchronous runtime for the Rust programming language.
 It is one of the more popular runtimes for asynchronous programming in rust.
@@ -369,18 +363,18 @@ impl EventHandler {
 }
 ```
 
-::: callout-note
+````admonish note
 
 Using `crossterm::event::EventStream::new()` requires the `event-stream` feature to be enabled.
 
 ```yml
 crossterm = { version = "0.26.1", default-features = false, features = [
-  "event-stream",
+"event-stream",
 ] }
 ```
-:::
+
+````
 
 With this `EventHandler` implemented, we can use `tokio` to create a separate "task" that handles any key asynchronously in our `main` loop.
 
 In the next section, we will introduce a `Command` pattern to bridge handling the effect of an event.
-

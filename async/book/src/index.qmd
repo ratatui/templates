@@ -1,8 +1,6 @@
----
-title: Home
----
+# Home
 
-{{< include ../README.md >}}
+{{#include ../../README.md}}
 
 ## Introduction
 
@@ -27,10 +25,10 @@ The `ratatui-org` project has added a template that covers the basics, and you f
 I wanted to take another stab at a template, one that uses `tokio` and organizes the code a little differently.
 This is an opinionated view on how to organize a `ratatui` project.
 
-::: {.callout .callout-tip}
+```admonish info
 Since `ratatui` is a immediate mode rendering based library, there are _multiple_ ways to organize your code, and there's no real "right" answer.
 Choose whatever works best for you!
-:::
+```
 
 This project also adds commonly used dependencies like logging, command line arguments, configuration options, etc.
 

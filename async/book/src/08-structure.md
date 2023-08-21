@@ -1,6 +1,4 @@
----
-title: "`components/logger.rs`"
----
+# `components/logger.rs`
 
 Here's an example of a simpler `Logger` component that is used instead the `Home` component.
 This `Logger` shows log output in the terminal user interface.

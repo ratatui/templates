@@ -1,6 +1,4 @@
----
-title: "`components/mod.rs`"
----
+# `components/mod.rs`
 
 In `components/mod.rs`, we implement a `trait` called `Component`:
 

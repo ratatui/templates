@@ -1,6 +1,4 @@
----
-title: FAQ
----
+# FAQ
 
 ### When should I use `tokio` or `async`/`await`?
 
@@ -56,15 +54,15 @@ Or would it work with 3 threads / `tokio` tasks like this:
                         ┊               |                  ┊
                         ┊  ,------------V--------------.   ┊     ,-------------.
                         ┊  | Send Action on action_tx  |---┊---->| Recv Action |
-                        ┊  `---------------------------´   ┊     `-----+-------´
+                        ┊  `---------------------------'   ┊     `-----+-------'
                         ┊                                  ┊           |
 ,-------------------.   ┊                                  ┊  ,--------v--------.
 | Recv on render_rx |<--┊----------------------------------┊--| Dispatch Action |
-`--------+----------´   ┊                                  ┊  `--------+--------´
+`--------+----------'   ┊                                  ┊  `--------+--------'
          |              ┊                                  ┊           |
 ,--------v---------.    ┊                                  ┊  ,--------v---------.
 | Render Component |    ┊                                  ┊  |   Update State   |
-`------------------´    ┊                                  ┊  `------------------´
+`------------------'    ┊                                  ┊  `------------------'
 ```
 
 The former be done without `async` and the latter is the approach described in this documentation with `tokio`.

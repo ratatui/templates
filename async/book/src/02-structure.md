@@ -1,6 +1,4 @@
----
-title: "`terminal.rs`"
----
+# `terminal.rs`
 
 In this section of the tutorial, we are going to discuss the basic components of the `Tui` struct.
 
@@ -33,13 +31,13 @@ You can use `termion` or `termwiz` instead here, and you'll have to change the i
 
 I personally like to use `crossterm` so that I can run the TUI on windows as well.
 
-::: callout-note
+```admonish note
 Terminals have two screen buffers for each window.
 The default screen buffer is what you are dropped into when you start up a terminal.
 The second screen buffer, called the alternate screen, is used for running interactive apps such as the `vim`, `less` etc.
 
 Here's a 8 minute talk on Terminal User Interfaces I gave at JuliaCon2020: <https://www.youtube.com/watch?v=-TASx67pphw> that might be worth watching for more information about how terminal user interfaces work.
-:::
+```
 
 We can reorganize the setup and teardown functions into an `enter()` and `exit()` methods on a `Tui` struct.
 
@@ -90,11 +88,10 @@ impl Tui {
 }
 ```
 
-::: callout-note
+```admonish note
 This is the same `Tui` struct we used in `initialize_panic_handler()`. We call `Tui::exit()` before printing the stacktrace.
-:::
+```
 
 Feel free to modify this as you need for use with `termion` or `wezterm`.
 
 The type alias to `Frame` is only to make the `components` folder easier to work with, and is not strictly required.
-

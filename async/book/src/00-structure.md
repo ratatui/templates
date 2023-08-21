@@ -1,6 +1,4 @@
----
-title: Structure of files
----
+# Structure of files
 
 The rust files in the `ratatui-async-template` project are organized as follows:
 
