@@ -24,4 +24,7 @@ git-repository-url = "https://github.com/ratatui-org/ratatui-async-template"
 git-repository-icon = "fa-github"
 edit-url-template = "https://github.com/ratatui-org/ratatui-async-template/edit/main/{path}"
 
+[output.html.playground]
+runnable = false
+
 [output.linkcheck]
