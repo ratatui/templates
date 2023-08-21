@@ -1,7 +1,20 @@
 # `action.rs`
 
-Now that we have created a `Tui` and `EventHandler`, we are also going to introduce the `Command` pattern, i.e. the concept of "reified method calls" from <http://gameprogrammingpatterns.com/command.html>.
+Now that we have created a `Tui` and `EventHandler`, we are also going to introduce the `Command` pattern.
+
+```admonition tip
+The `Command` pattern is the concept of "reified method calls".
+You can learn a lot more about this pattern from the excellent [http://gameprogrammingpatterns.com](http://gameprogrammingpatterns.com/command.html).
+```
+
 These are also typically called `Action`s or `Message`s.
+
+```admonition note
+It should come as no surprise that building a terminal user interface using `ratatui` (i.e. an immediate mode rendering library) has a lot of similarities with game development or user interface libraries.
+For example, you'll find these domains all have their own version of "input handling", "event loop" and "render" step.
+
+If you are coming to `ratatui` with a background in `Elm` or `React`, or if you are looking for a framework that extends the `ratatui` library to provide a more standard UI design paradigm, you can check out [`tui-realm`](https://github.com/veeso/tui-realm/) for a more featureful out of the box experience.
+```
 
 ```rust
 pub enum Action {
