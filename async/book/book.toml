@@ -23,3 +23,5 @@ additional-css = ["./mdbook-admonish.css", "./theme/catppuccin.css", "./theme/ca
 git-repository-url = "https://github.com/ratatui-org/ratatui-async-template"
 git-repository-icon = "fa-github"
 edit-url-template = "https://github.com/ratatui-org/ratatui-async-template/edit/main/{path}"
+
+[output.linkcheck]
