@@ -15,8 +15,9 @@ permissions:
   id-token: write
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-
+  group: "pages"
+  cancel-in-progress: false
+  
 jobs:
   build:
     runs-on: ubuntu-latest
