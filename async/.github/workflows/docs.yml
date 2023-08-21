@@ -23,33 +23,20 @@ jobs:
         with:
           mdbook-version: "latest"
 
-      # Cache cargo registry and target directories
-      - name: Cache Cargo registry and target
-        uses: actions/cache@v2
+      - uses: baptiste0928/cargo-install@v2
         with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}
+          crate: mdbook-admonish
+          version: "1.9.0"
 
-      - name: Install mdbook-admonish
-        uses: actions-rs/cargo@v1
+      - uses: baptiste0928/cargo-install@v2
         with:
-          command: install
-          args: --version 1.9.0 mdbook-admonish
+          crate: mdbook-svgbob2
+          version: "0.3.0"
 
-      - name: Install mdbook-svgbob2
-        uses: actions-rs/cargo@v1
+      - uses: baptiste0928/cargo-install@v2
         with:
-          command: install
-          args: --version 0.3.0 mdbook-svgbob2
-
-      - name: Install mdbook-linkcheck
-        uses: actions-rs/cargo@v1
-        with:
-          command: install
-          args: --version 0.7.7 mdbook-linkcheck
+          crate: mdbook-linkcheck
+          version: "0.7.7"
 
       - name: Build with mdbook
         run: mdbook build book
