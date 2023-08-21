@@ -2,7 +2,7 @@
 
 In this section, let's just cover the contents of `main.rs`, `build.rs` and `utils.rs`.
 
-The `main.rs` file is the entry point of the application. Here's the complete file:
+The `main.rs` file is the entry point of the application. Here's the complete `main.rs` file:
 
 ```rust,no_run,noplayground
 {{#include ../../src/main.rs:all}}
