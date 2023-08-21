@@ -57,10 +57,6 @@ jobs:
           command: install
           args: --version 0.7.7 mdbook-linkcheck
 
-      - name: Setup Pages
-        id: pages
-        uses: actions/configure-pages@v3
-
       - name: Build with mdbook
         run: mdbook build book
 
