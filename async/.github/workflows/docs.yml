@@ -9,6 +9,11 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
 
+env:
+  MDBOOK-ADMONISH-VERSION: v1.7.0
+  MDBOOK-CATPPUCCIN-VERSION: v0.1.1
+  MDBOOK-LINKCHECK-VERSION: v0.1.1
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -20,29 +25,26 @@ jobs:
         with:
           mdbook-version: "latest"
 
-      - name: Install mdbook-catppuccin
-        uses: actions-rs/cargo@v1
-        with:
-          command: install
-          args: --version 0.1.1 mdbook-catppuccin
+      - name: Install mdbook-plugins
+        run: |
+          mkdir mdbook-admonish
+          curl -LsSL https://github.com/tommilligan/mdbook-admonish/releases/download/${{ env.MDBOOK-ADMONISH-VERSION }}/mdbook-admonish-${{ env.MDBOOK-ADMONISH-VERSION }}-x86_64-unknown-linux-gnu.tar.gz | tar -xz --directory=./mdbook-admonish
+          echo `pwd`/mdbook-admonish >> $GITHUB_PATH
 
-      - name: Install mdbook-admonish
-        uses: actions-rs/cargo@v1
-        with:
-          command: install
-          args: --version 1.9.0 mdbook-admonish
+          mkdir mdbook-catppuccin
+          curl -LsSL https://github.com/catppuccin/mdBook/releases/download/${{ env.MDBOOK-CATPPUCCIN-VERSION }}/mdbook-catppuccin-x86_64-unknown-linux-gnu.tar.gz | tar -xz --directory=./mdbook-catppuccin
+          echo `pwd`/mdbook-catppuccin >> $GITHUB_PATH
+
+          curl -LsSf https://github.com/Michael-F-Bryan/mdbook-linkcheck/releases/download/${{ env.MDBOOK-LINKCHECK-VERSION }}/mdbook-linkcheck.x86_64-unknown-linux-gnu.zip -o mdbook-linkcheck.zip
+          unzip mdbook-linkcheck.zip -d mdbook-linkcheck
+          chmod +x mdbook-linkcheck/mdbook-linkcheck
+          echo `pwd`/mdbook-linkcheck >> $GITHUB_PATH
 
       - name: Install mdbook-svgbob2
         uses: actions-rs/cargo@v1
         with:
           command: install
           args: --version 0.3.0 mdbook-svgbob2
-
-      - name: Install mdbook-linkcheck
-        uses: actions-rs/cargo@v1
-        with:
-          command: install
-          args: --version 0.7.7 mdbook-linkcheck
 
       - name: Setup Pages
         id: pages
@@ -67,5 +69,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
