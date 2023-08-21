@@ -38,12 +38,6 @@ jobs:
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}
 
-      - name: Install mdbook-catppuccin
-        uses: actions-rs/cargo@v1
-        with:
-          command: install
-          args: --version 0.1.1 mdbook-catppuccin
-
       - name: Install mdbook-admonish
         uses: actions-rs/cargo@v1
         with:
