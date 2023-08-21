@@ -1,7 +1,7 @@
 # Summary
 
-- [Home](./index.qmd)
-- [FAQ](./faq.qmd)
+- [Home](./index.md)
+- [FAQ](./faq.md)
 
 - [Tutorial](./00-structure.md)
   - [`main.rs`](./01-structure.md)
