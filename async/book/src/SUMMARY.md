@@ -13,3 +13,4 @@
   - [`components/home.rs`](./07-structure.md)
   - [`components/logger.rs`](./08-structure.md)
   - [`config.rs`](./09-structure.md)
+  - [`utils.rs`](./10-structure.md)
