@@ -99,8 +99,8 @@ Finally, let's discuss the `initialize_panic_handler()` function, which is also 
 Your application may panic for a number of reasons (e.g. when you call `.unwrap()` on a `None`).
 And when this happens, you want to be a good citizen and:
 
-a) provide a useful stacktrace so that they can report errors back to you.
-b) not leave the users terminal state in a botched condition, resetting it back to the way it was.
+1. provide a useful stacktrace so that they can report errors back to you.
+2. not leave the users terminal state in a botched condition, resetting it back to the way it was.
 
 `utils::initialize_panic_handler()` uses [`better_panic`](https://docs.rs/better-panic/latest/better_panic/) to provide a prettier backtrace by default.
 
