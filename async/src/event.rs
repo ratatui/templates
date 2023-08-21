@@ -14,6 +14,7 @@ use crate::{
   components::{home::Home, Component},
 };
 
+// ANCHOR: event
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum Event {
   Quit,
@@ -95,3 +96,4 @@ impl EventHandler {
     self.cancellation_token.cancel();
   }
 }
+// ANCHOR_END: event

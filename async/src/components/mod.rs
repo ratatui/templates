@@ -8,6 +8,7 @@ use crate::{action::Action, event::Event, terminal::Frame};
 pub mod home;
 pub mod logger;
 
+//// ANCHOR: component
 pub trait Component {
   #[allow(unused_variables)]
   fn init(&mut self, tx: UnboundedSender<Action>) -> Result<()> {
@@ -39,3 +40,4 @@ pub trait Component {
   }
   fn render(&mut self, f: &mut Frame<'_>, rect: Rect);
 }
+//// ANCHOR_END: component

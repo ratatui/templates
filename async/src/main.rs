@@ -1,3 +1,4 @@
+// ANCHOR: all
 use anyhow::Result;
 use clap::Parser;
 use ratatui_async_template::{
@@ -5,6 +6,7 @@ use ratatui_async_template::{
   utils::{initialize_logging, initialize_panic_handler, version},
 };
 
+//// ANCHOR: args
 // Define the command line arguments structure
 #[derive(Parser, Debug)]
 #[command(version = version(), about = "ratatui template with crossterm and tokio")]
@@ -16,14 +18,12 @@ struct Args {
   #[arg(short, long, default_value_t = 50)]
   render_tick_rate: u64,
 }
+//// ANCHOR_END: args
 
-// Main function
 #[tokio::main]
 async fn main() -> Result<()> {
-  // Start with initializing logging
   initialize_logging()?;
 
-  // Next initialize the panic handler
   initialize_panic_handler();
 
   let args = Args::parse();
@@ -34,3 +34,4 @@ async fn main() -> Result<()> {
 
   Ok(())
 }
+// ANCHOR_END: all

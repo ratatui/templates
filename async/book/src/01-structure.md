@@ -4,41 +4,8 @@ In this section, let's just cover the contents of `main.rs`, `build.rs` and `uti
 
 The `main.rs` file is the entry point of the application. Here's the complete file:
 
-```rust {filename="main.rs"}
-use anyhow::Result;
-use clap::Parser;
-use ratatui_async_template::{
-  app::App,
-  utils::{initialize_logging, initialize_panic_handler, version},
-};
-
-// Define the command line arguments structure
-#[derive(Parser, Debug)]
-#[command(version = version(), about = "ratatui async template with crossterm and tokio")]
-struct Args {
-  /// App tick rate
-  #[arg(short, long, default_value_t = 1000)]
-  app_tick_rate: u64,
-  /// Render tick rate
-  #[arg(short, long, default_value_t = 50)]
-  render_tick_rate: u64,
-}
-
-// Main function
-#[tokio::main]
-async fn main() -> Result<()> {
-  initialize_logging()?;
-
-  initialize_panic_handler();
-
-  let args = Args::parse();
-  let tick_rate = (args.app_tick_rate, args.render_tick_rate);
-
-  let mut app = App::new(tick_rate)?;
-  app.run().await?;
-
-  Ok(())
-}
+```rust,no_run,noplayground
+{{#include ../../src/main.rs:all}}
 ```
 
 ````admonish
@@ -46,20 +13,8 @@ You'll notice that `main.rs` has `use ratatui_async_template::{...}`. `ratatui_a
 
 The contents that are imported on this line are from the `lib.rs` file:
 
-```rust
-pub mod app;
-
-pub mod action;
-
-pub mod components;
-
-pub mod config;
-
-pub mod event;
-
-pub mod terminal;
-
-pub mod utils;
+```rust,no_run,noplayground
+{{#include ../../src/lib.rs}}
 ```
 
 We will cover these modules in more detail in the next sections.
@@ -80,18 +35,8 @@ This `main.rs` file incorporates some key features that are not necessarily rela
 
 In this file, we define a [`clap`](https://docs.rs/clap/latest/clap/) `Args` struct.
 
-```rust
-// Define the command line arguments structure
-#[derive(Parser, Debug)]
-#[command(version = version(), about = "ratatui async template with crossterm and tokio")]
-struct Args {
-  /// App tick rate
-  #[arg(short, long, default_value_t = 1000)]
-  app_tick_rate: u64,
-  /// Render tick rate
-  #[arg(short, long, default_value_t = 50)]
-  render_tick_rate: u64,
-}
+```rust,no_run,noplayground
+{{#include ../../src/main.rs:args}}
 ```
 
 This allows us to pass command line arguments to our terminal user interface if we need to.
@@ -133,9 +78,7 @@ In addition, the location of the log files are decided by the `RATATUI_ASYNC_TEM
 I tend to use `.envrc` and `direnv` for development purposes, and I have the following in my `.envrc`:
 
 ```bash
-export RATATUI_ASYNC_TEMPLATE_CONFIG=`pwd`/.config
-export RATATUI_ASYNC_TEMPLATE_DATA=`pwd`/.data
-export RUST_LOG=debug
+{{#include ../../.envrc}}
 ```
 
 This puts the log files in the `RATATUI_ASYNC_TEMPLATE_DATA` folder, i.e. `.data` folder in the current directory, and sets the log level to `RUST_LOG`, i.e. `debug` when I am prototyping and developing using `cargo run`.

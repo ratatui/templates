@@ -274,7 +274,7 @@ We are also going to want to use a `CancellationToken` to stop the tokio task on
 
 Here's what the completed `EventHandler` code now looks like:
 
-```rust {filename="event.rs"}
+```rust,no_run,noplayground
 use anyhow::Result;
 use crossterm::{
   cursor,

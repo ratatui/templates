@@ -351,129 +351,14 @@ You can change around when "thread" or "task" does what in your application if y
 
 I personally like to create a `TerminalHandler` that handles the render thread task.
 
-```rust {filename="terminal.rs"}
-pub struct TerminalHandler {
-  pub task: JoinHandle<()>,
-  tx: mpsc::UnboundedSender<Message>,
-}
-
-impl TerminalHandler {
-  pub fn new(component: Arc<Mutex<Component>>) -> Self {
-    let (tx, mut rx) = mpsc::unbounded_channel::<Message>();
-
-    let task = tokio::spawn(async move {
-      let mut t = Tui::new().context(anyhow!("Unable to create terminal")).unwrap();
-      t.enter().unwrap();
-      loop {
-        match rx.recv().await {
-          Some(Message::Stop) => {
-            t.exit().unwrap_or_default();
-            break;
-          },
-          Some(Message::Suspend) => {
-            t.suspend().unwrap_or_default();
-            break;
-          },
-          Some(Message::Render) => {
-            let mut c = component.lock().await;
-            t.draw(|f| {
-              c.render(f, f.size());
-            })
-            .unwrap();
-          },
-          None => {},
-        }
-      }
-    });
-    Self { task, tx }
-  }
-
-  pub fn suspend(&self) -> Result<()> {
-    self.tx.send(Message::Suspend)?;
-    Ok(())
-  }
-
-  pub fn stop(&self) -> Result<()> {
-    self.tx.send(Message::Stop)?;
-    Ok(())
-  }
-
-  pub fn render(&self) -> Result<()> {
-    self.tx.send(Message::Render)?;
-    Ok(())
-  }
-}
+```rust,no_run,noplayground
+{{#include ../../src/terminal.rs:terminal_handler}}
 ```
 
 And I like to update the `EventHandler` itself to map the event to an action and send that over the action channel, like so:
 
-```rust {filename="event.rs"}
-pub struct EventHandler {
-  pub task: JoinHandle<()>,
-  cancellation_token: CancellationToken,
-}
-
-impl EventHandler {
-  pub fn new(tick_rate: (u64, u64), component: Arc<Mutex<Component>>, action_tx: mpsc::UnboundedSender<Action>) -> Self {
-    let (app_tick_rate, render_tick_rate) = tick_rate;
-
-    let (event_tx, mut event_rx) = mpsc::unbounded_channel();
-
-    let app_tick_rate = std::time::Duration::from_millis(app_tick_rate);
-    let render_tick_rate = std::time::Duration::from_millis(render_tick_rate);
-
-    let cancellation_token = CancellationToken::new();
-    let _cancellation_token = cancellation_token.clone();
-    let task = tokio::spawn(async move {
-      let mut reader = crossterm::event::EventStream::new();
-      let mut app_interval = tokio::time::interval(app_tick_rate);
-      let mut render_interval = tokio::time::interval(render_tick_rate);
-      loop {
-        let app_delay = app_interval.tick();
-        let render_delay = render_interval.tick();
-        let crossterm_event = reader.next().fuse();
-        tokio::select! {
-          _ = _cancellation_token.cancelled() => {
-            break;
-          }
-          maybe_event = crossterm_event => {
-            match maybe_event {
-              Some(Ok(evt)) => {
-                match evt {
-                  CrosstermEvent::Key(key) => {
-                    if key.kind == KeyEventKind::Press {
-                      event_tx.send(Event::Key(key)).unwrap();
-                    }
-                  },
-                  _ => {},
-                }
-              }
-              Some(Err(_)) => {
-                event_tx.send(Event::Error).unwrap();
-              }
-              None => {},
-            }
-          },
-          _ = app_delay => {
-              event_tx.send(Event::AppTick).unwrap();
-          },
-          _ = render_delay => {
-              event_tx.send(Event::RenderTick).unwrap();
-          },
-          event = event_rx.recv() => {
-            let action = component.lock().await.handle_events(event);
-            action_tx.send(action).unwrap();
-          }
-        }
-      }
-    });
-    Self { task, cancellation_token }
-  }
-
-  pub fn stop(&mut self) {
-    self.cancellation_token.cancel();
-  }
-}
+```rust,no_run,noplayground
+{{#include ../../src/event.rs:event}}
 ```
 
 With that, our `App` becomes a little more simpler:

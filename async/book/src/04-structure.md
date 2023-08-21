@@ -197,25 +197,11 @@ You are free to reorganize the code as you see fit!
 You can also add more actions as required.
 For example, here's all the actions in the template:
 
-```rust {filename="action.rs"}
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Action {
-  Quit,
-  Resume,
-  Suspend,
-  Tick,
-  RenderTick,
-  Resize(u16, u16),
-  ToggleShowLogger,
-  ScheduleIncrement,
-  ScheduleDecrement,
-  Increment(usize),
-  Decrement(usize),
-  EnterNormal,
-  EnterInsert,
-  EnterProcessing,
-  ExitProcessing,
-  Update,
-  Noop,
-}
+```rust,no_run,noplayground
+{{#include ../../src/action.rs}}
+```
+
+```admonish note
+We are choosing to use `serde` for `Action` so that we can allow users to decide which key event maps to which `Action` using a file for configuration.
+This is discussed in more detail in the [`config`](./09-structure.md) section.
 ```

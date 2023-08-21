@@ -3,6 +3,7 @@ use std::{
   sync::Arc,
 };
 
+//// ANCHOR: tui_use
 use anyhow::{anyhow, Context, Result};
 use crossterm::{
   cursor,
@@ -15,8 +16,10 @@ use tokio::{
   task::JoinHandle,
 };
 
+//// ANCHOR_END: tui_use
 use crate::components::{home::Home, Component};
 
+//// ANCHOR: tui
 pub type Frame<'a> = ratatui::Frame<'a, Backend<std::io::Stderr>>;
 
 pub struct Tui {
@@ -53,6 +56,7 @@ impl Tui {
     Ok(())
   }
 }
+//// ANCHOR_END: tui
 
 impl Deref for Tui {
   type Target = ratatui::Terminal<Backend<std::io::Stderr>>;
@@ -74,6 +78,7 @@ impl Drop for Tui {
   }
 }
 
+//// ANCHOR: terminal_handler
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Message {
   Render,
@@ -132,3 +137,4 @@ impl TerminalHandler {
     Ok(())
   }
 }
+//// ANCHOR_END: terminal_handler
