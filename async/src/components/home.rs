@@ -88,7 +88,7 @@ impl Component for Home {
     match self.mode {
       Mode::Normal | Mode::Processing => {
         if let Some(action) = self.keymap.get(&key) {
-          *action
+          action.clone()
         } else {
           Action::Tick
         }
@@ -96,7 +96,11 @@ impl Component for Home {
       Mode::Insert => {
         match key.code {
           KeyCode::Esc => Action::EnterNormal,
-          KeyCode::Enter => Action::EnterNormal,
+          KeyCode::Enter => {
+            let s = self.input.value().to_string();
+            self.action_tx.clone().unwrap().send(Action::CompleteInput(s.clone())).unwrap();
+            Action::EnterNormal
+          },
           _ => {
             self.input.handle_event(&crossterm::event::Event::Key(key));
             Action::Update

@@ -1,6 +1,6 @@
 use serde_derive::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Action {
   Quit,
   Resume,
@@ -13,6 +13,7 @@ pub enum Action {
   ScheduleDecrement,
   Increment(usize),
   Decrement(usize),
+  CompleteInput(String),
   EnterNormal,
   EnterInsert,
   EnterProcessing,

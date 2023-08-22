@@ -40,14 +40,14 @@ impl App {
     loop {
       if let Some(action) = action_rx.recv().await {
         if action != Action::Tick && action != Action::RenderTick {
-          trace_dbg!(action);
+          trace_dbg!(&action);
         }
         match action {
           Action::RenderTick => terminal.render()?,
           Action::Quit => self.should_quit = true,
           Action::Suspend => self.should_suspend = true,
           Action::Resume => self.should_suspend = false,
-          _ => {
+          action => {
             if let Some(_action) = self.home.lock().await.dispatch(action) {
               action_tx.send(_action)?
             };
