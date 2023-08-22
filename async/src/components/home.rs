@@ -1,6 +1,7 @@
 use std::{collections::HashMap, time::Duration};
 
 use crossterm::event::{KeyCode, KeyEvent};
+use log::error;
 use ratatui::{
   layout::{Alignment, Constraint, Direction, Layout, Rect},
   style::{Color, Modifier, Style},
@@ -93,19 +94,20 @@ impl Component for Home {
           Action::Tick
         }
       },
-      Mode::Insert => {
-        match key.code {
-          KeyCode::Esc => Action::EnterNormal,
-          KeyCode::Enter => {
-            let s = self.input.value().to_string();
-            self.action_tx.clone().unwrap().send(Action::CompleteInput(s.clone())).unwrap();
-            Action::EnterNormal
-          },
-          _ => {
-            self.input.handle_event(&crossterm::event::Event::Key(key));
-            Action::Update
-          },
-        }
+      Mode::Insert => match key.code {
+        KeyCode::Esc => Action::EnterNormal,
+        KeyCode::Enter => {
+          if let Some(sender) = &self.action_tx {
+            if let Err(e) = sender.send(Action::CompleteInput(self.input.value().to_string())) {
+              error!("Failed to send action: {:?}", e);
+            }
+          }
+          Action::EnterNormal
+        },
+        _ => {
+          self.input.handle_event(&crossterm::event::Event::Key(key));
+          Action::Update
+        },
       },
     }
   }
