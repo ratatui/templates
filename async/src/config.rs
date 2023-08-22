@@ -65,7 +65,7 @@ fn parse_key_event(raw: &str) -> Result<KeyEvent, String> {
   parse_key_code_with_modifiers(remaining, modifiers)
 }
 
-fn extract_modifiers<'a>(raw: &'a str) -> (&'a str, KeyModifiers) {
+fn extract_modifiers(raw: &str) -> (&str, KeyModifiers) {
   let mut modifiers = KeyModifiers::empty();
   let mut current = raw;
 
