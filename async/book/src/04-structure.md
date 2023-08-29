@@ -2,14 +2,14 @@
 
 Now that we have created a `Tui` and `EventHandler`, we are also going to introduce the `Command` pattern.
 
-```admonition tip
+```admonish tip
 The `Command` pattern is the concept of "reified method calls".
 You can learn a lot more about this pattern from the excellent [http://gameprogrammingpatterns.com](http://gameprogrammingpatterns.com/command.html).
 ```
 
 These are also typically called `Action`s or `Message`s.
 
-```admonition note
+```admonish note
 It should come as no surprise that building a terminal user interface using `ratatui` (i.e. an immediate mode rendering library) has a lot of similarities with game development or user interface libraries.
 For example, you'll find these domains all have their own version of "input handling", "event loop" and "render" step.
 
