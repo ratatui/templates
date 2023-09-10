@@ -34,10 +34,13 @@ impl Component for Home {
   }
 ```
 
-If a user wants to press `Up` and `Down` arrow key to `ScheduleIncrement` and `ScheduleDecrement`, the only way for them to do it is having to make changes to the source code and recompile the app.
-It would be better to provide a way for users to set up a configuration file that maps key presses to actions.
+If a user wants to press `Up` and `Down` arrow key to `ScheduleIncrement` and `ScheduleDecrement`,
+the only way for them to do it is having to make changes to the source code and recompile the app.
+It would be better to provide a way for users to set up a configuration file that maps key presses
+to actions.
 
-For example, assume we want a user to be able to set up a keyevents-to-actions mapping in a `config.toml` file like below:
+For example, assume we want a user to be able to set up a keyevents-to-actions mapping in a
+`config.toml` file like below:
 
 ```toml
 [keymap]
@@ -53,12 +56,13 @@ For example, assume we want a user to be able to set up a keyevents-to-actions m
 "Ctrl-z" = "Suspend"
 ```
 
-We can set up a `Config` struct using [the excellent `config` crate](https://docs.rs/config/0.13.3/config/):
+We can set up a `Config` struct using
+[the excellent `config` crate](https://docs.rs/config/0.13.3/config/):
 
 ```rust
 use std::collections::HashMap;
 
-use anyhow::Result;
+use color_eyre::eyre::Result;
 use crossterm::event::KeyEvent;
 use serde_derive::Deserialize;
 
@@ -85,7 +89,8 @@ impl Config {
 
 We are using `serde` to deserialize from a TOML file.
 
-Now the default `KeyEvent` serialized format is not very user friendly, so let's implement our own version:
+Now the default `KeyEvent` serialized format is not very user friendly, so let's implement our own
+version:
 
 ```rust
 #[derive(Clone, Debug, Default)]
@@ -117,7 +122,8 @@ impl<'de> Deserialize<'de> for KeyMap {
 Now all we need to do is implement a `parse_key_event` function.
 [You can check the source code for an example of this implementation](https://github.com/ratatui-org/ratatui-async-template/blob/main/src/config.rs#L62-L138).
 
-With that implementation complete, we can add a `HashMap` to store a map of `KeyEvent`s and `Action` in the `Home` component:
+With that implementation complete, we can add a `HashMap` to store a map of `KeyEvent`s and `Action`
+in the `Home` component:
 
 ```rust {filename="components/home.rs"}
 #[derive(Default)]
@@ -145,7 +151,8 @@ impl App {
 You can create different keyevent presses to map to different actions based on the mode of the app by adding more sections into the toml configuration file.
 ```
 
-And in the `handle_key_events` we get the `Action` that should to be performed from the `HashMap` directly.
+And in the `handle_key_events` we get the `Action` that should to be performed from the `HashMap`
+directly.
 
 ```rust
 impl Component for Home {

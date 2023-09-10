@@ -25,10 +25,11 @@ We will cover these modules in more detail in the next sections.
 
 ````
 
-In essence, the `main` function creates an instance of `App` and calls `app.run()`, which runs the "get event -> update state -> render" loop.
-We will talk more about this in a later section.
+In essence, the `main` function creates an instance of `App` and calls `app.run()`, which runs the
+"get event -> update state -> render" loop. We will talk more about this in a later section.
 
-This `main.rs` file incorporates some key features that are not necessarily related to `ratatui`, but in my opinion, essential for any Terminal User Interface (TUI) program:
+This `main.rs` file incorporates some key features that are not necessarily related to `ratatui`,
+but in my opinion, essential for any Terminal User Interface (TUI) program:
 
 - Command Line Argument Parsing (`clap`)
 - XDG Base Directory Specification

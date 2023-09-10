@@ -4,7 +4,7 @@ use std::{
 };
 
 //// ANCHOR: tui_use
-use anyhow::{anyhow, Context, Result};
+use color_eyre::eyre::{anyhow, Context, Result};
 use crossterm::{
   cursor,
   event::{DisableMouseCapture, EnableMouseCapture},
