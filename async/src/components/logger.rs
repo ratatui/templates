@@ -1,4 +1,4 @@
-use anyhow::Result;
+use color_eyre::eyre::Result;
 use log::LevelFilter;
 use ratatui::{
   layout::Rect,

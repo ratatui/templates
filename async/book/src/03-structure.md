@@ -35,13 +35,15 @@ Essentially, `terminal.draw()` takes a callback that takes a [`Frame`](https://d
 
 ```
 
-While we are in the "raw mode", i.e. after we call `t.enter()`, any key presses in that terminal window are sent to `stdin`.
-We have to read these key presses from `stdin` if we want to act on them.
+While we are in the "raw mode", i.e. after we call `t.enter()`, any key presses in that terminal
+window are sent to `stdin`. We have to read these key presses from `stdin` if we want to act on
+them.
 
-There's a number of different ways to do that.
-`crossterm` has a `event` module that implements features to read these key presses for us.
+There's a number of different ways to do that. `crossterm` has a `event` module that implements
+features to read these key presses for us.
 
-Let's assume we were building a simple "counter" application, that incremented a counter when we pressed `j` and decremented a counter when we pressed `k`.
+Let's assume we were building a simple "counter" application, that incremented a counter when we
+pressed `j` and decremented a counter when we pressed `k`.
 
 ```rust
 fn main() -> Result {
@@ -74,14 +76,18 @@ fn main() -> Result {
 }
 ```
 
-This works perfectly fine, and a lot of small to medium size programs can get away with doing just that.
+This works perfectly fine, and a lot of small to medium size programs can get away with doing just
+that.
 
-However, this approach conflates the key input handling with app state updates, and does so in the "draw" loop.
-The practical issue with this approach is we block the draw loop for 250 ms waiting for a key press.
-This can have odd side effects, for example pressing an holding a key will result in faster draws to the terminal.
+However, this approach conflates the key input handling with app state updates, and does so in the
+"draw" loop. The practical issue with this approach is we block the draw loop for 250 ms waiting for
+a key press. This can have odd side effects, for example pressing an holding a key will result in
+faster draws to the terminal.
 
-In terms of architecture, the code could get complicated to reason about.
-For example, we may even want key presses to mean _different_ things depending on the state of the app (when you are focused on an input field, you may want to enter the letter `"j"` into the text input field, but when focused on a list of items, you may want to scroll down the list.)
+In terms of architecture, the code could get complicated to reason about. For example, we may even
+want key presses to mean _different_ things depending on the state of the app (when you are focused
+on an input field, you may want to enter the letter `"j"` into the text input field, but when
+focused on a list of items, you may want to scroll down the list.)
 
 ![Pressing `j` 3 times to increment counter and 3 times in the text field](https://user-images.githubusercontent.com/1813121/254444604-de8cfcfa-eeec-417a-a8b0-92a7ccb5fcb5.gif)
 
@@ -106,11 +112,11 @@ Type "q"
 
 We have to do a few different things set ourselves up, so let's take things one step at a time.
 
-First, instead of polling, we are going to introduce channels to get the key presses asynchronously and send them over a channel.
-We will then receive on the channel in the `main` loop.
+First, instead of polling, we are going to introduce channels to get the key presses asynchronously
+and send them over a channel. We will then receive on the channel in the `main` loop.
 
-There are two ways to do this.
-We can either use OS threads or "green" threads, i.e. tasks, i.e. rust's `async`-`await` features + a future executor.
+There are two ways to do this. We can either use OS threads or "green" threads, i.e. tasks, i.e.
+rust's `async`-`await` features + a future executor.
 
 Here's example code of reading key presses asynchronously using `std::thread` and `tokio::task`.
 
@@ -248,11 +254,10 @@ To make the code work as expected across all platforms, you can do this instead:
 
 ````
 
-Tokio is an asynchronous runtime for the Rust programming language.
-It is one of the more popular runtimes for asynchronous programming in rust.
-You can learn more about here <https://tokio.rs/tokio/tutorial>.
-For the rest of the tutorial here, we are going to assume we want to use tokio.
-I highly recommend you read the official `tokio` documentation.
+Tokio is an asynchronous runtime for the Rust programming language. It is one of the more popular
+runtimes for asynchronous programming in rust. You can learn more about here
+<https://tokio.rs/tokio/tutorial>. For the rest of the tutorial here, we are going to assume we want
+to use tokio. I highly recommend you read the official `tokio` documentation.
 
 If we use `tokio`, receiving a event requires `.await`. So our `main` loop now looks like this:
 
@@ -290,16 +295,17 @@ async fn main() -> {
 
 ### Additional improvements
 
-We are going to modify our `EventHandler` to handle a `AppTick` event.
-We want the `Event::AppTick` to be sent at regular intervals.
-We are also going to want to use a `CancellationToken` to stop the tokio task on request.
+We are going to modify our `EventHandler` to handle a `AppTick` event. We want the `Event::AppTick`
+to be sent at regular intervals. We are also going to want to use a `CancellationToken` to stop the
+tokio task on request.
 
-[`tokio`'s `select!` macro](https://tokio.rs/tokio/tutorial/select) allows us to wait on multiple `async` computations and returns when a single computation completes.
+[`tokio`'s `select!` macro](https://tokio.rs/tokio/tutorial/select) allows us to wait on multiple
+`async` computations and returns when a single computation completes.
 
 Here's what the completed `EventHandler` code now looks like:
 
 ```rust,no_run,noplayground
-use anyhow::Result;
+use color_eyre::eyre::Result;
 use crossterm::{
   cursor,
   event::{Event as CrosstermEvent, KeyEvent, KeyEventKind, MouseEvent},
@@ -399,6 +405,8 @@ crossterm = { version = "0.26.1", default-features = false, features = [
 
 ````
 
-With this `EventHandler` implemented, we can use `tokio` to create a separate "task" that handles any key asynchronously in our `main` loop.
+With this `EventHandler` implemented, we can use `tokio` to create a separate "task" that handles
+any key asynchronously in our `main` loop.
 
-In the next section, we will introduce a `Command` pattern to bridge handling the effect of an event.
+In the next section, we will introduce a `Command` pattern to bridge handling the effect of an
+event.

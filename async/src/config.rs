@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fmt, path::PathBuf};
 
-use anyhow::Result;
+use color_eyre::eyre::Result;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use serde::de::{self, Deserialize, Deserializer, MapAccess, Visitor};
 use serde_derive::Deserialize;
@@ -139,8 +139,8 @@ fn parse_key_code_with_modifiers(raw: &str, mut modifiers: KeyModifiers) -> Resu
 
 impl Config {
   pub fn new() -> Result<Self, config::ConfigError> {
-    let data_dir = crate::utils::get_data_dir().expect("Unable to get data directory");
-    let config_dir = crate::utils::get_config_dir().expect("Unable to get config directory");
+    let data_dir = crate::utils::get_data_dir();
+    let config_dir = crate::utils::get_config_dir();
     let mut builder = config::Config::builder()
       .set_default("data_dir", data_dir.to_str().unwrap())?
       .set_default("config_dir", config_dir.to_str().unwrap())?

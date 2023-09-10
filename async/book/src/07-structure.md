@@ -2,16 +2,19 @@
 
 Here's an example of the `Home` component that moves over code from `App` and also adds state:
 
-1. `show_logger` is a `bool` that tracks whether or not the `Logger` `Component` should be rendered or not
+1. `show_logger` is a `bool` that tracks whether or not the `Logger` `Component` should be rendered
+   or not
 1. `ticker` is a counter that increments every `AppTick`.
 
-This `Home` component also adds fields for `logger: Logger` and `input: Input`, and stores a reference to `action_tx: mpsc::UnboundedSender<Action>`
+This `Home` component also adds fields for `logger: Logger` and `input: Input`, and stores a
+reference to `action_tx: mpsc::UnboundedSender<Action>`
 
 ```rust,no_run,noplayground
 {{#include ../../src/components/home.rs}}
 ```
 
-The `render` function takes a `Frame` and draws a paragraph to display a counter as well as a text box input:
+The `render` function takes a `Frame` and draws a paragraph to display a counter as well as a text
+box input:
 
 ![](https://user-images.githubusercontent.com/1813121/254134161-477b2182-a3ee-4be9-a180-1bcdc56c8a1d.png)
 
@@ -19,7 +22,9 @@ The `render` function can also optionally draw a `Logger` component.
 
 ![](https://user-images.githubusercontent.com/1813121/254134679-02334184-fc4f-4f52-8957-61c950cdb770.png)
 
-The `Home` component has a couple of methods `increment` and `decrement` that we saw earlier, but this time additional `Action`s are sent on the `action_tx` channel to track the start and end of the increment.
+The `Home` component has a couple of methods `increment` and `decrement` that we saw earlier, but
+this time additional `Action`s are sent on the `action_tx` channel to track the start and end of the
+increment.
 
 ```rust
   pub fn schedule_increment(&mut self, i: usize) {
@@ -43,7 +48,8 @@ The `Home` component has a couple of methods `increment` and `decrement` that we
   }
 ```
 
-When a `Action` is sent on the action channel, it is received in the `main` thread in the `app.run()` loop which then calls the `dispatch` method with the appropriate action:
+When a `Action` is sent on the action channel, it is received in the `main` thread in the
+`app.run()` loop which then calls the `dispatch` method with the appropriate action:
 
 ```rust
   fn dispatch(&mut self, action: Action) -> Option<Action> {
@@ -73,9 +79,11 @@ When a `Action` is sent on the action channel, it is received in the `main` thre
   }
 ```
 
-This way, you can have `Action` affect multiple components by propagating the actions down all of them.
+This way, you can have `Action` affect multiple components by propagating the actions down all of
+them.
 
-When the `Mode` is switched to `Insert`, all events are handled off the `Input` widget from the excellent [`tui-input` crate](https://github.com/sayanarijit/tui-input).
+When the `Mode` is switched to `Insert`, all events are handled off the `Input` widget from the
+excellent [`tui-input` crate](https://github.com/sayanarijit/tui-input).
 
 ![](https://user-images.githubusercontent.com/1813121/254444604-de8cfcfa-eeec-417a-a8b0-92a7ccb5fcb5.gif)
 

@@ -1,6 +1,7 @@
 # `action.rs`
 
-Now that we have created a `Tui` and `EventHandler`, we are also going to introduce the `Command` pattern.
+Now that we have created a `Tui` and `EventHandler`, we are also going to introduce the `Command`
+pattern.
 
 ```admonish tip
 The `Command` pattern is the concept of "reified method calls".
@@ -43,7 +44,8 @@ pub enum Action {
 
 ````
 
-Let's define a simple `impl App` such that every `Event` from the `EventHandler` is mapped to an `Action` from the enum.
+Let's define a simple `impl App` such that every `Event` from the `EventHandler` is mapped to an
+`Action` from the enum.
 
 ```rust
 #[derive(Default)]
@@ -120,12 +122,14 @@ impl App {
 }
 ```
 
-We use `handle_events(event) -> Action` to take a `Event` and map it to a `Action`.
-We use `dispatch(action)` to take an `Action` and modify the state of the app.
+We use `handle_events(event) -> Action` to take a `Event` and map it to a `Action`. We use
+`dispatch(action)` to take an `Action` and modify the state of the app.
 
-One advantage of this approach is that we can modify `handle_key_events()` to use a key configuration if we'd like, so that users can define their own map from key to action.
+One advantage of this approach is that we can modify `handle_key_events()` to use a key
+configuration if we'd like, so that users can define their own map from key to action.
 
-Another advantage of this is that the business logic of the `App` struct can be tested without having to create an instance of a `Tui` or `EventHandler`, e.g.:
+Another advantage of this is that the business logic of the `App` struct can be tested without
+having to create an instance of a `Tui` or `EventHandler`, e.g.:
 
 ```rust
 mod tests {
@@ -139,10 +143,13 @@ mod tests {
 }
 ```
 
-In the test above, we did not create an instance of the `Tui` or the `EventHandler`, and did not call the `run` function, but we are still able to test the business logic of our application.
-Using "dispatching" on `Action`s gets us one step closer to making our application a "state machine", which improves understanding and testability.
+In the test above, we did not create an instance of the `Tui` or the `EventHandler`, and did not
+call the `run` function, but we are still able to test the business logic of our application. Using
+"dispatching" on `Action`s gets us one step closer to making our application a "state machine",
+which improves understanding and testability.
 
-If we wanted to be purist about it, we would make our `AppState` immutable, and we would have an `dispatch` function like so:
+If we wanted to be purist about it, we would make our `AppState` immutable, and we would have an
+`dispatch` function like so:
 
 ```rust
 fn dispatch(app_state::AppState, action::Action) -> new_app_state::State {
@@ -191,8 +198,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 ````
 
-Writing code to follow this architecture in rust (in my opinion) requires more upfront design, mostly because you have to make your `AppState` struct `Clone`-friendly.
-If I were in an exploratory or prototype stage of a TUI, I wouldn't want to do that and would only be interested in refactoring it this way once I got a handle on the design.
+Writing code to follow this architecture in rust (in my opinion) requires more upfront design,
+mostly because you have to make your `AppState` struct `Clone`-friendly. If I were in an exploratory
+or prototype stage of a TUI, I wouldn't want to do that and would only be interested in refactoring
+it this way once I got a handle on the design.
 
 My workaround for this (as you saw earlier) is to make `dispatch` a method that takes a `&mut self`:
 
@@ -207,8 +216,7 @@ impl App {
 
 You are free to reorganize the code as you see fit!
 
-You can also add more actions as required.
-For example, here's all the actions in the template:
+You can also add more actions as required. For example, here's all the actions in the template:
 
 ```rust,no_run,noplayground
 {{#include ../../src/action.rs}}

@@ -27,7 +27,8 @@ fn main() -> Result<()> {
 }
 ```
 
-You can use `termion` or `termwiz` instead here, and you'll have to change the implementation of `setup_terminal` and `teardown_terminal`.
+You can use `termion` or `termwiz` instead here, and you'll have to change the implementation of
+`setup_terminal` and `teardown_terminal`.
 
 I personally like to use `crossterm` so that I can run the TUI on windows as well.
 
@@ -39,7 +40,8 @@ The second screen buffer, called the alternate screen, is used for running inter
 Here's a 8 minute talk on Terminal User Interfaces I gave at JuliaCon2020: <https://www.youtube.com/watch?v=-TASx67pphw> that might be worth watching for more information about how terminal user interfaces work.
 ```
 
-We can reorganize the setup and teardown functions into an `enter()` and `exit()` methods on a `Tui` struct.
+We can reorganize the setup and teardown functions into an `enter()` and `exit()` methods on a `Tui`
+struct.
 
 ```rust,no_run,noplayground
 {{#include ../../src/terminal.rs:tui_use}}
@@ -52,4 +54,5 @@ This is the same `Tui` struct we used in `initialize_panic_handler()`. We call `
 
 Feel free to modify this as you need for use with `termion` or `wezterm`.
 
-The type alias to `Frame` is only to make the `components` folder easier to work with, and is not strictly required.
+The type alias to `Frame` is only to make the `components` folder easier to work with, and is not
+strictly required.

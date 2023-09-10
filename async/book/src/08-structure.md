@@ -1,8 +1,8 @@
 # `components/logger.rs`
 
-Here's an example of a simpler `Logger` component that is used instead the `Home` component.
-This `Logger` shows log output in the terminal user interface.
-This uses `tracing` with the excellent [`tui-logger` crate](https://github.com/gin66/tui-logger).
+Here's an example of a simpler `Logger` component that is used instead the `Home` component. This
+`Logger` shows log output in the terminal user interface. This uses `tracing` with the excellent
+[`tui-logger` crate](https://github.com/gin66/tui-logger).
 
 ```rust,no_run,noplayground
 {{#include ../../src/components/logger.rs}}

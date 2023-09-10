@@ -1,7 +1,7 @@
 # `app.rs`
 
-Finally, putting all the pieces together, we are almost ready to get the `App` struct.
-Before we do, we should discuss the process of a TUI.
+Finally, putting all the pieces together, we are almost ready to get the `App` struct. Before we do,
+we should discuss the process of a TUI.
 
 Most TUIs are single process, single threaded applications.
 
@@ -31,18 +31,22 @@ When an application is structured like this, the TUI is blocking at each step:
 This works perfectly fine for small applications, and this is what I recommend starting out with.
 For _most_ TUIs, you'll never need to graduate from this process methodology.
 
-Usually, `draw` and `get_events` are fast enough that it doesn't matter.
-But if you do need to do a computationally demanding or I/O intensive task while updating state (e.g. reading a database, computing math or making a web request), your app may "hang" while it is doing so.
+Usually, `draw` and `get_events` are fast enough that it doesn't matter. But if you do need to do a
+computationally demanding or I/O intensive task while updating state (e.g. reading a database,
+computing math or making a web request), your app may "hang" while it is doing so.
 
-Let's say a user presses `j` to scroll down a list.
-And every time the user presses `j` you want to check the web for additional items to add to the list.
+Let's say a user presses `j` to scroll down a list. And every time the user presses `j` you want to
+check the web for additional items to add to the list.
 
-What should happen when a user presses and holds `j`?
-It is up to you to decide how you would like your TUI application to behave in that instance.
+What should happen when a user presses and holds `j`? It is up to you to decide how you would like
+your TUI application to behave in that instance.
 
-You may decide that the desired behavior for your app is to hang while downloading new elements for the list, and all key presses while the app hangs are received and handled "instantly" after the download completes.
+You may decide that the desired behavior for your app is to hang while downloading new elements for
+the list, and all key presses while the app hangs are received and handled "instantly" after the
+download completes.
 
-Or you may decide to `flush` all keyboard events so they are not buffered, and you may want to implement something like the following:
+Or you may decide to `flush` all keyboard events so they are not buffered, and you may want to
+implement something like the following:
 
 ```rust
 let mut app = App::new();
@@ -58,14 +62,18 @@ loop {
 }
 ```
 
-Alternatively, you may decide you want the app to update in the background, and a user should be able to scroll through the existing list while the app is downloading new elements.
+Alternatively, you may decide you want the app to update in the background, and a user should be
+able to scroll through the existing list while the app is downloading new elements.
 
-In my experience, the trade-off is here is usually complexity for the developer versus ergonomics for the user.
+In my experience, the trade-off is here is usually complexity for the developer versus ergonomics
+for the user.
 
-Let's say we weren't worried about complexity, and were interested in performing a computationally demanding or I/O intensive task in the background.
-For our example, let's say that we wanted to trigger a increment to the counter after sleeping for `5` seconds.
+Let's say we weren't worried about complexity, and were interested in performing a computationally
+demanding or I/O intensive task in the background. For our example, let's say that we wanted to
+trigger a increment to the counter after sleeping for `5` seconds.
 
-This means that we'll have to start a "task" that sleeps for 5 seconds, and then sends another `Action` to be dispatched on.
+This means that we'll have to start a "task" that sleeps for 5 seconds, and then sends another
+`Action` to be dispatched on.
 
 Now, our `dispatch()` method takes the following shape:
 
@@ -158,9 +166,12 @@ This is what we want to do:
   }
 ```
 
-However, this doesn't quite work because we can't move `self`, i.e. the `App` to the `event -> action` mapping, i.e. `self.handle_events()`, and still use it later for `self.dispatch()`.
-One way to solve this is to pass a `Arc<Mutex<Component>` instance to the `event -> action` mapping loop, where it uses a `lock()` to get a reference to the object to call `obj.handle_events()`.
-We'll have to use the same `lock()` functionality in the main loop as well to call `obj.dispatch()`.
+However, this doesn't quite work because we can't move `self`, i.e. the `App` to the
+`event -> action` mapping, i.e. `self.handle_events()`, and still use it later for
+`self.dispatch()`. One way to solve this is to pass a `Arc<Mutex<Component>` instance to the
+`event -> action` mapping loop, where it uses a `lock()` to get a reference to the object to call
+`obj.handle_events()`. We'll have to use the same `lock()` functionality in the main loop as well to
+call `obj.dispatch()`.
 
 ```rust
 pub struct App {
@@ -207,8 +218,8 @@ impl App {
 }
 ```
 
-Now our `App` is generic boilerplate that doesn't depend on any business logic.
-It is responsible just to drive the application forward, i.e. call appropriate functions.
+Now our `App` is generic boilerplate that doesn't depend on any business logic. It is responsible
+just to drive the application forward, i.e. call appropriate functions.
 
 All business logic will be located in a `Component` struct.
 
@@ -355,7 +366,8 @@ I personally like to create a `TerminalHandler` that handles the render thread t
 {{#include ../../src/terminal.rs:terminal_handler}}
 ```
 
-And I like to update the `EventHandler` itself to map the event to an action and send that over the action channel, like so:
+And I like to update the `EventHandler` itself to map the event to an action and send that over the
+action channel, like so:
 
 ```rust,no_run,noplayground
 {{#include ../../src/event.rs:event}}
@@ -403,9 +415,10 @@ impl App {
 }
 ```
 
-Our `Component` currently does one thing and just one thing (increment and decrement a counter).
-But we may want to do more complex things and combine `Component`s in interesting ways.
-For example, we may want to add a text input field as well as show logs conditionally from our TUI application.
+Our `Component` currently does one thing and just one thing (increment and decrement a counter). But
+we may want to do more complex things and combine `Component`s in interesting ways. For example, we
+may want to add a text input field as well as show logs conditionally from our TUI application.
 
-In the next sections, we will talk about breaking out our app into various components, with the one root component called `Home`.
-And we'll introduce a `Component` trait so it is easier to understand where the TUI specific code ends and where our app's business logic begins.
+In the next sections, we will talk about breaking out our app into various components, with the one
+root component called `Home`. And we'll introduce a `Component` trait so it is easier to understand
+where the TUI specific code ends and where our app's business logic begins.

@@ -80,7 +80,7 @@ impl Home {
 }
 
 impl Component for Home {
-  fn init(&mut self, tx: UnboundedSender<Action>) -> anyhow::Result<()> {
+  fn init(&mut self, tx: UnboundedSender<Action>) -> color_eyre::eyre::Result<()> {
     self.action_tx = Some(tx);
     Ok(())
   }

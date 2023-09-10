@@ -1,6 +1,6 @@
 // ANCHOR: all
-use anyhow::Result;
 use clap::Parser;
+use color_eyre::eyre::Result;
 use ratatui_async_template::{
   app::App,
   utils::{initialize_logging, initialize_panic_handler, version},
@@ -24,7 +24,7 @@ struct Args {
 async fn main() -> Result<()> {
   initialize_logging()?;
 
-  initialize_panic_handler();
+  initialize_panic_handler()?;
 
   let args = Args::parse();
   let tick_rate = (args.app_tick_rate, args.render_tick_rate);

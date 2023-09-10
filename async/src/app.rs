@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use anyhow::Result;
+use color_eyre::eyre::Result;
 use tokio::sync::{mpsc, Mutex};
 
 use crate::{
