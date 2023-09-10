@@ -9,7 +9,7 @@ use ratatui_async_template::{
 //// ANCHOR: args
 // Define the command line arguments structure
 #[derive(Parser, Debug)]
-#[command(version = version(), about = "ratatui template with crossterm and tokio")]
+#[command(version = version(), about = "ratatui async template with crossterm and tokio")]
 struct Args {
   /// App tick rate
   #[arg(short, long, default_value_t = 1000)]
