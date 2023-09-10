@@ -22,7 +22,7 @@ impl Component for Logger {
     Ok(())
   }
 
-  fn render(&mut self, f: &mut Frame<'_>, rect: Rect) {
+  fn draw(&mut self, f: &mut Frame<'_>, rect: Rect) {
     let w = TuiLoggerWidget::default()
       .block(Block::default().title("Log").borders(Borders::ALL))
       .style_error(Style::default().fg(Color::Red))

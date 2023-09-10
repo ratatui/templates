@@ -8,16 +8,14 @@ $ tree
 ├── build.rs
 └── src
    ├── action.rs
-   ├── app.rs
    ├── components
    │  ├── home.rs
    │  ├── logger.rs
    │  └── mod.rs
    ├── config.rs
-   ├── event.rs
-   ├── lib.rs
    ├── main.rs
-   ├── terminal.rs
+   ├── runner.rs
+   ├── tui.rs
    └── utils.rs
 ```
 

@@ -3,10 +3,10 @@ use serde_derive::{Deserialize, Serialize};
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Action {
   Quit,
+  Tick,
+  Render,
   Resume,
   Suspend,
-  Tick,
-  RenderTick,
   Resize(u16, u16),
   ToggleShowLogger,
   ScheduleIncrement,
@@ -19,5 +19,4 @@ pub enum Action {
   EnterProcessing,
   ExitProcessing,
   Update,
-  Noop,
 }

@@ -1,412 +1,234 @@
-# `event.rs`
+# `action.rs`
 
-In it's simplest form, most applications will have a `main` loop like this:
+Now that we have created a `Tui` and `EventHandler`, we are also going to introduce the `Command`
+pattern.
 
-```rust
-fn main() -> Result<()> {
-  let mut app = App::new();
-
-  let mut t = Tui::new()?;
-
-  t.enter()?; // raw mode enabled
-
-  loop {
-
-    // get key event and update state
-    // ... Special handling to read key or mouse events required here
-
-    t.terminal.draw(|f| { // <- `terminal.draw` is the only ratatui function here
-      ui(app, f) // render state to terminal
-    })?;
-
-  }
-
-  t.exit()?; // raw mode disabled
-
-  Ok(())
-}
+```admonish tip
+The `Command` pattern is the concept of "reified method calls".
+You can learn a lot more about this pattern from the excellent [http://gameprogrammingpatterns.com](http://gameprogrammingpatterns.com/command.html).
 ```
+
+These are also typically called `Action`s or `Message`s.
 
 ```admonish note
+It should come as no surprise that building a terminal user interface using `ratatui` (i.e. an immediate mode rendering library) has a lot of similarities with game development or user interface libraries.
+For example, you'll find these domains all have their own version of "input handling", "event loop" and "draw" step.
 
-The `terminal.draw(|f| { ui(app, f); })` call is the only line in the code above that uses `ratatui` functionality.
-You can learn more about [`draw` from the official documentation](https://docs.rs/ratatui/latest/ratatui/terminal/struct.Terminal.html#method.draw).
-Essentially, `terminal.draw()` takes a callback that takes a [`Frame`](https://docs.rs/ratatui/latest/ratatui/terminal/struct.Frame.html) and expects the callback to render widgets to that frame, which is then drawn to the terminal using a double buffer technique.
-
+If you are coming to `ratatui` with a background in `Elm` or `React`, or if you are looking for a framework that extends the `ratatui` library to provide a more standard UI design paradigm, you can check out [`tui-realm`](https://github.com/veeso/tui-realm/) for a more featureful out of the box experience.
 ```
-
-While we are in the "raw mode", i.e. after we call `t.enter()`, any key presses in that terminal
-window are sent to `stdin`. We have to read these key presses from `stdin` if we want to act on
-them.
-
-There's a number of different ways to do that. `crossterm` has a `event` module that implements
-features to read these key presses for us.
-
-Let's assume we were building a simple "counter" application, that incremented a counter when we
-pressed `j` and decremented a counter when we pressed `k`.
 
 ```rust
-fn main() -> Result {
-  let mut app = App::new();
-
-  let mut t = Tui::new()?;
-
-  t.enter()?;
-
-  loop {
-    if crossterm::event::poll(Duration::from_millis(250))? {
-      if let Event::Key(key) = crossterm::event::read()? {
-        match key.code {
-          KeyCode::Char('j') => app.increment(),
-          KeyCode::Char('k') => app.decrement(),
-          KeyCode::Char('q') => break,
-          _ => (),
-        }
-      }
-    };
-
-    t.terminal.draw(|f| {
-      ui(app, f)
-    })?;
-  }
-
-  t.exit()?;
-
-  Ok(())
+pub enum Action {
+  Quit,
+  Tick,
+  Increment,
+  Decrement,
+  Noop,
 }
 ```
 
-This works perfectly fine, and a lot of small to medium size programs can get away with doing just
-that.
-
-However, this approach conflates the key input handling with app state updates, and does so in the
-"draw" loop. The practical issue with this approach is we block the draw loop for 250 ms waiting for
-a key press. This can have odd side effects, for example pressing an holding a key will result in
-faster draws to the terminal.
-
-In terms of architecture, the code could get complicated to reason about. For example, we may even
-want key presses to mean _different_ things depending on the state of the app (when you are focused
-on an input field, you may want to enter the letter `"j"` into the text input field, but when
-focused on a list of items, you may want to scroll down the list.)
-
-![Pressing `j` 3 times to increment counter and 3 times in the text field](https://user-images.githubusercontent.com/1813121/254444604-de8cfcfa-eeec-417a-a8b0-92a7ccb5fcb5.gif)
-
-<!--
-```
-Set Shell zsh
-Sleep 1s
-Hide
-Type "cargo run"
-Enter
-Sleep 1s
-Show
-Type "jjj"
-Sleep 5s
-Sleep 5s
-Type "/jjj"
-Sleep 5s
-Escape
-Type "q"
-```
--->
-
-We have to do a few different things set ourselves up, so let's take things one step at a time.
-
-First, instead of polling, we are going to introduce channels to get the key presses asynchronously
-and send them over a channel. We will then receive on the channel in the `main` loop.
-
-There are two ways to do this. We can either use OS threads or "green" threads, i.e. tasks, i.e.
-rust's `async`-`await` features + a future executor.
-
-Here's example code of reading key presses asynchronously using `std::thread` and `tokio::task`.
-
-## `std::thread`
+````admonish tip
+You can attach payloads to enums in rust.
+For example, in the following `Action` enum, `Increment(usize)` and `Decrement(usize)` have
+a `usize` payload which can be used to represent the value to add to or subtract from
+the counter as a payload.
 
 ```rust
-enum Event {
-  Key(crossterm::event::KeyEvent)
-}
-
-struct EventHandler {
-  rx: std::sync::mpsc::Receiver<Event>,
-}
-
-impl EventHandler {
-  fn new() -> Self {
-    let tick_rate = std::time::Duration::from_millis(250);
-    let (tx, rx) =  std::sync::mpsc::channel();
-    std::thread::spawn(move || {
-      loop {
-        if crossterm::event::poll(tick_rate)? {
-          match crossterm::event::read()? {
-            CrosstermEvent::Key(e) => tx.send(Event::Key(e)),
-            _ => unimplemented!(),
-          }?
-        }
-      }
-    })
-
-    EventHandler { rx }
-  }
-
-  fn next(&self) -> Result<Event> {
-    Ok(self.rx.recv()?)
-  }
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Action {
+  Quit,
+  Tick,
+  Increment(usize),
+  Decrement(usize),
+  Noop,
 }
 ```
 
-## `tokio::task`
-
-```rust
-enum Event {
-  Key(crossterm::event::KeyEvent)
-}
-
-struct EventHandler {
-  rx: tokio::sync::mpsc::UnboundedReceiver<Event>,
-}
-
-impl EventHandler {
-  fn new() -> Self {
-    let tick_rate = std::time::Duration::from_millis(250);
-    let (tx, mut rx) =  tokio::sync::mpsc::unbounded_channel();
-    tokio::spawn(async move {
-      loop {
-        if crossterm::event::poll(tick_rate)? {
-          match crossterm::event::read()? {
-            CrosstermEvent::Key(e) => tx.send(Event::Key(e)),
-            _ => unimplemented!(),
-          }?
-        }
-      }
-    })
-
-    EventHandler { rx }
-  }
-
-  async fn next(&self) -> Result<Event> {
-    Ok(self.rx.recv().await.ok()?)
-  }
-}
-```
-
-## `diff`
-
-```diff
-  enum Event {
-    Key(crossterm::event::KeyEvent)
-  }
-
-  struct EventHandler {
--   rx: std::sync::mpsc::Receiver<Event>,
-+   rx: tokio::sync::mpsc::UnboundedReceiver<Event>,
-  }
-
-  impl EventHandler {
-    fn new() -> Self {
-      let tick_rate = std::time::Duration::from_millis(250);
--     let (tx, rx) =  std::sync::mpsc::channel();
-+     let (tx, mut rx) =  tokio::sync::mpsc::unbounded_channel();
--     std::thread::spawn(move || {
-+     tokio::spawn(async move {
-        loop {
-          if crossterm::event::poll(tick_rate)? {
-            match crossterm::event::read()? {
-              CrosstermEvent::Key(e) => tx.send(Event::Key(e)),
-              _ => unimplemented!(),
-            }?
-          }
-        }
-      })
-
-      EventHandler { rx }
-    }
-
--   fn next(&self) -> Result<Event> {
-+   async fn next(&self) -> Result<Event> {
--     Ok(self.rx.recv()?)
-+     Ok(self.rx.recv().await.ok()?)
-    }
-  }
-```
-
-````admonish warning
-
-A lot of examples out there in the wild might use the following code for sending key presses:
-
-
-```rust
-  CrosstermEvent::Key(e) => tx.send(Event::Key(e)),
-```
-
-However, on Windows, when using `Crossterm`, this will send the same `Event::Key(e)` twice; one for when you press the key, i.e. `KeyEventKind::Press` and one for when you release the key, i.e. `KeyEventKind::Release`.
-On `MacOS` and `Linux` only `KeyEventKind::Press` kinds of `key` event is generated.
-
-To make the code work as expected across all platforms, you can do this instead:
-
-```rust
-  CrosstermEvent::Key(key) => {
-    if key.kind == KeyEventKind::Press {
-      event_tx.send(Event::Key(key)).unwrap();
-    }
-  },
-```
+Also, note that we are using `Noop` here as a variant that means "no operation".
+You can remove `Noop` from `Action` and return `Option<Action>` instead of `Action`,
+using Rust's built in `None` type to represent "no operation".
 
 ````
 
-Tokio is an asynchronous runtime for the Rust programming language. It is one of the more popular
-runtimes for asynchronous programming in rust. You can learn more about here
-<https://tokio.rs/tokio/tutorial>. For the rest of the tutorial here, we are going to assume we want
-to use tokio. I highly recommend you read the official `tokio` documentation.
-
-If we use `tokio`, receiving a event requires `.await`. So our `main` loop now looks like this:
+Let's define a simple `impl App` such that every `Event` from the `EventHandler` is mapped to an
+`Action` from the enum.
 
 ```rust
-#[tokio::main]
-async fn main() -> {
-  let mut app = App::new();
+#[derive(Default)]
+struct App {
+  counter: i64,
+  should_quit: bool,
+}
 
-  let events = EventHandler::new();
-
-  let mut t = Tui::new()?;
-
-  t.enter()?;
-
-  loop {
-    if let Event::Key(key) = events.next().await? {
-      match key.code {
-        KeyCode::Char('j') => app.increment(),
-        KeyCode::Char('k') => app.decrement(),
-        KeyCode::Char('q') => break,
-        _ => (),
-      }
-    }
-
-    t.terminal.draw(|f| {
-      ui(app, f)
-    })?;
+impl App {
+  pub fn new() -> Self {
+    Self::default()
   }
 
-  t.exit()?;
+  pub async fn run(&mut self) -> Result<()> {
+    let t = Tui::new();
+    t.enter();
+    let mut events = EventHandler::new(tick_rate);
+    loop {
+      let event = events.next().await;
+      let action = self.handle_events(event);
+      self.update(action);
+      t.terminal.draw(|f| self.draw(f))?;
+      if self.should_quit {
+        break
+      }
+    };
+    t.exit();
+    Ok(())
+  }
 
-  Ok(())
+  fn handle_events(&mut self, event: Option<Event>) -> Action {
+    match event {
+      Some(Event::Quit) => Action::Quit,
+      Some(Event::AppTick) => Action::Tick,
+      Some(Event::Key(key_event)) => {
+        if let Some(key) = event {
+            match key.code {
+              KeyCode::Char('q') => Action::Quit,
+              KeyCode::Char('j') => Action::Increment,
+              KeyCode::Char('k') => Action::Decrement
+              _ => {}
+          }
+        }
+      },
+      Some(_) => Action::Noop,
+      None => Action::Noop,
+    }
+  }
+
+  fn update(&mut self, action: Action) {
+    match action {
+      Action::Quit => self.should_quit = true,
+      Action::Tick => self.tick(),
+      Action::Increment => self.increment(),
+      Action::Decrement => self.decrement(),
+  }
+
+  fn increment(&mut self) {
+    self.counter += 1;
+  }
+
+  fn decrement(&mut self) {
+    self.counter -= 1;
+  }
+
+  fn draw(&mut self, f: &mut Frame<'_>) {
+    f.render_widget(
+      Paragraph::new(format!(
+        "Press j or k to increment or decrement.\n\nCounter: {}",
+        self.counter
+      ))
+    )
+  }
 }
 ```
 
-### Additional improvements
+We use `handle_events(event) -> Action` to take a `Event` and map it to a `Action`. We use
+`update(action)` to take an `Action` and modify the state of the app.
 
-We are going to modify our `EventHandler` to handle a `AppTick` event. We want the `Event::AppTick`
-to be sent at regular intervals. We are also going to want to use a `CancellationToken` to stop the
-tokio task on request.
+One advantage of this approach is that we can modify `handle_key_events()` to use a key
+configuration if we'd like, so that users can define their own map from key to action.
 
-[`tokio`'s `select!` macro](https://tokio.rs/tokio/tutorial/select) allows us to wait on multiple
-`async` computations and returns when a single computation completes.
+Another advantage of this is that the business logic of the `App` struct can be tested without
+having to create an instance of a `Tui` or `EventHandler`, e.g.:
 
-Here's what the completed `EventHandler` code now looks like:
-
-```rust,no_run,noplayground
-use color_eyre::eyre::Result;
-use crossterm::{
-  cursor,
-  event::{Event as CrosstermEvent, KeyEvent, KeyEventKind, MouseEvent},
-};
-use futures::{FutureExt, StreamExt};
-use tokio::{
-  sync::{mpsc, oneshot},
-  task::JoinHandle,
-};
-
-#[derive(Clone, Copy, Debug)]
-pub enum Event {
-  Error,
-  AppTick,
-  Key(KeyEvent),
+```rust
+mod tests {
+  #[test]
+  fn test_app() {
+    let mut app = App::new();
+    let old_counter = app.counter;
+    app.update(Action::Increment);
+    assert!(app.counter == old_counter + 1);
+  }
 }
+```
 
-#[derive(Debug)]
-pub struct EventHandler {
-  _tx: mpsc::UnboundedSender<Event>,
-  rx: mpsc::UnboundedReceiver<Event>,
-  task: Option<JoinHandle<()>>,
-  stop_cancellation_token: CancellationToken,
+In the test above, we did not create an instance of the `Tui` or the `EventHandler`, and did not
+call the `run` function, but we are still able to test the business logic of our application.
+Updating the app state on `Action`s gets us one step closer to making our application a "state
+machine", which improves understanding and testability.
+
+If we wanted to be purist about it, we would make our `AppState` immutable, and we would have an
+`update` function like so:
+
+```rust
+fn update(app_state::AppState, action::Action) -> new_app_state::State {
+  let mut state = app_state.clone();
+  state.counter += 1;
+  // ...
+  state
 }
+```
 
-impl EventHandler {
-  pub fn new(tick_rate: u64) -> Self {
-    let tick_rate = std::time::Duration::from_millis(tick_rate);
+In rare occasions, we may also want to choose a future action during `update`.
 
-    let (tx, rx) = mpsc::unbounded_channel();
-    let _tx = tx.clone();
-
-    let stop_cancellation_token = CancellationToken::new();
-    let _stop_cancellation_token = stop_cancellation_token.clone();
-
-    let task = tokio::spawn(async move {
-      let mut reader = crossterm::event::EventStream::new();
-      let mut interval = tokio::time::interval(tick_rate);
-      loop {
-        let delay = interval.tick();
-        let crossterm_event = reader.next().fuse();
-        tokio::select! {
-          _ = _stop_cancellation_token.cancelled() => {
-            break;
-          }
-          maybe_event = crossterm_event => {
-            match maybe_event {
-              Some(Ok(evt)) => {
-                match evt {
-                  CrosstermEvent::Key(key) => {
-                    if key.kind == KeyEventKind::Press {
-                      tx.send(Event::Key(key)).unwrap();
-                    }
-                  },
-                  _ => {},
-                }
-              }
-              Some(Err(_)) => {
-                tx.send(Event::Error).unwrap();
-              }
-              None => {},
-            }
-          },
-          _ = delay => {
-              tx.send(Event::AppTick).unwrap();
-          },
-        }
-      }
-    });
-
-    Self { _tx, rx, task: Some(task), stop_cancellation_token }
-  }
-
-  pub async fn next(&mut self) -> Option<Event> {
-    self.rx.recv().await
-  }
-
-  pub async fn stop(&mut self) -> Result<()> {
-    self.stop_cancellation_token.cancel();
-    if let Some(handle) = self.task.take() {
-      handle.await.unwrap();
-    }
-    Ok(())
-  }
+```rust
+fn update(app_state::AppState, action::Action) -> (new_app_state::State, Option<action::Action>) {
+  let mut state = app_state.clone();
+  state.counter += 1;
+  // ...
+  (state, Action::Tick)
 }
 ```
 
 ````admonish note
+In [`Charm`'s `bubbletea`](https://github.com/charmbracelet/bubbletea), this function is called an `Update`. Here's an example of what that might look like:
 
-Using `crossterm::event::EventStream::new()` requires the `event-stream` feature to be enabled.
+```go
+func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+    switch msg := msg.(type) {
 
-```yml
-crossterm = { version = "0.26.1", default-features = false, features = [
-"event-stream",
-] }
+    // Is it a key press?
+    case tea.KeyMsg:
+        // These keys should exit the program.
+        case "q":
+            return m, tea.Quit
+
+        case "k":
+            m.counter--
+
+        case "j":
+            m.counter++
+    }
+
+    // Note that we're not returning a command.
+    return m, nil
+}
 ```
 
 ````
 
-With this `EventHandler` implemented, we can use `tokio` to create a separate "task" that handles
-any key asynchronously in our `main` loop.
+Writing code to follow this architecture in rust (in my opinion) requires more upfront design,
+mostly because you have to make your `AppState` struct `Clone`-friendly. If I were in an exploratory
+or prototype stage of a TUI, I wouldn't want to do that and would only be interested in refactoring
+it this way once I got a handle on the design.
 
-In the next section, we will introduce a `Command` pattern to bridge handling the effect of an
-event.
+My workaround for this (as you saw earlier) is to make `update` a method that takes a `&mut self`:
+
+```rust
+impl App {
+  fn update(&mut self, action: Action) -> Option<Action> {
+    self.counter += 1
+    None
+  }
+}
+```
+
+You are free to reorganize the code as you see fit!
+
+You can also add more actions as required. For example, here's all the actions in the template:
+
+```rust,no_run,noplayground
+{{#include ../../src/action.rs}}
+```
+
+```admonish note
+We are choosing to use `serde` for `Action` so that we can allow users to decide which key event maps to which `Action` using a file for configuration.
+This is discussed in more detail in the [`config`](./08-structure.md) section.
+```
