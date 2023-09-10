@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use color_eyre::eyre::{anyhow, Context, Result};
+use color_eyre::eyre::Result;
 use directories::ProjectDirs;
 use lazy_static::lazy_static;
 use tracing::error;
@@ -24,21 +24,6 @@ lazy_static! {
 
 fn project_directory() -> Option<ProjectDirs> {
   ProjectDirs::from("com", "kdheepak", PROJECT_NAME.clone().to_lowercase().as_str())
-}
-
-pub fn is_markdown_file(path: PathBuf) -> Result<()> {
-  if !path.exists() {
-    return Err(anyhow!("{:?} does not exist", path));
-  }
-  if !path.is_file() {
-    return Err(anyhow!("{:?} is not a file", path));
-  }
-
-  // Check file extension
-  match path.extension() {
-    Some(ext) if ext == "md" || ext == "qmd" || ext == "rmd" || ext == "markdown" => Ok(()),
-    _ => Err(anyhow!("{:?} must have a .md or .markdown extension", path)),
-  }
 }
 
 pub fn initialize_panic_handler() -> Result<()> {
@@ -104,7 +89,7 @@ pub fn get_config_dir() -> PathBuf {
 
 pub fn initialize_logging() -> Result<()> {
   let directory = get_data_dir();
-  std::fs::create_dir_all(directory.clone()).context(format!("{directory:?} could not be created"))?;
+  std::fs::create_dir_all(directory.clone())?;
   let log_path = directory.join(LOG_FILE.clone());
   let log_file = std::fs::File::create(log_path)?;
   let file_subscriber = tracing_subscriber::fmt::layer()
