@@ -2,7 +2,7 @@
 "q" = "Quit"
 "j" = "ScheduleIncrement"
 "k" = "ScheduleDecrement"
-"l" = "ToggleShowLogger"
+"?" = "ToggleShowHelp"
 "/" = "EnterInsert"
 "ESC" = "EnterNormal"
 "Enter" = "EnterNormal"

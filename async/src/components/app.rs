@@ -3,17 +3,12 @@ use std::{collections::HashMap, time::Duration};
 use color_eyre::eyre::Result;
 use crossterm::event::{KeyCode, KeyEvent};
 use log::error;
-use ratatui::{
-  layout::{Alignment, Constraint, Direction, Layout, Rect},
-  style::{Color, Modifier, Style},
-  text::{Line, Span},
-  widgets::{Block, BorderType, Borders, Paragraph},
-};
-use tokio::sync::mpsc::{self, UnboundedSender};
+use ratatui::{prelude::*, widgets::*};
+use tokio::sync::mpsc::UnboundedSender;
 use tracing::trace;
 use tui_input::{backend::crossterm::EventHandler, Input};
 
-use super::{logger::Logger, Component, Frame};
+use super::{Component, Frame};
 use crate::action::Action;
 
 #[derive(Default, Copy, Clone, PartialEq, Eq)]
@@ -26,14 +21,13 @@ pub enum Mode {
 
 #[derive(Default)]
 pub struct App {
-  pub logger: Logger,
-  pub show_logger: bool,
+  pub show_help: bool,
   pub counter: usize,
   pub app_ticker: usize,
   pub render_ticker: usize,
   pub mode: Mode,
   pub input: Input,
-  pub action_tx: Option<mpsc::UnboundedSender<Action>>,
+  pub action_tx: Option<UnboundedSender<Action>>,
   pub keymap: HashMap<KeyEvent, Action>,
   pub text: Vec<String>,
 }
@@ -129,7 +123,7 @@ impl Component for App {
     match action {
       Action::Tick => self.tick(),
       Action::Render => self.render_tick(),
-      Action::ToggleShowLogger => self.show_logger = !self.show_logger,
+      Action::ToggleShowHelp => self.show_help = !self.show_help,
       Action::ScheduleIncrement => self.schedule_increment(1),
       Action::ScheduleDecrement => self.schedule_decrement(1),
       Action::Increment(i) => self.increment(i),
@@ -154,17 +148,6 @@ impl Component for App {
   }
 
   fn draw(&mut self, f: &mut Frame<'_>, rect: Rect) {
-    let rect = if self.show_logger {
-      let chunks = Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
-        .split(rect);
-      self.logger.draw(f, chunks[1]);
-      chunks[0]
-    } else {
-      rect
-    };
-
     let rects = Layout::default().constraints([Constraint::Percentage(100), Constraint::Min(3)].as_ref()).split(rect);
 
     let mut text: Vec<Line> = self.text.clone().iter().map(|l| Line::from(l.clone())).collect();
@@ -228,5 +211,29 @@ impl Component for App {
     if self.mode == Mode::Insert {
       f.set_cursor((rects[1].x + 1 + self.input.cursor() as u16).min(rects[1].x + rects[1].width - 2), rects[1].y + 1)
     }
+
+    if self.show_help {
+      let rect = rect.inner(&Margin { horizontal: 4, vertical: 2 });
+      f.render_widget(Clear, rect);
+      let block = Block::default()
+        .title(Line::from(vec![Span::styled("Key Bindings", Style::default().add_modifier(Modifier::BOLD))]))
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(Color::Yellow));
+      f.render_widget(block, rect);
+      let rows = vec![
+        Row::new(vec!["j", "Increment"]),
+        Row::new(vec!["k", "Decrement"]),
+        Row::new(vec!["/", "Enter Input"]),
+        Row::new(vec!["ESC", "Exit Input"]),
+        Row::new(vec!["Enter", "Submit Input"]),
+        Row::new(vec!["q", "Quit"]),
+        Row::new(vec!["?", "Open Help"]),
+      ];
+      let table = Table::new(rows)
+        .header(Row::new(vec!["Key", "Action"]).bottom_margin(1).style(Style::default().add_modifier(Modifier::BOLD)))
+        .widths(&[Constraint::Percentage(10), Constraint::Percentage(90)])
+        .column_spacing(1);
+      f.render_widget(table, rect.inner(&Margin { vertical: 4, horizontal: 2 }));
+    };
   }
 }
