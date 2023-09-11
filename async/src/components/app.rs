@@ -1,5 +1,6 @@
 use std::{collections::HashMap, time::Duration};
 
+use color_eyre::eyre::Result;
 use crossterm::event::{KeyCode, KeyEvent};
 use log::error;
 use ratatui::{
@@ -24,18 +25,20 @@ pub enum Mode {
 }
 
 #[derive(Default)]
-pub struct Home {
+pub struct App {
   pub logger: Logger,
   pub show_logger: bool,
   pub counter: usize,
-  pub ticker: usize,
+  pub app_ticker: usize,
+  pub render_ticker: usize,
   pub mode: Mode,
   pub input: Input,
   pub action_tx: Option<mpsc::UnboundedSender<Action>>,
   pub keymap: HashMap<KeyEvent, Action>,
+  pub text: Vec<String>,
 }
 
-impl Home {
+impl App {
   pub fn new() -> Self {
     Self::default()
   }
@@ -47,14 +50,23 @@ impl Home {
 
   pub fn tick(&mut self) {
     trace!("Tick");
-    self.ticker = self.ticker.saturating_add(1);
+    self.app_ticker = self.app_ticker.saturating_add(1);
+  }
+
+  pub fn render_tick(&mut self) {
+    trace!("Render Tick");
+    self.render_ticker = self.render_ticker.saturating_add(1);
+  }
+
+  pub fn add(&mut self, s: String) {
+    self.text.push(s)
   }
 
   pub fn schedule_increment(&mut self, i: usize) {
     let tx = self.action_tx.clone().unwrap();
     tokio::spawn(async move {
       tx.send(Action::EnterProcessing).unwrap();
-      tokio::time::sleep(Duration::from_secs(5)).await;
+      tokio::time::sleep(Duration::from_secs(1)).await;
       tx.send(Action::Increment(i)).unwrap();
       tx.send(Action::ExitProcessing).unwrap();
     });
@@ -64,7 +76,7 @@ impl Home {
     let tx = self.action_tx.clone().unwrap();
     tokio::spawn(async move {
       tx.send(Action::EnterProcessing).unwrap();
-      tokio::time::sleep(Duration::from_secs(5)).await;
+      tokio::time::sleep(Duration::from_secs(1)).await;
       tx.send(Action::Decrement(i)).unwrap();
       tx.send(Action::ExitProcessing).unwrap();
     });
@@ -79,14 +91,14 @@ impl Home {
   }
 }
 
-impl Component for Home {
-  fn init(&mut self, tx: UnboundedSender<Action>) -> color_eyre::eyre::Result<()> {
+impl Component for App {
+  fn init(&mut self, tx: UnboundedSender<Action>) -> Result<()> {
     self.action_tx = Some(tx);
     Ok(())
   }
 
-  fn handle_key_events(&mut self, key: KeyEvent) -> Action {
-    match self.mode {
+  fn handle_key_events(&mut self, key: KeyEvent) -> Option<Action> {
+    let action = match self.mode {
       Mode::Normal | Mode::Processing => {
         if let Some(action) = self.keymap.get(&key) {
           action.clone()
@@ -109,17 +121,20 @@ impl Component for Home {
           Action::Update
         },
       },
-    }
+    };
+    Some(action)
   }
 
-  fn dispatch(&mut self, action: Action) -> Option<Action> {
+  fn update(&mut self, action: Action) -> Result<Option<Action>> {
     match action {
       Action::Tick => self.tick(),
+      Action::Render => self.render_tick(),
       Action::ToggleShowLogger => self.show_logger = !self.show_logger,
       Action::ScheduleIncrement => self.schedule_increment(1),
       Action::ScheduleDecrement => self.schedule_decrement(1),
       Action::Increment(i) => self.increment(i),
       Action::Decrement(i) => self.decrement(i),
+      Action::CompleteInput(s) => self.add(s),
       Action::EnterNormal => {
         self.mode = Mode::Normal;
       },
@@ -135,16 +150,16 @@ impl Component for Home {
       },
       _ => (),
     }
-    None
+    Ok(None)
   }
 
-  fn render(&mut self, f: &mut Frame<'_>, rect: Rect) {
+  fn draw(&mut self, f: &mut Frame<'_>, rect: Rect) {
     let rect = if self.show_logger {
       let chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
         .split(rect);
-      self.logger.render(f, chunks[1]);
+      self.logger.draw(f, chunks[1]);
       chunks[0]
     } else {
       rect
@@ -152,24 +167,45 @@ impl Component for Home {
 
     let rects = Layout::default().constraints([Constraint::Percentage(100), Constraint::Min(3)].as_ref()).split(rect);
 
+    let mut text: Vec<Line> = self.text.clone().iter().map(|l| Line::from(l.clone())).collect();
+    text.insert(0, "".into());
+    text.insert(0, "Type into input and hit enter to display here".into());
+    text.insert(0, "".into());
+    text.insert(0, format!("Render Ticker: {}", self.render_ticker).into());
+    text.insert(0, format!("App Ticker: {}", self.app_ticker).into());
+    text.insert(0, format!("Counter: {}", self.counter).into());
+    text.insert(0, "".into());
+    text.insert(
+      0,
+      Line::from(vec![
+        "Press ".into(),
+        Span::styled("j", Style::default().fg(Color::Red)),
+        " or ".into(),
+        Span::styled("k", Style::default().fg(Color::Red)),
+        " to ".into(),
+        Span::styled("increment", Style::default().fg(Color::Yellow)),
+        " or ".into(),
+        Span::styled("decrement", Style::default().fg(Color::Yellow)),
+        ".".into(),
+      ]),
+    );
+    text.insert(0, "".into());
+
     f.render_widget(
-      Paragraph::new(format!(
-        "Press j or k to increment or decrement.\n\nCounter: {}\n\nTicker: {}",
-        self.counter, self.ticker
-      ))
-      .block(
-        Block::default()
-          .title("Template")
-          .title_alignment(Alignment::Center)
-          .borders(Borders::ALL)
-          .border_style(match self.mode {
-            Mode::Processing => Style::default().fg(Color::Yellow),
-            _ => Style::default(),
-          })
-          .border_type(BorderType::Rounded),
-      )
-      .style(Style::default().fg(Color::Cyan))
-      .alignment(Alignment::Center),
+      Paragraph::new(text)
+        .block(
+          Block::default()
+            .title("ratatui async template")
+            .title_alignment(Alignment::Center)
+            .borders(Borders::ALL)
+            .border_style(match self.mode {
+              Mode::Processing => Style::default().fg(Color::Yellow),
+              _ => Style::default(),
+            })
+            .border_type(BorderType::Rounded),
+        )
+        .style(Style::default().fg(Color::Cyan))
+        .alignment(Alignment::Center),
       rects[0],
     );
     let width = rects[1].width.max(3) - 3; // keep 2 for borders and 1 for cursor

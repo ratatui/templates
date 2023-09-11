@@ -1,22 +1,34 @@
 // ANCHOR: all
-use clap::Parser;
-use color_eyre::eyre::Result;
-use ratatui_async_template::{
-  app::App,
+pub mod runner;
+
+pub mod action;
+
+pub mod components;
+
+pub mod config;
+
+pub mod tui;
+
+pub mod utils;
+
+use crate::{
+  runner::Runner,
   utils::{initialize_logging, initialize_panic_handler, version},
 };
+use clap::Parser;
+use color_eyre::eyre::Result;
 
 //// ANCHOR: args
 // Define the command line arguments structure
 #[derive(Parser, Debug)]
 #[command(version = version(), about = "ratatui async template with crossterm and tokio")]
 struct Args {
-  /// App tick rate
-  #[arg(short, long, default_value_t = 1000)]
-  app_tick_rate: u64,
-  /// Render tick rate
-  #[arg(short, long, default_value_t = 50)]
-  render_tick_rate: u64,
+  /// Tick rate (ms)
+  #[arg(short, long, default_value_t = 250)]
+  tick_rate: usize,
+  /// Render tick rate (ms)
+  #[arg(short, long, default_value_t = 100)]
+  render_tick_rate: usize,
 }
 //// ANCHOR_END: args
 
@@ -27,10 +39,8 @@ async fn main() -> Result<()> {
   initialize_panic_handler()?;
 
   let args = Args::parse();
-  let tick_rate = (args.app_tick_rate, args.render_tick_rate);
-
-  let mut app = App::new(tick_rate)?;
-  app.run().await?;
+  let mut runner = Runner::new((args.tick_rate, args.render_tick_rate))?;
+  runner.run().await?;
 
   Ok(())
 }

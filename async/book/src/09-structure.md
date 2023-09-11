@@ -1,181 +1,96 @@
-# `config.rs`
+# `utils.rs`
 
-At the moment, our keys are hard coded into the app.
+### Command Line Argument Parsing (`clap`)
 
-```rust {filename="components/home.rs"}
-impl Component for Home {
+In this file, we define a [`clap`](https://docs.rs/clap/latest/clap/) `Args` struct.
 
-  fn handle_key_events(&mut self, key: KeyEvent) -> Action {
-    match self.mode {
-      Mode::Normal | Mode::Processing => {
-        match key.code {
-          KeyCode::Char('q') => Action::Quit,
-          KeyCode::Char('d') if key.modifiers.contains(KeyModifiers::CONTROL) => Action::Quit,
-          KeyCode::Char('c') if key.modifiers.contains(KeyModifiers::CONTROL) => Action::Quit,
-          KeyCode::Char('z') if key.modifiers.contains(KeyModifiers::CONTROL) => Action::Suspend,
-          KeyCode::Char('l') => Action::ToggleShowLogger,
-          KeyCode::Char('j') => Action::ScheduleIncrement,
-          KeyCode::Char('k') => Action::ScheduleDecrement,
-          KeyCode::Char('/') => Action::EnterInsert,
-          _ => Action::Tick,
-        }
-      },
-      Mode::Insert => {
-        match key.code {
-          KeyCode::Esc => Action::EnterNormal,
-          KeyCode::Enter => Action::EnterNormal,
-          _ => {
-            self.input.handle_event(&crossterm::event::Event::Key(key));
-            Action::Update
-          },
-        }
-      },
-    }
-  }
+```rust,no_run,noplayground
+{{#include ../../src/main.rs:args}}
 ```
 
-If a user wants to press `Up` and `Down` arrow key to `ScheduleIncrement` and `ScheduleDecrement`,
-the only way for them to do it is having to make changes to the source code and recompile the app.
-It would be better to provide a way for users to set up a configuration file that maps key presses
-to actions.
+This allows us to pass command line arguments to our terminal user interface if we need to.
 
-For example, assume we want a user to be able to set up a keyevents-to-actions mapping in a
-`config.toml` file like below:
+![](https://user-images.githubusercontent.com/1813121/252718163-ab1945d1-7d44-4b5b-928d-1164ac99f2c9.png)
 
-```toml
-[keymap]
-"q" = "Quit"
-"j" = "ScheduleIncrement"
-"k" = "ScheduleDecrement"
-"l" = "ToggleShowLogger"
-"/" = "EnterInsert"
-"ESC" = "EnterNormal"
-"Enter" = "EnterNormal"
-"Ctrl-d" = "Quit"
-"Ctrl-c" = "Quit"
-"Ctrl-z" = "Suspend"
-```
-
-We can set up a `Config` struct using
-[the excellent `config` crate](https://docs.rs/config/0.13.3/config/):
+In addtion to command line arguments, we typically want the version of the command line program to
+show up on request. In the `clap` command, we pass in an argument called `version()`. This
+`version()` function (defined in `src/utils.rs`) uses a environment variable called
+`RATATUI_ASYNC_TEMPLATE_GIT_INFO` to get the version number with the git commit hash.
+`RATATUI_ASYNC_TEMPLATE_GIT_INFO` is populated in `./build.rs` when building with `cargo`, because
+of this line:
 
 ```rust
-use std::collections::HashMap;
-
-use color_eyre::eyre::Result;
-use crossterm::event::KeyEvent;
-use serde_derive::Deserialize;
-
-use crate::action::Action;
-
-#[derive(Clone, Debug, Default, Deserialize)]
-pub struct Config {
-  #[serde(default)]
-  pub keymap: KeyMap,
-}
-
-#[derive(Clone, Debug, Default, Deserialize)]
-pub struct KeyMap(pub HashMap<KeyEvent, Action>);
-
-impl Config {
-  pub fn new() -> Result<Self, config::ConfigError> {
-    let mut builder = config::Config::builder();
-    builder = builder
-      .add_source(config::File::from(config_dir.join("config.toml")).format(config::FileFormat::Toml).required(false));
-    builder.build()?.try_deserialize()
-  }
-}
+  println!("cargo:rustc-env=RATATUI_ASYNC_TEMPLATE_GIT_INFO={}", git_describe);
 ```
 
-We are using `serde` to deserialize from a TOML file.
+![](https://user-images.githubusercontent.com/1813121/253160580-dc537c49-4191-4821-874a-9efc73cfe098.png)
 
-Now the default `KeyEvent` serialized format is not very user friendly, so let's implement our own
-version:
+You can configure what the version string should look like by modifying the string template code in
+`utils::version()`.
 
-```rust
-#[derive(Clone, Debug, Default)]
-pub struct KeyMap(pub HashMap<KeyEvent, Action>);
+### XDG Base Directory Specification
 
-impl<'de> Deserialize<'de> for KeyMap {
-  fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: Deserializer<'de>,
-  {
-    struct KeyMapVisitor;
-    impl<'de> Visitor<'de> for KeyMapVisitor {
-      type Value = KeyMap;
-      fn visit_map<M>(self, mut access: M) -> Result<KeyMap, M::Error>
-      where
-        M: MapAccess<'de>,
-      {
-        let mut keymap = HashMap::new();
-        while let Some((key_str, action)) = access.next_entry::<String, Action>()? {
-          let key_event = parse_key_event(&key_str).map_err(de::Error::custom)?;
-          keymap.insert(key_event, action);
-        }
-        Ok(KeyMap(keymap))
-      }
-    }
-    deserializer.deserialize_map(KeyMapVisitor)
-  }
-}
+Most command line tools have configuration files or data files that they need to store somewhere. To
+be a good citizen, you might want to consider following the XDG Base Directory Specification.
+
+This template uses `directories-rs` and `ProjectDirs`'s config and data local directories. You can
+find more information about the exact location for your operating system here:
+<https://github.com/dirs-dev/directories-rs#projectdirs>.
+
+This template also prints out the location when you pass in the `--version` command line argument.
+
+![](https://user-images.githubusercontent.com/1813121/252721469-4d5ec38b-e868-46b4-b7b7-1c2c8bc496ac.png)
+
+There are situations where you or your users may want to override where the configuration and data
+files should be located. This can be accomplished by using the environment variables
+`RATATUI_ASYNC_TEMPLATE_CONFIG` and `RATATUI_ASYNC_TEMPLATE_DATA`.
+
+The functions that calculate the config and data directories are in `src/utils.rs`. Feel free to
+modify the `utils::get_config_dir()` and `utils::get_data_dir()` functions as you see fit.
+
+### Logging
+
+The `utils::initialize_logging()` function is defined in `src/utils.rs`. The log level is decided by
+the `RUST_LOG` environment variable (default = `log::LevelFilter::Info`). In addition, the location
+of the log files are decided by the `RATATUI_ASYNC_TEMPLATE_DATA` environment variable (default =
+`XDG_DATA_HOME (local)`).
+
+I tend to use `.envrc` and `direnv` for development purposes, and I have the following in my
+`.envrc`:
+
+```bash
+{{#include ../../.envrc}}
 ```
 
-Now all we need to do is implement a `parse_key_event` function.
-[You can check the source code for an example of this implementation](https://github.com/ratatui-org/ratatui-async-template/blob/main/src/config.rs#L62-L138).
+This puts the log files in the `RATATUI_ASYNC_TEMPLATE_DATA` folder, i.e. `.data` folder in the
+current directory, and sets the log level to `RUST_LOG`, i.e. `debug` when I am prototyping and
+developing using `cargo run`.
 
-With that implementation complete, we can add a `HashMap` to store a map of `KeyEvent`s and `Action`
-in the `Home` component:
+In addition to add a log file to the `.data` folder, `initialize_logging()` also sets up
+`tui-logger` with `tracing`, so that you can add a `tui-logger` widget to show the logs to your
+users on a key press.
 
-```rust {filename="components/home.rs"}
-#[derive(Default)]
-pub struct Home {
-  ...
-  pub keymap: HashMap<KeyEvent, Action>,
-}
-```
+![Top half is a Iterm2 terminal with the TUI showing a Vertical split with tui-logger widget. Bottom half is a ITerm2 terminal showing the output of running `tail -f` on the log file.](https://user-images.githubusercontent.com/1813121/254093932-46d8c6fd-c572-4675-bcaf-45a36eed51ff.png)
 
-Now we have to create an instance of `Config` and pass the keymap to `Home`:
+Using the `RATATUI_ASYNC_TEMPLATE_CONFIG` environment variable also allows me to have configuration
+data that I can use for testing when development that doesn't affect my local user configuration for
+the same program.
 
-```rust
-impl App {
-  pub fn new(tick_rate: (u64, u64)) -> Result<Self> {
-    let h = Home::new();
-    let config = Config::new()?;
-    let h = h.keymap(config.keymap.0.clone());
-    let home = Arc::new(Mutex::new(h));
-    Ok(Self { tick_rate, home, should_quit: false, should_suspend: false, config })
-  }
-}
-```
+### Panic Handler
 
-```admonish tip
-You can create different keyevent presses to map to different actions based on the mode of the app by adding more sections into the toml configuration file.
-```
+Finally, let's discuss the `initialize_panic_handler()` function, which is also defined in
+`src/utils.rs`, and is used to define a callback when the application panics. Your application may
+panic for a number of reasons (e.g. when you call `.unwrap()` on a `None`). And when this happens,
+you want to be a good citizen and:
 
-And in the `handle_key_events` we get the `Action` that should to be performed from the `HashMap`
-directly.
+1. provide a useful stacktrace so that they can report errors back to you.
+2. not leave the users terminal state in a botched condition, resetting it back to the way it was.
 
-```rust
-impl Component for Home {
-  fn handle_key_events(&mut self, key: KeyEvent) -> Action {
-    match self.mode {
-      Mode::Normal | Mode::Processing => {
-        if let Some(action) = self.keymap.get(&key) {
-          *action
-        } else {
-          Action::Tick
-        }
-      },
-      Mode::Insert => {
-        match key.code {
-          KeyCode::Esc => Action::EnterNormal,
-          KeyCode::Enter => Action::EnterNormal,
-          _ => {
-            self.input.handle_event(&crossterm::event::Event::Key(key));
-            Action::Update
-          },
-        }
-      },
-    }
-  }
-}
-```
+In the screenshot below, I added a `None.unwrap()` into a function that is called on a keypress, so
+that you can see what a prettier backtrace looks like:
+
+![](https://user-images.githubusercontent.com/1813121/252723080-18c15640-c75f-42b3-8aeb-d4e6ce323430.png)
+
+`utils::initialize_panic_handler()` also calls `Tui::new().exit()` to reset the terminal state back
+to the way it was before the user started the TUI program. We'll learn more about the `Tui` in the
+next section.
