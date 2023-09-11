@@ -22,8 +22,22 @@ pub struct Config {
   pub keymap: KeyMap,
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct KeyMap(pub HashMap<KeyEvent, Action>);
+
+impl Default for KeyMap {
+  fn default() -> Self {
+    let mut keymap: HashMap<KeyEvent, Action> = Default::default();
+    keymap.insert(parse_key_event("q").unwrap(), Action::Quit);
+    keymap.insert(parse_key_event("j").unwrap(), Action::ScheduleIncrement);
+    keymap.insert(parse_key_event("k").unwrap(), Action::ScheduleDecrement);
+    keymap.insert(parse_key_event("?").unwrap(), Action::ToggleShowHelp);
+    keymap.insert(parse_key_event("/").unwrap(), Action::EnterInsert);
+    keymap.insert(parse_key_event("ESC").unwrap(), Action::EnterNormal);
+    keymap.insert(parse_key_event("Enter").unwrap(), Action::EnterNormal);
+    Self(keymap)
+  }
+}
 
 impl<'de> Deserialize<'de> for KeyMap {
   fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
