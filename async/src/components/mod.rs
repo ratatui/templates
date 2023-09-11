@@ -6,7 +6,6 @@ use tokio::sync::mpsc::UnboundedSender;
 use crate::{action::Action, tui::Event, tui::Frame};
 
 pub mod app;
-pub mod logger;
 
 //// ANCHOR: component
 pub trait Component {

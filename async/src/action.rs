@@ -8,7 +8,7 @@ pub enum Action {
   Resume,
   Suspend,
   Resize(u16, u16),
-  ToggleShowLogger,
+  ToggleShowHelp,
   ScheduleIncrement,
   ScheduleDecrement,
   Increment(usize),

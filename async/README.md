@@ -5,18 +5,20 @@
 ### Features
 
 - Uses [tokio](https://tokio.rs/) for async events
-- Logs with [tui-logger](https://github.com/gin66/tui-logger) and [tracing](https://github.com/tokio-rs/tracing)
+- Logs [tracing](https://github.com/tokio-rs/tracing)
 - [better-panic](https://github.com/mitsuhiko/better-panic)
+- [color-eyre](https://github.com/eyre/color-eyre)
+- [human-panic](https://github.com/rust-cli/human-panic)
 - Clap for command line argument parsing
-- App with `Component` trait, with [`Home`](https://github.com/ratatui-org/ratatui-async-template/blog/main/src/components/home.rs) and [`Logger`](https://github.com/ratatui-org/ratatui-async-template/blog/main/src/components/logger.rs) components as examples
+- App with `Component` trait, with
+  [`App`](https://github.com/ratatui-org/ratatui-async-template/blog/main/src/components/app.rs) and
+  component as an example
 
 ### Usage
 
 - Clone the repository
-- Rename `ratatui-async-template` and `RATATUI_ASYNC_TEMPLATE` with your `app-name` and `APP_NAME` in the following files:
-  - `src/main.rs`
-  - `src/utils.rs`
-  - `src/config.rs`
+- Rename `ratatui-async-template` and `RATATUI_ASYNC_TEMPLATE` with your `app-name` and `APP_NAME`
+  in the following files:
   - `build.rs`
   - `Cargo.toml`
   - `README.md`

@@ -89,7 +89,7 @@ you want to be a good citizen and:
 In the screenshot below, I added a `None.unwrap()` into a function that is called on a keypress, so
 that you can see what a prettier backtrace looks like:
 
-![](https://user-images.githubusercontent.com/1813121/252723080-18c15640-c75f-42b3-8aeb-d4e6ce323430.png)
+![](https://user-images.githubusercontent.com/1813121/266889163-2fb6b210-58aa-4519-b491-0d35d9fa2c87.png)
 
 `utils::initialize_panic_handler()` also calls `Tui::new().exit()` to reset the terminal state back
 to the way it was before the user started the TUI program. We'll learn more about the `Tui` in the

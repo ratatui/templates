@@ -28,7 +28,15 @@ fn project_directory() -> Option<ProjectDirs> {
 }
 
 pub fn initialize_panic_handler() -> Result<()> {
-  let (panic_hook, eyre_hook) = color_eyre::config::HookBuilder::default().into_hooks();
+  let (panic_hook, eyre_hook) = color_eyre::config::HookBuilder::default()
+    .panic_section(format!("This is a bug. Consider reporting it at {}", env!("CARGO_PKG_REPOSITORY")))
+    .display_location_section(true)
+    .display_env_section(true)
+    .issue_url(concat!(env!("CARGO_PKG_REPOSITORY"), "/issues/new"))
+    .add_issue_metadata("version", env!("CARGO_PKG_VERSION"))
+    .add_issue_metadata("os", std::env::consts::OS)
+    .add_issue_metadata("arch", std::env::consts::ARCH)
+    .into_hooks();
   eyre_hook.install()?;
   std::panic::set_hook(Box::new(move |panic_info| {
     if let Ok(t) = Tui::new() {
@@ -36,15 +44,11 @@ pub fn initialize_panic_handler() -> Result<()> {
         error!("Unable to exit Terminal: {:?}", r);
       }
     }
-    let payload = panic_info.payload().downcast_ref::<&str>();
-    let message =
-      if let Some(payload) = payload { format!("Message: {}", &payload) } else { String::from("No error message") };
-    let location = match panic_info.location() {
-      Some(location) => format!("Crash location: {}:{}", location.file(), location.line()),
-      None => String::from("Crash location unknown"),
-    };
-    tracing::error!("Error: {}", strip_ansi_escapes::strip_str(message));
-    tracing::error!("Location: {}", location);
+
+    let msg = format!("{}", panic_hook.panic_report(panic_info));
+    eprintln!("{}", msg);
+    log::error!("Error: {}", strip_ansi_escapes::strip_str(msg));
+
     use human_panic::{handle_dump, print_msg, Metadata};
     let meta = Metadata {
       version: env!("CARGO_PKG_VERSION").into(),
@@ -52,15 +56,20 @@ pub fn initialize_panic_handler() -> Result<()> {
       authors: env!("CARGO_PKG_AUTHORS").replace(':', ", ").into(),
       homepage: env!("CARGO_PKG_HOMEPAGE").into(),
     };
-    let msg = format!("{}", panic_hook.panic_report(panic_info));
+
     let file_path = handle_dump(&meta, panic_info);
     print_msg(file_path, &meta).expect("human-panic: printing error message to console failed");
-    eprintln!("{}", msg);
-    better_panic::Settings::auto()
-      .most_recent_first(false)
-      .lineno_suffix(true)
-      .verbosity(better_panic::Verbosity::Full)
-      .create_panic_handler()(panic_info);
+
+    // Better Panic. Only enabled *when* debugging.
+    #[cfg(debug_assertions)]
+    {
+      better_panic::Settings::auto()
+        .most_recent_first(false)
+        .lineno_suffix(true)
+        .verbosity(better_panic::Verbosity::Full)
+        .create_panic_handler()(panic_info);
+    }
+
     std::process::exit(libc::EXIT_FAILURE);
   }));
   Ok(())
@@ -100,22 +109,22 @@ pub fn initialize_logging() -> Result<()> {
     .with_target(false)
     .with_ansi(false)
     .with_filter(EnvFilter::from_default_env());
-
   tracing_subscriber::registry()
     .with(file_subscriber)
-    .with(tui_logger::tracing_subscriber_layer())
+    // .with(tui_logger::tracing_subscriber_layer())
     .with(ErrorLayer::default())
     .init();
-  let default_level = match LOG_LEVEL.clone().to_lowercase().as_str() {
-    "off" => log::LevelFilter::Off,
-    "error" => log::LevelFilter::Error,
-    "warn" => log::LevelFilter::Warn,
-    "info" => log::LevelFilter::Info,
-    "debug" => log::LevelFilter::Debug,
-    "trace" => log::LevelFilter::Trace,
-    _ => log::LevelFilter::Info,
-  };
-  tui_logger::set_default_level(default_level);
+
+  // let default_level = match LOG_LEVEL.clone().to_lowercase().as_str() {
+  //   "off" => log::LevelFilter::Off,
+  //   "error" => log::LevelFilter::Error,
+  //   "warn" => log::LevelFilter::Warn,
+  //   "info" => log::LevelFilter::Info,
+  //   "debug" => log::LevelFilter::Debug,
+  //   "trace" => log::LevelFilter::Trace,
+  //   _ => log::LevelFilter::Info,
+  // };
+  // tui_logger::set_default_level(default_level);
 
   Ok(())
 }
