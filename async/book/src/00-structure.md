@@ -9,8 +9,7 @@ $ tree
 └── src
    ├── action.rs
    ├── components
-   │  ├── home.rs
-   │  ├── logger.rs
+   │  ├── app.rs
    │  └── mod.rs
    ├── config.rs
    ├── main.rs

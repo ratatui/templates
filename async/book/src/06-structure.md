@@ -2,12 +2,11 @@
 
 Here's an example of the `App` component with additional state:
 
-1. `show_logger` is a `bool` that tracks whether or not the `Logger` `Component` should be rendered
-   or not
+1. `show_help` is a `bool` that tracks whether or not help should be rendered or not
 1. `ticker` is a counter that increments every `AppTick`.
 
-This `App` component also adds fields for `logger: Logger` and `input: Input`, and stores a
-reference to `action_tx: mpsc::UnboundedSender<Action>`
+This `App` component also adds fields for `input: Input`, and stores a reference to
+`action_tx: mpsc::UnboundedSender<Action>`
 
 ```rust,no_run,noplayground
 {{#include ../../src/components/app.rs}}
@@ -17,10 +16,6 @@ The `render` function takes a `Frame` and draws a paragraph to display a counter
 box input:
 
 ![](https://user-images.githubusercontent.com/1813121/254134161-477b2182-a3ee-4be9-a180-1bcdc56c8a1d.png)
-
-The `render` function can also optionally draw a `Logger` component.
-
-![](https://user-images.githubusercontent.com/1813121/254134679-02334184-fc4f-4f52-8957-61c950cdb770.png)
 
 The `App` component has a couple of methods `increment` and `decrement` that we saw earlier, but
 this time additional `Action`s are sent on the `action_tx` channel to track the start and end of the
@@ -55,7 +50,7 @@ When a `Action` is sent on the action channel, it is received in the `main` thre
   fn dispatch(&mut self, action: Action) -> Option<Action> {
     match action {
       Action::Tick => self.tick(),
-      Action::ToggleShowLogger => self.show_logger = !self.show_logger,
+      Action::ToggleShowHelp => self.show_help = !self.show_help,
       Action::ScheduleIncrement=> self.schedule_increment(1),
       Action::ScheduleDecrement=> self.schedule_decrement(1),
       Action::Increment(i) => self.increment(i),
@@ -86,9 +81,3 @@ When the `Mode` is switched to `Insert`, all events are handled off the `Input` 
 excellent [`tui-input` crate](https://github.com/sayanarijit/tui-input).
 
 ![](https://user-images.githubusercontent.com/1813121/254444604-de8cfcfa-eeec-417a-a8b0-92a7ccb5fcb5.gif)
-
-Hitting the `l` key toggles the `Logger` view:
-
-![](https://user-images.githubusercontent.com/1813121/254452502-879beb8a-77dd-4475-bb55-1b15a443c747.gif)
-
-You can see how the `Logger` is set up in the next section.
