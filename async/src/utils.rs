@@ -19,6 +19,7 @@ lazy_static! {
     std::env::var(format!("{}_CONFIG", PROJECT_NAME.clone())).ok().map(PathBuf::from);
   pub static ref GIT_COMMIT_HASH: String =
     std::env::var(format!("{}_GIT_INFO", PROJECT_NAME.clone())).unwrap_or_else(|_| String::from("Unknown"));
+  pub static ref LOG_LEVEL: String = std::env::var(format!("{}_LOG_LEVEL", PROJECT_NAME.clone())).unwrap_or_default();
   pub static ref LOG_FILE: String = format!("{}.log", env!("CARGO_PKG_NAME").to_lowercase());
 }
 
@@ -105,16 +106,15 @@ pub fn initialize_logging() -> Result<()> {
     .with(tui_logger::tracing_subscriber_layer())
     .with(ErrorLayer::default())
     .init();
-  let default_level =
-    std::env::var("RUST_LOG").map_or(log::LevelFilter::Info, |val| match val.to_lowercase().as_str() {
-      "off" => log::LevelFilter::Off,
-      "error" => log::LevelFilter::Error,
-      "warn" => log::LevelFilter::Warn,
-      "info" => log::LevelFilter::Info,
-      "debug" => log::LevelFilter::Debug,
-      "trace" => log::LevelFilter::Trace,
-      _ => log::LevelFilter::Info,
-    });
+  let default_level = match LOG_LEVEL.clone().to_lowercase().as_str() {
+    "off" => log::LevelFilter::Off,
+    "error" => log::LevelFilter::Error,
+    "warn" => log::LevelFilter::Warn,
+    "info" => log::LevelFilter::Info,
+    "debug" => log::LevelFilter::Debug,
+    "trace" => log::LevelFilter::Trace,
+    _ => log::LevelFilter::Info,
+  };
   tui_logger::set_default_level(default_level);
 
   Ok(())
