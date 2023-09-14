@@ -41,12 +41,12 @@ pub struct Tui {
   pub cancellation_token: CancellationToken,
   pub event_rx: UnboundedReceiver<Event>,
   pub event_tx: UnboundedSender<Event>,
-  pub tick_rate: (usize, usize),
+  pub tick_rate: (f64, f64),
 }
 
 impl Tui {
   pub fn new() -> Result<Self> {
-    let tick_rate = (1000, 100);
+    let tick_rate = (1.0, 0.01);
     let terminal = ratatui::Terminal::new(Backend::new(std::io::stderr()))?;
     let (event_tx, event_rx) = mpsc::unbounded_channel();
     let cancellation_token = CancellationToken::new();
@@ -54,13 +54,13 @@ impl Tui {
     Ok(Self { terminal, task, cancellation_token, event_rx, event_tx, tick_rate })
   }
 
-  pub fn tick_rate(&mut self, tick_rate: (usize, usize)) {
+  pub fn tick_rate(&mut self, tick_rate: (f64, f64)) {
     self.tick_rate = tick_rate;
   }
 
   pub fn start(&mut self) {
-    let tick_rate = std::time::Duration::from_millis(self.tick_rate.0 as u64);
-    let render_tick_rate = std::time::Duration::from_millis(self.tick_rate.1 as u64);
+    let tick_rate = std::time::Duration::from_secs_f64(self.tick_rate.0);
+    let render_tick_rate = std::time::Duration::from_secs_f64(self.tick_rate.1);
     self.cancel();
     self.cancellation_token = CancellationToken::new();
     let _cancellation_token = self.cancellation_token.clone();

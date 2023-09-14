@@ -3,26 +3,33 @@ use tokio::sync::mpsc;
 
 use crate::{
   action::Action,
-  components::{app::App, Component},
+  components::{app::App, fps::FpsCounter, Component},
   config::Config,
   trace_dbg,
-  tui::Tui,
+  tui::{self, Tui},
 };
 
 pub struct Runner {
   pub config: Config,
-  pub tick_rate: (usize, usize),
+  pub tick_rate: (f64, f64),
   pub components: Vec<Box<dyn Component>>,
   pub should_quit: bool,
   pub should_suspend: bool,
 }
 
 impl Runner {
-  pub fn new(tick_rate: (usize, usize)) -> Result<Self> {
+  pub fn new(tick_rate: (f64, f64)) -> Result<Self> {
     let h = App::new();
     let config = Config::new()?;
     let h = h.keymap(config.keymap.0.clone());
-    Ok(Self { tick_rate, components: vec![Box::new(h)], should_quit: false, should_suspend: false, config })
+    let fps = FpsCounter::new();
+    Ok(Self {
+      tick_rate,
+      components: vec![Box::new(h), Box::new(fps)],
+      should_quit: false,
+      should_suspend: false,
+      config,
+    })
   }
 
   pub async fn run(&mut self) -> Result<()> {
@@ -38,10 +45,18 @@ impl Runner {
 
     loop {
       if let Some(e) = tui.next().await {
-        for component in self.components.iter_mut() {
-          if let Some(action) = component.handle_events(Some(e.clone())) {
-            action_tx.send(action)?;
-          }
+        match e {
+          tui::Event::Quit => action_tx.send(Action::Quit)?,
+          tui::Event::Tick => action_tx.send(Action::Tick)?,
+          tui::Event::Render => action_tx.send(Action::Render)?,
+          tui::Event::Resize(x, y) => action_tx.send(Action::Resize(x, y))?,
+          e => {
+            for component in self.components.iter_mut() {
+              if let Some(action) = component.handle_events(Some(e.clone())) {
+                action_tx.send(action)?;
+              }
+            }
+          },
         }
       }
 
@@ -54,24 +69,18 @@ impl Runner {
           Action::Suspend => self.should_suspend = true,
           Action::Resume => self.should_suspend = false,
           Action::Render => {
-            for component in self.components.iter_mut() {
-              tui.draw(|f| {
+            tui.draw(|f| {
+              for component in self.components.iter_mut() {
                 component.draw(f, f.size());
-              })?;
-            }
-            for component in self.components.iter_mut() {
-              if let Some(action) = component.update(action.clone())? {
-                action_tx.send(action)?
-              };
-            }
+              }
+            })?;
           },
-          action => {
-            for component in self.components.iter_mut() {
-              if let Some(action) = component.update(action.clone())? {
-                action_tx.send(action)?
-              };
-            }
-          },
+          _ => {},
+        }
+        for component in self.components.iter_mut() {
+          if let Some(action) = component.update(action.clone())? {
+            action_tx.send(action)?
+          };
         }
       }
       if self.should_suspend {

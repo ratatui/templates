@@ -100,20 +100,22 @@ impl Component for App {
           Action::Tick
         }
       },
-      Mode::Insert => match key.code {
-        KeyCode::Esc => Action::EnterNormal,
-        KeyCode::Enter => {
-          if let Some(sender) = &self.action_tx {
-            if let Err(e) = sender.send(Action::CompleteInput(self.input.value().to_string())) {
-              error!("Failed to send action: {:?}", e);
+      Mode::Insert => {
+        match key.code {
+          KeyCode::Esc => Action::EnterNormal,
+          KeyCode::Enter => {
+            if let Some(sender) = &self.action_tx {
+              if let Err(e) = sender.send(Action::CompleteInput(self.input.value().to_string())) {
+                error!("Failed to send action: {:?}", e);
+              }
             }
-          }
-          Action::EnterNormal
-        },
-        _ => {
-          self.input.handle_event(&crossterm::event::Event::Key(key));
-          Action::Update
-        },
+            Action::EnterNormal
+          },
+          _ => {
+            self.input.handle_event(&crossterm::event::Event::Key(key));
+            Action::Update
+          },
+        }
       },
     };
     Some(action)
