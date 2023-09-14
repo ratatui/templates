@@ -5,7 +5,6 @@ use crate::{
   action::Action,
   components::{app::App, fps::FpsCounter, Component},
   config::Config,
-  trace_dbg,
   tui::{self, Tui},
 };
 
@@ -61,8 +60,8 @@ impl Runner {
       }
 
       while let Ok(action) = action_rx.try_recv() {
-        if action != Action::Tick {
-          trace_dbg!(&action);
+        if action != Action::Tick && action != Action::Render {
+          log::debug!("{action:?}");
         }
         match action {
           Action::Quit => self.should_quit = true,
