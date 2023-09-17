@@ -130,8 +130,8 @@ impl Tui {
         self.task.abort();
       }
       if counter > 100 {
-        log::error!("Failed to abort task in 100 milliseconds for unknown reason");
-        return Err(color_eyre::eyre::eyre!("Unable to abort task"));
+        log::error!("Failed to abort task for unknown reason");
+        break;
       }
     }
     Ok(())
@@ -146,8 +146,10 @@ impl Tui {
 
   pub fn exit(&self) -> Result<()> {
     self.stop()?;
-    crossterm::execute!(std::io::stderr(), LeaveAlternateScreen, cursor::Show)?;
-    crossterm::terminal::disable_raw_mode()?;
+    if crossterm::terminal::is_raw_mode_enabled()? {
+      crossterm::execute!(std::io::stderr(), LeaveAlternateScreen, cursor::Show)?;
+      crossterm::terminal::disable_raw_mode()?;
+    }
     Ok(())
   }
 

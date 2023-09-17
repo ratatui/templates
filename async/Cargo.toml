@@ -47,7 +47,7 @@ serde_derive = "1.0.183"
 config = "0.13.3"
 lazy_static = "1.4.0"
 tracing-error = "0.2.0"
-color-eyre = { version = "0.6.2", features = ["issue-url"] }
+color-eyre = "0.6.2"
 strip-ansi-escapes = "0.2.0"
 human-panic = "1.2.0"
 

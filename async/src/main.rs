@@ -33,8 +33,7 @@ struct Args {
 }
 //// ANCHOR_END: args
 
-#[tokio::main]
-async fn main() -> Result<()> {
+async fn tokio_main() -> Result<()> {
   initialize_logging()?;
 
   initialize_panic_handler()?;
@@ -43,6 +42,12 @@ async fn main() -> Result<()> {
   let mut runner = Runner::new((args.tick_rate, args.render_tick_rate))?;
   runner.run().await?;
 
+  Ok(())
+}
+
+#[tokio::main]
+async fn main() -> Result<()> {
+  tokio_main().await.unwrap(); // Always invoke panic handler
   Ok(())
 }
 // ANCHOR_END: all
