@@ -42,7 +42,11 @@ impl Runner {
     tui.enter()?;
 
     for component in self.components.iter_mut() {
-      component.init(action_tx.clone())?;
+      component.register_action_handler(action_tx.clone())?;
+    }
+
+    for component in self.components.iter_mut() {
+      component.init()?;
     }
 
     loop {
@@ -54,7 +58,7 @@ impl Runner {
           tui::Event::Resize(x, y) => action_tx.send(Action::Resize(x, y))?,
           e => {
             for component in self.components.iter_mut() {
-              if let Some(action) = component.handle_events(Some(e.clone())) {
+              if let Some(action) = component.handle_events(Some(e.clone()))? {
                 action_tx.send(action)?;
               }
             }
@@ -73,7 +77,8 @@ impl Runner {
           Action::Render => {
             tui.draw(|f| {
               for component in self.components.iter_mut() {
-                component.draw(f, f.size());
+                let r = component.draw(f, f.size());
+                action_tx.send(Action::Error(format!("Failed to draw {:?}", r))).unwrap();
               }
             })?;
           },

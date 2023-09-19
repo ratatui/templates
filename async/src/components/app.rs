@@ -86,12 +86,12 @@ impl App {
 }
 
 impl Component for App {
-  fn init(&mut self, tx: UnboundedSender<Action>) -> Result<()> {
+  fn register_action_handler(&mut self, tx: UnboundedSender<Action>) -> Result<()> {
     self.action_tx = Some(tx);
     Ok(())
   }
 
-  fn handle_key_events(&mut self, key: KeyEvent) -> Option<Action> {
+  fn handle_key_events(&mut self, key: KeyEvent) -> Result<Option<Action>> {
     let action = match self.mode {
       Mode::Normal | Mode::Processing => {
         if let Some(action) = self.keymap.get(&key) {
@@ -118,7 +118,7 @@ impl Component for App {
         }
       },
     };
-    Some(action)
+    Ok(Some(action))
   }
 
   fn update(&mut self, action: Action) -> Result<Option<Action>> {
@@ -149,7 +149,7 @@ impl Component for App {
     Ok(None)
   }
 
-  fn draw(&mut self, f: &mut Frame<'_>, rect: Rect) {
+  fn draw(&mut self, f: &mut Frame<'_>, rect: Rect) -> Result<()> {
     let rects = Layout::default().constraints([Constraint::Percentage(100), Constraint::Min(3)].as_ref()).split(rect);
 
     let mut text: Vec<Line> = self.text.clone().iter().map(|l| Line::from(l.clone())).collect();
@@ -237,5 +237,6 @@ impl Component for App {
         .column_spacing(1);
       f.render_widget(table, rect.inner(&Margin { vertical: 4, horizontal: 2 }));
     };
+    Ok(())
   }
 }
