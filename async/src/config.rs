@@ -266,6 +266,14 @@ mod tests {
   }
 
   #[test]
+  fn test_reverse_multiple_modifiers() {
+    assert_eq!(
+      key_event_to_string(&KeyEvent::new(KeyCode::Char('a'), KeyModifiers::CONTROL | KeyModifiers::ALT)),
+      "ctrl-alt-a".to_string()
+    );
+  }
+
+  #[test]
   fn test_invalid_keys() {
     assert!(parse_key_event("invalid-key").is_err());
     assert!(parse_key_event("ctrl-invalid-key").is_err());
