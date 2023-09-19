@@ -10,20 +10,22 @@ use crate::{
 
 pub struct Runner {
   pub config: Config,
-  pub tick_rate: (f64, f64),
+  pub tick_rate: f64,
+  pub frame_rate: f64,
   pub components: Vec<Box<dyn Component>>,
   pub should_quit: bool,
   pub should_suspend: bool,
 }
 
 impl Runner {
-  pub fn new(tick_rate: (f64, f64)) -> Result<Self> {
+  pub fn new(tick_rate: f64, frame_rate: f64) -> Result<Self> {
     let h = App::new();
     let config = Config::new()?;
     let h = h.keymap(config.keymap.0.clone());
     let fps = FpsCounter::new();
     Ok(Self {
       tick_rate,
+      frame_rate,
       components: vec![Box::new(h), Box::new(fps)],
       should_quit: false,
       should_suspend: false,
@@ -36,6 +38,7 @@ impl Runner {
 
     let mut tui = Tui::new()?;
     tui.tick_rate(self.tick_rate);
+    tui.frame_rate(self.frame_rate);
     tui.enter()?;
 
     for component in self.components.iter_mut() {

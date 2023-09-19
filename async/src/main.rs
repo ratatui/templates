@@ -24,12 +24,12 @@ use crate::{
 #[derive(Parser, Debug)]
 #[command(version = version(), about = "ratatui async template with crossterm and tokio")]
 struct Args {
-  /// Tick rate (s)
-  #[arg(short, long, default_value_t = 1.0/4.0)]
+  /// Tick rate (n per second)
+  #[arg(short, long, default_value_t = 4.0)]
   tick_rate: f64,
-  /// Render tick rate (s)
-  #[arg(short, long, default_value_t = 1.0/60.0)]
-  render_tick_rate: f64,
+  /// Frame rate (n per second)
+  #[arg(short, long, default_value_t = 60.0)]
+  frame_rate: f64,
 }
 //// ANCHOR_END: args
 
@@ -39,7 +39,7 @@ async fn tokio_main() -> Result<()> {
   initialize_panic_handler()?;
 
   let args = Args::parse();
-  let mut runner = Runner::new((args.tick_rate, args.render_tick_rate))?;
+  let mut runner = Runner::new(args.tick_rate, args.frame_rate)?;
   runner.run().await?;
 
   Ok(())
