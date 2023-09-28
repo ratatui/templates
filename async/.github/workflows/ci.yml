@@ -9,7 +9,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      PROJECT_NAME: rust-gh-example
+      PROJECT_NAME: ratatui-github-example
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
