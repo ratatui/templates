@@ -1,6 +1,6 @@
 # ratatui-async-template
 
-<img width="757" alt="image" src="https://github.com/ratatui-org/ratatui-async-template/assets/1813121/f5c872fa-2c78-41af-82cd-717bdf7d0c1e">
+<img width="752" alt="image" src="https://github.com/ratatui-org/ratatui-async-template/assets/1813121/2980bc86-3a1e-425f-9ba2-c42066357541">
 
 ### Features
 
