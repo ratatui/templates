@@ -1,0 +1,4 @@
+[values]
+gh-username = "kdheepak"
+project-description = "Example of ratatui template"
+msrv = "stable"

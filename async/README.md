@@ -16,11 +16,9 @@
 
 ### Usage
 
-- Clone the repository
-- Rename `ratatui-async-template` and `RATATUI_ASYNC_TEMPLATE` with your `app-name` and `APP_NAME`
-  in the following files:
-  - `build.rs`
-  - `Cargo.toml`
-  - `README.md`
-  - `.github/workflows/cd.yml`
-  - `.envrc`
+To generate a template locally:
+
+```
+$ cargo install cargo-generate
+$ cargo generate --git https://github.com/ratatui-org/ratatui-async-template
+```
