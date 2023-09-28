@@ -22,3 +22,7 @@ To generate a template locally:
 $ cargo install cargo-generate
 $ cargo generate --git https://github.com/ratatui-org/ratatui-async-template
 ```
+
+### Documentation
+
+Read documentation on design decisions in the template here: <https://ratatui-org.github.io/ratatui-async-template/>
