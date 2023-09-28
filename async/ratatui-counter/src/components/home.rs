@@ -9,7 +9,7 @@ use tracing::trace;
 use tui_input::{backend::crossterm::EventHandler, Input};
 
 use super::{Component, Frame};
-use crate::action::Action;
+use crate::{action::Action, config::key_event_to_string};
 
 #[derive(Default, Copy, Clone, PartialEq, Eq)]
 pub enum Mode {
@@ -30,6 +30,7 @@ pub struct Home {
   pub action_tx: Option<UnboundedSender<Action>>,
   pub keymap: HashMap<KeyEvent, Action>,
   pub text: Vec<String>,
+  pub last_events: Vec<KeyEvent>,
 }
 
 impl Home {
@@ -43,12 +44,13 @@ impl Home {
   }
 
   pub fn tick(&mut self) {
-    trace!("Tick");
+    log::info!("Tick");
     self.app_ticker = self.app_ticker.saturating_add(1);
+    self.last_events.drain(..);
   }
 
   pub fn render_tick(&mut self) {
-    trace!("Render Tick");
+    log::debug!("Render Tick");
     self.render_ticker = self.render_ticker.saturating_add(1);
   }
 
@@ -92,14 +94,9 @@ impl Component for Home {
   }
 
   fn handle_key_events(&mut self, key: KeyEvent) -> Result<Option<Action>> {
+    self.last_events.push(key.clone());
     let action = match self.mode {
-      Mode::Normal | Mode::Processing => {
-        if let Some(action) = self.keymap.get(&key) {
-          action.clone()
-        } else {
-          Action::Tick
-        }
-      },
+      Mode::Normal | Mode::Processing => return Ok(None),
       Mode::Insert => {
         match key.code {
           KeyCode::Esc => Action::EnterNormal,
@@ -237,6 +234,20 @@ impl Component for Home {
         .column_spacing(1);
       f.render_widget(table, rect.inner(&Margin { vertical: 4, horizontal: 2 }));
     };
+
+    f.render_widget(
+      Block::default()
+        .title(
+          ratatui::widgets::block::Title::from(format!(
+            "{:?}",
+            &self.last_events.iter().map(|k| key_event_to_string(k)).collect::<Vec<_>>()
+          ))
+          .alignment(Alignment::Right),
+        )
+        .title_style(Style::default().add_modifier(Modifier::BOLD)),
+      Rect { x: rect.x + 1, y: rect.height.saturating_sub(1), width: rect.width.saturating_sub(2), height: 1 },
+    );
+
     Ok(())
   }
 }
