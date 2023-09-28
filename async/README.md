@@ -11,7 +11,7 @@
 - [human-panic](https://github.com/rust-cli/human-panic)
 - Clap for command line argument parsing
 - `Component` trait with
-  [`App`](https://github.com/ratatui-org/ratatui-async-template/blog/main/src/components/app.rs)
+  [`Home`](https://github.com/ratatui-org/ratatui-async-template/blog/main/src/components/home.rs)
   component as an example
 
 ### Usage
