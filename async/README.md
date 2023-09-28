@@ -16,11 +16,13 @@
 
 ### Usage
 
-To generate a template locally:
+You can start by git cloning the project:
 
-```
+```bash
 $ cargo install cargo-generate
-$ cargo generate --git https://github.com/ratatui-org/ratatui-async-template
+$ cargo generate --git https://github.com/ratatui-org/ratatui-async-template --name ratatui-hello-world
+$ cd ratatui-hello-world
+$ cargo run # Press `q` to exit
 ```
 
 ### Documentation
