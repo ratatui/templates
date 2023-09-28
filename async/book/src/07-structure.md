@@ -233,3 +233,9 @@ And because we are now using multiple keys as input, you have to update the `app
     }
     // -- snip --
 ```
+
+Here's the JSON configuration we use for the counter application:
+
+```json
+{{#include ../../ratatui-counter/.config/config.json5}}
+```
