@@ -5,16 +5,21 @@ use tokio::sync::mpsc::UnboundedSender;
 
 use crate::{
   action::Action,
+  config::Config,
   tui::{Event, Frame},
 };
 
-pub mod app;
+pub mod home;
 pub mod fps;
 
 //// ANCHOR: component
 pub trait Component {
   #[allow(unused_variables)]
   fn register_action_handler(&mut self, tx: UnboundedSender<Action>) -> Result<()> {
+    Ok(())
+  }
+  #[allow(unused_variables)]
+  fn register_config_handler(&mut self, config: Config) -> Result<()> {
     Ok(())
   }
   fn init(&mut self) -> Result<()> {

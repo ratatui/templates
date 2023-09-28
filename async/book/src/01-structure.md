@@ -5,7 +5,7 @@ In this section, let's just cover the contents of `main.rs`, `build.rs` and `uti
 The `main.rs` file is the entry point of the application. Here's the complete `main.rs` file:
 
 ```rust,no_run,noplayground
-{{#include ../../src/main.rs:all}}
+{{#include ../../ratatui-counter/src/main.rs:all}}
 ```
 
 We'll describe below in more detail the different aspects of this file.

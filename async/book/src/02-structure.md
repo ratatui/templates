@@ -522,7 +522,7 @@ I personally like to combine the `EventHandler` and the `Tui` struct into one st
 example of that `Tui` struct for your reference.
 
 ```rust
-{{#include ../../src/tui.rs}}
+{{#include ../../ratatui-counter/src/tui.rs}}
 ```
 
 In the next section, we will introduce a `Command` pattern to bridge handling the effect of an

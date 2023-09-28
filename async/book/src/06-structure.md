@@ -9,7 +9,7 @@ This `App` component also adds fields for `input: Input`, and stores a reference
 `action_tx: mpsc::UnboundedSender<Action>`
 
 ```rust,no_run,noplayground
-{{#include ../../src/components/app.rs}}
+{{#include ../../ratatui-counter/src/components/app.rs}}
 ```
 
 The `render` function takes a `Frame` and draws a paragraph to display a counter as well as a text

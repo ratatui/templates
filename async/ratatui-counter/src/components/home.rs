@@ -20,7 +20,7 @@ pub enum Mode {
 }
 
 #[derive(Default)]
-pub struct App {
+pub struct Home {
   pub show_help: bool,
   pub counter: usize,
   pub app_ticker: usize,
@@ -32,7 +32,7 @@ pub struct App {
   pub text: Vec<String>,
 }
 
-impl App {
+impl Home {
   pub fn new() -> Self {
     Self::default()
   }
@@ -85,7 +85,7 @@ impl App {
   }
 }
 
-impl Component for App {
+impl Component for Home {
   fn register_action_handler(&mut self, tx: UnboundedSender<Action>) -> Result<()> {
     self.action_tx = Some(tx);
     Ok(())

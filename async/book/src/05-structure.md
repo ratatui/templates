@@ -3,7 +3,7 @@
 In `components/mod.rs`, we implement a `trait` called `Component`:
 
 ```rust,no_run,noplayground
-{{#include ../../src/components.rs:component}}
+{{#include ../../ratatui-counter/src/components.rs:component}}
 ```
 
 I personally like keeping the functions for `handle_events` (i.e. event -> action mapping),
