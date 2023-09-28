@@ -49,10 +49,15 @@ impl Config {
       ("config.toml", config::FileFormat::Toml),
       ("config.ini", config::FileFormat::Ini),
     ];
+    let mut found_config = false;
     for (file, format) in &config_files {
+      builder = builder.add_source(config::File::from(config_dir.join(file)).format(*format).required(false));
       if config_dir.join(file).exists() {
-        builder = builder.add_source(config::File::from(config_dir.join(file)).format(*format).required(false));
+        found_config = true
       }
+    }
+    if !found_config {
+      log::error!("No configuration file found. Application may not behave as expected");
     }
 
     let mut cfg: Self = builder.build()?.try_deserialize()?;
