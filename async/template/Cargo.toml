@@ -1,10 +1,10 @@
 [package]
-name = "{{project-name}}"
+name = "{{project-name | kebab_case}}"
 version = "0.1.0"
 edition = "2021"
 description = "{{project-description}}"
 repository = "https://github.com/{{gh-username}}/{{project-name}}"
-authors = "{{authors}}"
+authors = ["{{authors}}"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
