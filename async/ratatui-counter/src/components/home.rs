@@ -154,7 +154,7 @@ impl Component for Home {
 
     let mut text: Vec<Line> = self.text.clone().iter().map(|l| Line::from(l.clone())).collect();
     text.insert(0, "".into());
-    text.insert(0, "Type into input and hit enter to display here".into());
+    text.insert(0, "Type into input and hit enter to display here".dim().into());
     text.insert(0, "".into());
     text.insert(0, format!("Render Ticker: {}", self.render_ticker).into());
     text.insert(0, format!("App Ticker: {}", self.app_ticker).into());
