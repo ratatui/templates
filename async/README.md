@@ -28,3 +28,19 @@ $ cargo run # Press `q` to exit
 ### Documentation
 
 Read documentation on design decisions in the template here: <https://ratatui-org.github.io/ratatui-async-template/>
+
+### Demo
+
+Run the demo
+
+```bash
+cd ratatui-counter
+
+export RATATUI_COUNTER_CONFIG=`pwd`/.config
+export RATATUI_COUNTER_DATA=`pwd`/.data
+export RATATUI_COUNTER_LOG_LEVEL=debug
+# OR
+direnv allow
+
+cargo run
+```
