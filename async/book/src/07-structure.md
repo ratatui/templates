@@ -179,3 +179,57 @@ impl Component for Home {
   }
 }
 ```
+
+In the template, it is set up to handle `Vec<KeyEvent>` mapped to an `Action`.
+This allows you to map for example:
+
+- `<g><j>` to `Action::GotoBottom`
+- `<g><k>` to `Action::GotoTop`
+
+```admonish note
+Remember, if you add a new `Action` variant you also have to update the `deserialize` method accordingly.
+```
+
+And because we are now using multiple keys as input, you have to update the `app.rs` main loop accordingly to handle that:
+
+```rust
+    // -- snip --
+    loop {
+      if let Some(e) = tui.next().await {
+        match e {
+          // -- snip --
+          tui::Event::Key(key) => {
+            if let Some(keymap) = self.config.keybindings.get(&self.mode) {
+              // If the key is a single key action
+              if let Some(action) = keymap.get(&vec![key.clone()]) {
+                log::info!("Got action: {action:?}");
+                action_tx.send(action.clone())?;
+              } else {
+                // If the key was not handled as a single key action,
+                // then consider it for multi-key combinations.
+                self.last_tick_key_events.push(key);
+
+                // Check for multi-key combinations
+                if let Some(action) = keymap.get(&self.last_tick_key_events) {
+                  log::info!("Got action: {action:?}");
+                  action_tx.send(action.clone())?;
+                }
+              }
+            };
+          },
+          _ => {},
+        }
+        // -- snip --
+      }
+      while let Ok(action) = action_rx.try_recv() {
+        // -- snip --
+        for component in self.components.iter_mut() {
+          if let Some(action) = component.update(action.clone())? {
+            action_tx.send(action)?
+          };
+        }
+      }
+      // -- snip --
+    }
+    // -- snip --
+```

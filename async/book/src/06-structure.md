@@ -1,15 +1,15 @@
-# `components/app.rs`
+# `components/home.rs`
 
-Here's an example of the `App` component with additional state:
+Here's an example of the `Home` component with additional state:
 
 1. `show_help` is a `bool` that tracks whether or not help should be rendered or not
 1. `ticker` is a counter that increments every `AppTick`.
 
-This `App` component also adds fields for `input: Input`, and stores a reference to
+This `Home` component also adds fields for `input: Input`, and stores a reference to
 `action_tx: mpsc::UnboundedSender<Action>`
 
 ```rust,no_run,noplayground
-{{#include ../../ratatui-counter/src/components/app.rs}}
+{{#include ../../ratatui-counter/src/components/home.rs}}
 ```
 
 The `render` function takes a `Frame` and draws a paragraph to display a counter as well as a text
@@ -17,7 +17,7 @@ box input:
 
 ![](https://user-images.githubusercontent.com/1813121/254134161-477b2182-a3ee-4be9-a180-1bcdc56c8a1d.png)
 
-The `App` component has a couple of methods `increment` and `decrement` that we saw earlier, but
+The `Home` component has a couple of methods `increment` and `decrement` that we saw earlier, but
 this time additional `Action`s are sent on the `action_tx` channel to track the start and end of the
 increment.
 

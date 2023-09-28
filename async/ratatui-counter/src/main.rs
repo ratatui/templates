@@ -26,8 +26,8 @@ async fn tokio_main() -> Result<()> {
   initialize_panic_handler()?;
 
   let args = Cli::parse();
-  let mut runner = App::new(args.tick_rate, args.frame_rate)?;
-  runner.run().await?;
+  let mut app = App::new(args.tick_rate, args.frame_rate)?;
+  app.run().await?;
 
   Ok(())
 }

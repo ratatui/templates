@@ -8,9 +8,7 @@ The `main.rs` file is the entry point of the application. Here's the complete `m
 {{#include ../../ratatui-counter/src/main.rs:all}}
 ```
 
-We'll describe below in more detail the different aspects of this file.
-
-In essence, the `main` function creates an instance of `Runner` and calls `runner.run()`, which runs
+In essence, the `main` function creates an instance of `App` and calls `App.run()`, which runs
 the "`handle event` -> `update state` -> `draw`" loop. We will talk more about this in a later
 section.
 

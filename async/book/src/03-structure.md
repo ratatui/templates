@@ -225,7 +225,7 @@ You are free to reorganize the code as you see fit!
 You can also add more actions as required. For example, here's all the actions in the template:
 
 ```rust,no_run,noplayground
-{{#include ../../ratatui-counter/src/action.rs}}
+{{#include ../../ratatui-counter/src/action.rs:action_enum}}
 ```
 
 ```admonish note

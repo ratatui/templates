@@ -1,4 +1,4 @@
-# `run.rs`
+# `app.rs`
 
 Finally, putting all the pieces together, we are almost ready to get the `Run` struct. Before we do,
 we should discuss the process of a TUI.
@@ -49,7 +49,7 @@ Or you may decide to `flush` all keyboard events so they are not buffered, and y
 implement something like the following:
 
 ```rust
-let mut runner = Runner::new();
+let mut app = App::new();
 loop {
   // ...
   let before_draw = Instant::now();
@@ -120,11 +120,11 @@ And `schedule_increment()` and `schedule_decrement()` both spawn short lived `to
 
 ```
 
-In order to do this, we want to set up a `action_tx` on the `Runner` struct:
+In order to do this, we want to set up a `action_tx` on the `App` struct:
 
 ```rust
 #[derive(Default)]
-struct Runner {
+struct App {
   counter: i64,
   should_quit: bool,
   action_tx: Option<UnboundedSender<Action>>
@@ -132,7 +132,7 @@ struct Runner {
 ```
 
 ```admonish note
-The only reason we are using an `Option<T>` here for `action_tx` is that we are not initializing the action channel when creating the instance of the `Runner`.
+The only reason we are using an `Option<T>` here for `action_tx` is that we are not initializing the action channel when creating the instance of the `App`.
 ```
 
 This is what we want to do:
@@ -166,7 +166,7 @@ This is what we want to do:
   }
 ```
 
-However, this doesn't quite work because we can't move `self`, i.e. the `Runner` to the
+However, this doesn't quite work because we can't move `self`, i.e. the `App` to the
 `event -> action` mapping, i.e. `self.handle_events()`, and still use it later for `self.update()`.
 
 One way to solve this is to pass a `Arc<Mutex<App>` instance to the `event -> action` mapping loop,
@@ -174,12 +174,12 @@ where it uses a `lock()` to get a reference to the object to call `obj.handle_ev
 to use the same `lock()` functionality in the main loop as well to call `obj.update()`.
 
 ```rust
-pub struct Runner {
+pub struct App {
   pub component: Arc<Mutex<App>>,
   pub should_quit: bool,
 }
 
-impl Runner {
+impl App {
   pub async fn run(&mut self) -> Result<()> {
     let (action_tx, mut action_rx) = mpsc::unbounded_channel();
 
@@ -218,18 +218,18 @@ impl Runner {
 }
 ```
 
-Now our `Runner` is generic boilerplate that doesn't depend on any business logic. It is responsible
+Now our `App` is generic boilerplate that doesn't depend on any business logic. It is responsible
 just to drive the application forward, i.e. call appropriate functions.
 
 We can go one step further and make the render loop its own `tokio` task:
 
 ```rust
-pub struct Runner {
-  pub component: Arc<Mutex<App>>,
+pub struct App {
+  pub component: Arc<Mutex<Home>>,
   pub should_quit: bool,
 }
 
-impl Runner {
+impl App {
   pub async fn run(&mut self) -> Result<()> {
     let (render_tx, mut render_rx) = mpsc::unbounded_channel();
 
@@ -379,18 +379,18 @@ impl App {
 }
 ```
 
-With that, our `Runner` becomes a little more simpler:
+With that, our `App` becomes a little more simpler:
 
 ```rust
-pub struct Runner {
+pub struct App {
   pub tick_rate: (u64, u64),
-  pub component: App,
+  pub component: Home,
   pub should_quit: bool,
 }
 
 impl Component {
   pub fn new(tick_rate: (u64, u64)) -> Result<Self> {
-    let component = App::new();
+    let component = Home::new();
     Ok(Self { tick_rate, component, should_quit: false, should_suspend: false })
   }
 
