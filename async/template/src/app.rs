@@ -51,6 +51,7 @@ impl App {
     let mut tui = tui::Tui::new()?;
     tui.tick_rate(self.tick_rate);
     tui.frame_rate(self.frame_rate);
+    // tui.mouse(true);
     tui.enter()?;
 
     for component in self.components.iter_mut() {
@@ -62,7 +63,7 @@ impl App {
     }
 
     for component in self.components.iter_mut() {
-      component.init()?;
+      component.init(tui.size()?)?;
     }
 
     loop {
@@ -74,7 +75,7 @@ impl App {
           tui::Event::Resize(x, y) => action_tx.send(Action::Resize(x, y))?,
           tui::Event::Key(key) => {
             if let Some(keymap) = self.config.keybindings.get(&self.mode) {
-              if let Some(action) = keymap.get(&vec![key.clone()]) {
+              if let Some(action) = keymap.get(&vec![key]) {
                 log::info!("Got action: {action:?}");
                 action_tx.send(action.clone())?;
               } else {
@@ -145,6 +146,7 @@ impl App {
         tui = tui::Tui::new()?;
         tui.tick_rate(self.tick_rate);
         tui.frame_rate(self.frame_rate);
+        // tui.mouse(true);
         tui.enter()?;
       } else if self.should_quit {
         tui.stop()?;

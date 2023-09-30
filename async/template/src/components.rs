@@ -20,7 +20,7 @@ pub trait Component {
   fn register_config_handler(&mut self, config: Config) -> Result<()> {
     Ok(())
   }
-  fn init(&mut self) -> Result<()> {
+  fn init(&mut self, area: Rect) -> Result<()> {
     Ok(())
   }
   fn handle_events(&mut self, event: Option<Event>) -> Result<Option<Action>> {
@@ -43,5 +43,5 @@ pub trait Component {
   fn update(&mut self, action: Action) -> Result<Option<Action>> {
     Ok(None)
   }
-  fn draw(&mut self, f: &mut Frame<'_>, rect: Rect) -> Result<()>;
+  fn draw(&mut self, f: &mut Frame<'_>, area: Rect) -> Result<()>;
 }
