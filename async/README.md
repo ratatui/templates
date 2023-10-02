@@ -10,7 +10,9 @@
 - [color-eyre](https://github.com/eyre/color-eyre)
 - [human-panic](https://github.com/rust-cli/human-panic)
 - Clap for command line argument parsing
-- `Component` trait with a [`Home`](https://github.com/ratatui-org/ratatui-async-template/blob/main/template/src/components/home.rs) component as an example
+- `Component` trait with a
+  [`Home`](https://github.com/ratatui-org/ratatui-async-template/blob/main/template/src/components/home.rs)
+  component as an example
 
 ### Usage
 
@@ -20,10 +22,15 @@ You can start by git cloning the project:
 $ cargo install cargo-generate
 $ cargo generate --git https://github.com/ratatui-org/ratatui-async-template --name ratatui-hello-world
 $ cd ratatui-hello-world
-$ cargo run -- --version
-$ cargo run -- --help
+```
+
+**Run**
+
+```
 $ cargo run # Press `q` to exit
 ```
+
+**Help**
 
 ```text
 $ cargo run -- --help
@@ -37,6 +44,8 @@ Options:
   -h, --help                Print help
   -V, --version             Print version
 ```
+
+**Version**
 
 Without direnv variables:
 
