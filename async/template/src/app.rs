@@ -8,14 +8,9 @@ use crate::{
   action::Action,
   components::{home::Home, Component},
   config::Config,
+  mode::Mode,
   tui,
 };
-
-#[derive(Default, Debug, Copy, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum Mode {
-  #[default]
-  Home,
-}
 
 pub struct App {
   pub config: Config,
