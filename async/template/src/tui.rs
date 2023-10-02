@@ -64,20 +64,24 @@ impl Tui {
     Ok(Self { terminal, task, cancellation_token, event_rx, event_tx, frame_rate, tick_rate, mouse, paste })
   }
 
-  pub fn tick_rate(&mut self, tick_rate: f64) {
+  pub fn tick_rate(mut self, tick_rate: f64) -> Self {
     self.tick_rate = tick_rate;
+    self
   }
 
-  pub fn frame_rate(&mut self, frame_rate: f64) {
+  pub fn frame_rate(mut self, frame_rate: f64) -> Self {
     self.frame_rate = frame_rate;
+    self
   }
 
-  pub fn mouse(&mut self, mouse: bool) {
+  pub fn mouse(mut self, mouse: bool) -> Self {
     self.mouse = mouse;
+    self
   }
 
-  pub fn paste(&mut self, paste: bool) {
+  pub fn paste(mut self, paste: bool) -> Self {
     self.paste = paste;
+    self
   }
 
   pub fn start(&mut self) {
