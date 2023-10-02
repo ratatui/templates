@@ -26,13 +26,13 @@ $ cd ratatui-hello-world
 
 **Run**
 
-```
+```bash
 $ cargo run # Press `q` to exit
 ```
 
 **Help**
 
-```text
+```bash
 $ cargo run -- --help
 Hello World project using ratatui-template
 
@@ -49,7 +49,7 @@ Options:
 
 Without direnv variables:
 
-```text
+```bash
 $ cargo run -- --version
     Finished dev [unoptimized + debuginfo] target(s) in 0.07s
      Running `target/debug/ratatui-hello-world --version`
@@ -63,7 +63,7 @@ Data directory: /Users/kd/Library/Application Support/com.kdheepak.ratatui-hello
 
 With direnv variables:
 
-```
+```bash
 $ direnv allow
 direnv: loading ~/gitrepos/ratatui-async-template/ratatui-hello-world/.envrc
 direnv: export +RATATUI_HELLO_WORLD_CONFIG +RATATUI_HELLO_WORLD_DATA +RATATUI_HELLO_WORLD_LOG_LEVEL
