@@ -1,8 +1,6 @@
 # Summary
 
 - [Home](./index.md)
-- [FAQ](./faq.md)
-
 - [Tutorial](./00-structure.md)
   - [`main.rs`](./01-structure.md)
   - [`tui.rs`](./02-structure.md)

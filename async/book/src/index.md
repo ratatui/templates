@@ -2,7 +2,7 @@
 
 {{#include ../../README.md}}
 
-## Introduction
+## Background
 
 [`ratatui`](https://github.com/ratatui-org/ratatui) is a Rust library to build rich terminal user
 interfaces (TUIs) and dashboards. It is a community fork of the original
@@ -13,8 +13,6 @@ opinionated template for getting up and running with `ratatui`. You can pick and
 of this `ratatui-async-template` to suit your needs and sensibilities. This rest of this
 documentation is a walk-through of why the code is structured the way it is, so that you are aided
 in modifying it as you require.
-
-## Background
 
 `ratatui` is based on the principle of immediate rendering with intermediate buffers. This means
 that at each new frame you have to build all widgets that are supposed to be part of the UI. In
@@ -55,4 +53,3 @@ You may also want to check out the following links (roughly in order of increasi
 - <https://github.com/veeso/tui-realm/>: A framework for `tui.rs` to simplify the implementation of
   terminal user interfaces adding the possibility to work with re-usable components with properties
   and states.
-
