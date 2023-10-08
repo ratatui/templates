@@ -45,7 +45,7 @@ if use_gitserver {
         let warn_msg = "!!! => project-name(" + {project_name} + ") has different name than used in git-url(" + {git_project_name} + ")!";
         print(warn_msg);
 
-        project_name = variable::prompt("The project name in link and used in prompt are different which `project-name` use?", {project_name}, [{project_name}, {git_project_name}]);
+        project_name = variable::prompt("The project name in link and used in prompt are different. Which `project-name` to use?", {project_name}, [{project_name}, {git_project_name}]);
     }
 
     variable::set("repository", "https://" + {repository});
