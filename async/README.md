@@ -24,6 +24,14 @@ $ cargo generate --git https://github.com/ratatui-org/ratatui-async-template --n
 $ cd ratatui-hello-world
 ```
 
+You can also use a [`template.toml`](./.github/workflows/template.toml) file to skip the prompts:
+
+```bash
+$ cargo generate --git https://github.com/ratatui-org/ratatui-async-template --template-values-file .github/workflows/template.toml --name ratatui-hello-world
+# OR generate from local clone
+$ cargo generate --path . --template-values-file .github/workflows/template.toml --name ratatui-hello-world
+```
+
 **Run**
 
 ```bash
