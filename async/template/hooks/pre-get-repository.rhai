@@ -23,22 +23,22 @@ if use_gitserver {
     for schema in schemas {
         let schema_index = repository.index_of(schema);
         if schema_index == 0 {
-            let splited_repo = repository.split(schema);
-            repository = splited_repo[1];
+            let splitted_repo = repository.split(schema);
+            repository = splitted_repo[1];
             break;
         }
     }
 
     // split by `/` assume there is `git server`, `organization`,  `project-name`
-    let splited_repo = repository.split(`/`);
+    let splitted_repo = repository.split(`/`);
 
-    if splited_repo.len() != 3 {
+    if splitted_repo.len() != 3 {
         abort("could not parse repository url. Expected format <gitserver>/username/project-name ")
     }
 
-    let git_server = splited_repo[0];
-    let git_user = splited_repo[1];
-    let git_project_name = splited_repo[2];
+    let git_server = splitted_repo[0];
+    let git_user = splitted_repo[1];
+    let git_project_name = splitted_repo[2];
 
     if git_project_name != project_name {
         // FIXME: this should be only warning
