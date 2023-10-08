@@ -1,0 +1,69 @@
+if !variable::is_set("project-description") {
+    let project_description = variable::prompt("Enter a short description of the project?");
+    variable::set("project-description", project_description);
+}
+
+let use_gitserver = if variable::is_set("use_gitserver") {
+    variable::get("use_gitserver")
+} else {
+    variable::prompt("Would you like to set a Git repository URL?", true)
+};
+
+if use_gitserver {
+    let gs_username = variable::prompt("Please enter your gitserver username:");
+    variable::set("gs_username", gs_username);
+    let project_name = variable::get("project-name");
+    let origin_repository = variable::prompt("Please enter repository URL: ", "https://github.com/" + {gs_username} + "/" + {project_name});
+    origin_repository.trim();
+    let repository = origin_repository; // make copy for parse
+
+    // remove `http://` `https://` or `git@`
+    let schemas = ["http://", "https://", "git@"];
+    for schema in schemas {
+        let schema_index = repository.index_of(schema);
+        if schema_index == 0 {
+            let splited_repo = repository.split(schema);
+            repository = splited_repo[1];
+            break;
+        }
+    }
+
+    // split by `/` assume there is `git server`, `organization`,  `project-name`
+    let splited_repo = repository.split(`/`);
+
+    if splited_repo.len() != 3 {
+        abort("could not parse repository url. Expected format <gitserver>/username/project-name ")
+    }
+
+    let git_server = splited_repo[0];
+    let git_user = splited_repo[1];
+    let git_project_name = splited_repo[2];
+
+    if git_project_name != project_name {
+        // FIXME: this should be only warning
+        let warn_msg = "!!! => project-name(" + {project_name} + ") has different name than used in git-url(" + {git_project_name} + ")!";
+        print(warn_msg);
+
+        project_name = variable::prompt("The project name in link and used in prompt are different which `project-name` use?", {project_name}, [{project_name}, {git_project_name}]);
+    }
+
+    variable::set("repository", "https://" + {repository});
+    variable::set("project-name", project_name);
+} else {
+    print("!!! repository in Cargo.toml will not be set");
+    variable::set("repository", "");
+}
+
+let project_name = variable::get("project-name");
+let crate_name = project_name;
+crate_name.replace("-", "_");
+crate_name.replace(" ", "_");
+variable::set("crate_name", crate_name);
+
+let msrv = if variable::is_set("msrv") {
+    variable::get("msrv")
+} else {
+    variable::prompt("What is your Minimum Supported Rust Version", "stable")
+};
+variable::set("msrv", msrv);
+

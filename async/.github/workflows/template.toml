@@ -2,3 +2,4 @@
 gh-username = "kdheepak"
 project-description = "Example of ratatui template"
 msrv = "stable"
+use_gitserver = false
