@@ -1,3 +1,4 @@
+// loosely based on https://github.com/xoac/opinionated-rust-template/blob/main/template/pre-get-repository.rhai
 if !variable::is_set("project-description") {
     let project_description = variable::prompt("Enter a short description of the project?");
     variable::set("project-description", project_description);
