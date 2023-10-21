@@ -1,6 +1,6 @@
 # ratatui-async-template
 
-![](https://user-images.githubusercontent.com/1813121/277112522-170883f8-c2b9-49e7-b9d2-879ccc63977f.gif)
+![](https://user-images.githubusercontent.com/1813121/277114001-0d25a09c-f24e-4ffc-8763-cd258828cec0.gif)
 
 ### Features
 
