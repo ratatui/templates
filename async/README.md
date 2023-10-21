@@ -18,7 +18,9 @@
 
 ### Usage
 
-You can start by git cloning the project:
+![](https://user-images.githubusercontent.com/1813121/277112522-170883f8-c2b9-49e7-b9d2-879ccc63977f.gif)
+
+You can start by using `cargo-generate`:
 
 ```bash
 $ cargo install cargo-generate
