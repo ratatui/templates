@@ -5,14 +5,16 @@
 ### Features
 
 - Uses [tokio](https://tokio.rs/) for async events
-- Logs [tracing](https://github.com/tokio-rs/tracing)
+- Logs using [tracing](https://github.com/tokio-rs/tracing)
 - [better-panic](https://github.com/mitsuhiko/better-panic)
 - [color-eyre](https://github.com/eyre/color-eyre)
 - [human-panic](https://github.com/rust-cli/human-panic)
 - Clap for command line argument parsing
 - `Component` trait with a
   [`Home`](https://github.com/ratatui-org/ratatui-async-template/blob/main/template/src/components/home.rs)
-  component as an example
+  and
+  [`Fps`](https://github.com/ratatui-org/ratatui-async-template/blob/main/template/src/components/fps.rs)
+  components as examples
 
 ### Usage
 
