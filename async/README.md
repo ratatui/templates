@@ -44,7 +44,7 @@ $ cargo generate --path . --template-values-file .github/workflows/template.toml
 $ cargo run # Press `q` to exit
 ```
 
-**Help**
+**Show `help`**
 
 ```bash
 $ cargo run -- --help
@@ -59,7 +59,7 @@ Options:
   -V, --version             Print version
 ```
 
-**Version**
+**Show `version`**
 
 Without direnv variables:
 
