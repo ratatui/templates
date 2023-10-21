@@ -21,7 +21,11 @@ use tokio::{
 };
 use tokio_util::sync::CancellationToken;
 
-pub type Frame<'a> = ratatui::Frame<'a, Backend<std::io::Stderr>>;
+pub type IO = std::io::Stdout;
+pub fn io() -> IO {
+  std::io::stdout()
+}
+pub type Frame<'a> = ratatui::Frame<'a, Backend<IO>>;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum Event {
@@ -40,7 +44,7 @@ pub enum Event {
 }
 
 pub struct Tui {
-  pub terminal: ratatui::Terminal<Backend<std::io::Stderr>>,
+  pub terminal: ratatui::Terminal<Backend<IO>>,
   pub task: JoinHandle<()>,
   pub cancellation_token: CancellationToken,
   pub event_rx: UnboundedReceiver<Event>,
@@ -55,7 +59,7 @@ impl Tui {
   pub fn new() -> Result<Self> {
     let tick_rate = 4.0;
     let frame_rate = 60.0;
-    let terminal = ratatui::Terminal::new(Backend::new(std::io::stderr()))?;
+    let terminal = ratatui::Terminal::new(Backend::new(io()))?;
     let (event_tx, event_rx) = mpsc::unbounded_channel();
     let cancellation_token = CancellationToken::new();
     let task = tokio::spawn(async {});
@@ -166,12 +170,12 @@ impl Tui {
 
   pub fn enter(&mut self) -> Result<()> {
     crossterm::terminal::enable_raw_mode()?;
-    crossterm::execute!(std::io::stderr(), EnterAlternateScreen, cursor::Hide)?;
+    crossterm::execute!(io(), EnterAlternateScreen, cursor::Hide)?;
     if self.mouse {
-      crossterm::execute!(std::io::stderr(), EnableMouseCapture)?;
+      crossterm::execute!(io(), EnableMouseCapture)?;
     }
     if self.paste {
-      crossterm::execute!(std::io::stderr(), EnableBracketedPaste)?;
+      crossterm::execute!(io(), EnableBracketedPaste)?;
     }
     self.start();
     Ok(())
@@ -182,12 +186,12 @@ impl Tui {
     if crossterm::terminal::is_raw_mode_enabled()? {
       self.flush()?;
       if self.paste {
-        crossterm::execute!(std::io::stderr(), DisableBracketedPaste)?;
+        crossterm::execute!(io(), DisableBracketedPaste)?;
       }
       if self.mouse {
-        crossterm::execute!(std::io::stderr(), DisableMouseCapture)?;
+        crossterm::execute!(io(), DisableMouseCapture)?;
       }
-      crossterm::execute!(std::io::stderr(), LeaveAlternateScreen, cursor::Show)?;
+      crossterm::execute!(io(), LeaveAlternateScreen, cursor::Show)?;
       crossterm::terminal::disable_raw_mode()?;
     }
     Ok(())
@@ -215,7 +219,7 @@ impl Tui {
 }
 
 impl Deref for Tui {
-  type Target = ratatui::Terminal<Backend<std::io::Stderr>>;
+  type Target = ratatui::Terminal<Backend<IO>>;
 
   fn deref(&self) -> &Self::Target {
     &self.terminal
