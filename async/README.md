@@ -104,12 +104,16 @@ Data directory: /Users/kd/gitrepos/ratatui-async-template/ratatui-hello-world/.d
 Read documentation on design decisions in the template here:
 <https://ratatui-org.github.io/ratatui-async-template/>
 
-### Demo
+### Counter + Text Input Demo
 
-Run the demo
+This repo contains a `ratatui-counter` folder that is a working demo as an example. If you wish to
+run a demo without using `cargo generate`, you can run the counter + text input demo by following
+the instructions below:
 
 ```bash
-cd ratatui-counter
+git clone https://github.com/ratatui-org/ratatui-async-template
+cd ratatui-async-template
+cd ratatui-counter # counter + text input demo
 
 export RATATUI_COUNTER_CONFIG=`pwd`/.config
 export RATATUI_COUNTER_DATA=`pwd`/.data
