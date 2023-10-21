@@ -1,6 +1,6 @@
 # ratatui-async-template
 
-![out](https://github.com/ratatui-org/ratatui-async-template/assets/1813121/057a0fe9-9f6d-4f8c-963c-ca2725721bdd)
+![](https://user-images.githubusercontent.com/1813121/277112522-170883f8-c2b9-49e7-b9d2-879ccc63977f.gif)
 
 ### Features
 
@@ -17,8 +17,6 @@
   components as examples
 
 ### Usage
-
-![](https://user-images.githubusercontent.com/1813121/277112522-170883f8-c2b9-49e7-b9d2-879ccc63977f.gif)
 
 You can start by using `cargo-generate`:
 
@@ -123,3 +121,7 @@ direnv allow
 
 cargo run
 ```
+
+You should see a demo like this:
+
+![](https://github.com/ratatui-org/ratatui-async-template/assets/1813121/057a0fe9-9f6d-4f8c-963c-ca2725721bdd)
