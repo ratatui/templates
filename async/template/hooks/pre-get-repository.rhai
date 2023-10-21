@@ -55,6 +55,30 @@ if use_gitserver {
     variable::set("repository", "");
 }
 
+if !variable::is_set("crossterm_io") {
+    let crossterm_io = variable::prompt("Would you like to use stderr or stdout for Crossterm IO?", "stderr", ["stderr", "stdout"]);
+    variable::set("crossterm_io", crossterm_io);
+} else {
+    if variable::get("crossterm_io").to_lower() == "stdout" {
+        variable::set("crossterm_io", "stdout");
+    } else if variable::get("crossterm_io").to_lower() == "stderr" {
+        variable::set("crossterm_io", "stderr");
+    } else {
+        print("!!! Unknown value for `crossterm_io`: " + variable::get("crossterm_io") + ". Using `stderr`.");
+        variable::set("crossterm_io", "stderr");
+    }
+};
+
+let use_rustfmt = if variable::is_set("use_rustfmt") {
+    variable::get("use_rustfmt")
+} else {
+    variable::prompt("Would you like to use an opinionated rustfmt.toml file?", true)
+};
+
+if !use_rustfmt {
+    file::delete("./.rustfmt.toml");
+}
+
 let project_name = variable::get("project-name");
 let crate_name = project_name;
 crate_name.replace("-", "_");
@@ -68,3 +92,4 @@ let msrv = if variable::is_set("msrv") {
 };
 variable::set("msrv", msrv);
 
+file::delete("./hooks");

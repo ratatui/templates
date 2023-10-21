@@ -21,9 +21,9 @@ use tokio::{
 };
 use tokio_util::sync::CancellationToken;
 
-pub type IO = std::io::Stdout;
+pub type IO = std::io::{{crossterm_io | title_case}};
 pub fn io() -> IO {
-  std::io::stdout()
+  std::io::{{crossterm_io}}()
 }
 pub type Frame<'a> = ratatui::Frame<'a, Backend<IO>>;
 
