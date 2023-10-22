@@ -10,7 +10,7 @@
 - [color-eyre](https://github.com/eyre/color-eyre)
 - [human-panic](https://github.com/rust-cli/human-panic)
 - Clap for command line argument parsing
-- `Component` trait with a
+- `Component` trait with
   [`Home`](https://github.com/ratatui-org/ratatui-async-template/blob/main/template/src/components/home.rs)
   and
   [`Fps`](https://github.com/ratatui-org/ratatui-async-template/blob/main/template/src/components/fps.rs)
