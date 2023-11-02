@@ -1,4 +1,4 @@
-use tui::{
+use ratatui::{
     layout::Alignment,
     style::{Color, Style},
     widgets::{Block, BorderType, Borders, Paragraph},
