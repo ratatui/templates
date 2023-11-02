@@ -1,5 +1,4 @@
 use tui::{
-    backend::Backend,
     layout::Alignment,
     style::{Color, Style},
     widgets::{Block, BorderType, Borders, Paragraph},
@@ -9,7 +8,7 @@ use tui::{
 use crate::app::App;
 
 /// Renders the user interface widgets.
-pub fn render<B: Backend>(app: &mut App, frame: &mut Frame<'_, B>) {
+pub fn render(app: &mut App, frame: &mut Frame) {
     // This is where you add new widgets.
     // See the following resources:
     // - https://docs.rs/ratatui/latest/ratatui/widgets/index.html
