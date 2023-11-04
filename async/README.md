@@ -5,6 +5,8 @@
 ### Features
 
 - Uses [tokio](https://tokio.rs/) for async events
+  - Start and stop key events to shell out to another TUI like vim
+  - Supports suspend signal hooks
 - Logs using [tracing](https://github.com/tokio-rs/tracing)
 - [better-panic](https://github.com/mitsuhiko/better-panic)
 - [color-eyre](https://github.com/eyre/color-eyre)
