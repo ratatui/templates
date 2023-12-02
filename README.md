@@ -1,23 +1,10 @@
-# rust-tui-template
+# `ratatui-template` 🧀
 
-A template for bootstrapping a Rust [**TUI**](https://en.wikipedia.org/wiki/Text-based_user_interface) application with [`ratatui`](https://github.com/ratatui-org/ratatui) & [`crossterm`](https://github.com/crossterm-rs/crossterm).
+A template for bootstrapping a Rust [**TUI**](https://en.wikipedia.org/wiki/Text-based_user_interface) application with [`Ratatui`](https://github.com/ratatui-org/ratatui) & [`crossterm`](https://github.com/crossterm-rs/crossterm).
 
 <img src="https://raw.githubusercontent.com/ratatui-org/ratatui/b33c878808c4c40591d7a2d9f9d94d6fee95a96f/examples/demo2.gif" width="600">
 
-### ratatui
-
-> The library is based on the principle of immediate rendering with intermediate buffers. This means that at each new frame you should build all widgets that are supposed to be part of the UI. While providing a great flexibility for rich and interactive UI, this may introduce overhead for highly dynamic content. So, the implementation try to minimize the number of ansi escapes sequences generated to draw the updated UI. In practice, given the speed of Rust the overhead rather comes from the terminal emulator than the library itself.
-
-#### [Documentation](https://docs.rs/tui)
-
-### crossterm
-
-> Crossterm is a pure-rust, terminal manipulation library that makes it possible to write cross-platform text-based interfaces (see [features](https://github.com/crossterm-rs/crossterm/blob/master/README.md#features)). It supports all UNIX and Windows terminals down to Windows 7 (not all terminals are tested,
-> see [Tested Terminals](https://github.com/crossterm-rs/crossterm/blob/master/README.md#tested-terminals) for more info).
-
-#### [Documentation](https://docs.rs/crossterm)
-
-## Structure
+## Project structure
 
 ```
 src/
@@ -30,7 +17,7 @@ src/
 └── ui.rs      -> renders the widgets / UI
 ```
 
-## Usage
+## Creating a project
 
 1. Install [`cargo-generate`](https://github.com/cargo-generate/cargo-generate#installation)
 
@@ -41,9 +28,9 @@ cargo install cargo-generate
 2. Clone this repository via `cargo-generate`:
 
 ```sh
-cargo generate --git https://github.com/ratatui-org/rust-tui-template --name <project-name>
+cargo generate --git https://github.com/ratatui-org/ratatui-template --name <project-name>
 ```
 
 ## See also
 
-- [Rust Munich Meetup #8 - Designing TUI Applications in Rust](https://www.youtube.com/watch?v=ogdJnOLo238)
+- [Rust Munich Meetup #8 - Designing TUI Applications in Rust](https://www.youtube.com/watch?v=ogdJnOLo238) (2021/outdated)
