@@ -1,8 +1,18 @@
 # async-template
 
-![](https://user-images.githubusercontent.com/1813121/277114001-0d25a09c-f24e-4ffc-8763-cd258828cec0.gif)
+![async template demo](https://user-images.githubusercontent.com/1813121/277114001-0d25a09c-f24e-4ffc-8763-cd258828cec0.gif)
 
-### Features
+## Usage
+
+You can start by using `cargo-generate`:
+
+```shell
+cargo install cargo-generate
+cargo generate ratatui-org/templates async --name ratatui-hello-world
+cd ratatui-hello-world
+```
+
+## Features
 
 - Uses [tokio](https://tokio.rs/) for async events
   - Start and stop key events to shell out to another TUI like vim
@@ -18,15 +28,7 @@
   [`Fps`](https://github.com/ratatui-org/async-template/blob/main/template/src/components/fps.rs)
   components as examples
 
-### Usage
-
-You can start by using `cargo-generate`:
-
-```bash
-$ cargo install cargo-generate
-$ cargo generate --git https://github.com/ratatui-org/async-template --name ratatui-hello-world
-$ cd ratatui-hello-world
-```
+## Advanced Usage
 
 You can also use a
 [`template.toml`](https://github.com/ratatui-org/async-template/blob/main/.github/workflows/template.toml)
@@ -38,13 +40,13 @@ $ cargo generate --git https://github.com/ratatui-org/async-template --template-
 $ cargo generate --path . --template-values-file .github/workflows/template.toml --name ratatui-hello-world
 ```
 
-**Run**
+## Running your App
 
 ```bash
-$ cargo run # Press `q` to exit
+cargo run # Press `q` to exit
 ```
 
-**Show `help`**
+## Show help
 
 ```bash
 $ cargo run -- --help
@@ -59,7 +61,7 @@ Options:
   -V, --version             Print version
 ```
 
-**Show `version`**
+## Show `version`
 
 Without direnv variables:
 
@@ -99,12 +101,12 @@ Config directory: /Users/kd/gitrepos/async-template/ratatui-hello-world/.config
 Data directory: /Users/kd/gitrepos/async-template/ratatui-hello-world/.data
 ```
 
-### Documentation
+## Documentation
 
 Read documentation on design decisions in the template here:
 <https://ratatui-org.github.io/async-template/>
 
-### Counter + Text Input Demo
+## Counter + Text Input Demo
 
 This repo contains a `ratatui-counter` folder that is a working demo as an example. If you wish to
 run a demo without using `cargo generate`, you can run the counter + text input demo by following
@@ -126,4 +128,4 @@ cargo run
 
 You should see a demo like this:
 
-![](https://github.com/ratatui-org/async-template/assets/1813121/057a0fe9-9f6d-4f8c-963c-ca2725721bdd)
+![counter demo](https://github.com/ratatui-org/async-template/assets/1813121/057a0fe9-9f6d-4f8c-963c-ca2725721bdd)
