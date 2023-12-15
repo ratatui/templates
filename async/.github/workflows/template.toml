@@ -1,0 +1,7 @@
+[values]
+gh-username = "kdheepak"
+project-description = "Example of ratatui template"
+msrv = "stable"
+use_gitserver = false
+crossterm_io = "stderr"
+use_rustfmt = false
