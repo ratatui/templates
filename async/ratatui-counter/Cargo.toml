@@ -2,7 +2,7 @@
 name = "ratatui-counter"
 version = "0.1.0"
 edition = "2021"
-description = "Counter application with ratatui-async-template"
+description = "Counter application with async-template"
 repository = "https://github.com/ratatui-org/ratatui-counter"
 authors = ["Dheepak Krishnamurthy"]
 

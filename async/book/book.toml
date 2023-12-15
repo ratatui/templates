@@ -3,7 +3,7 @@ authors = ["Dheepak Krishnamurthy"]
 language = "en"
 multilingual = false
 src = "src"
-title = "ratatui-async-template"
+title = "async-template"
 
 [preprocessor]
 
@@ -20,10 +20,10 @@ assets_version = "0.2.1" # DO NOT EDIT: Managed by `mdbook-catppuccin install`
 
 [output.html]
 additional-css = ["./mdbook-admonish.css", "./theme/catppuccin.css", "./theme/catppuccin-highlight.css"]
-git-repository-url = "https://github.com/ratatui-org/ratatui-async-template"
+git-repository-url = "https://github.com/ratatui-org/async-template"
 git-repository-icon = "fa-github"
-edit-url-template = "https://github.com/ratatui-org/ratatui-async-template/edit/main/book/{path}"
-site-url = "/ratatui-async-template/"
+edit-url-template = "https://github.com/ratatui-org/async-template/edit/main/book/{path}"
+site-url = "/async-template/"
 
 [output.html.playground]
 runnable = false

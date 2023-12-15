@@ -1,6 +1,6 @@
 # Structure of files
 
-The rust files in the `ratatui-async-template` project are organized as follows:
+The rust files in the `async-template` project are organized as follows:
 
 ```bash
 $ tree

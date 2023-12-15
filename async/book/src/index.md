@@ -8,11 +8,11 @@
 interfaces (TUIs) and dashboards. It is a community fork of the original
 [`tui-rs`](https://github.com/fdehau/tui-rs) created to maintain and improve the project.
 
-The [source code of this project](https://github.com/ratatui-org/ratatui-async-template) is an
-opinionated template for getting up and running with `ratatui`. You can pick and choose the pieces
-of this `ratatui-async-template` to suit your needs and sensibilities. This rest of this
-documentation is a walk-through of why the code is structured the way it is, so that you are aided
-in modifying it as you require.
+The [source code of this project](https://github.com/ratatui-org/async-template) is an opinionated
+template for getting up and running with `ratatui`. You can pick and choose the pieces of this
+`async-template` to suit your needs and sensibilities. This rest of this documentation is a
+walk-through of why the code is structured the way it is, so that you are aided in modifying it as
+you require.
 
 `ratatui` is based on the principle of immediate rendering with intermediate buffers. This means
 that at each new frame you have to build all widgets that are supposed to be part of the UI. In
@@ -48,8 +48,8 @@ You may also want to check out the following links (roughly in order of increasi
 - <https://github.com/ratatui-org/rust-tui-template>: Starter kit for using `ratatui`
 - <https://github.com/ratatui-org/ratatui-book/tree/main/ratatui-book-tutorial-project>: Tutorial
   project that the user a simple interface to enter key-value pairs, which will printed in json.
-- <https://github.com/ratatui-org/ratatui-async-template>: Async tokio crossterm based opinionated
-  starter kit for using `ratatui`.
+- <https://github.com/ratatui-org/async-template>: Async tokio crossterm based opinionated starter
+  kit for using `ratatui`.
 - <https://github.com/veeso/tui-realm/>: A framework for `tui.rs` to simplify the implementation of
   terminal user interfaces adding the possibility to work with re-usable components with properties
   and states.

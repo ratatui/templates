@@ -120,7 +120,7 @@ impl<'de> Deserialize<'de> for KeyMap {
 ```
 
 Now all we need to do is implement a `parse_key_event` function.
-[You can check the source code for an example of this implementation](https://github.com/ratatui-org/ratatui-async-template/blob/main/src/config.rs#L62-L138).
+[You can check the source code for an example of this implementation](https://github.com/ratatui-org/async-template/blob/main/src/config.rs#L62-L138).
 
 With that implementation complete, we can add a `HashMap` to store a map of `KeyEvent`s and `Action`
 in the `Home` component:
@@ -180,8 +180,8 @@ impl Component for Home {
 }
 ```
 
-In the template, it is set up to handle `Vec<KeyEvent>` mapped to an `Action`.
-This allows you to map for example:
+In the template, it is set up to handle `Vec<KeyEvent>` mapped to an `Action`. This allows you to
+map for example:
 
 - `<g><j>` to `Action::GotoBottom`
 - `<g><k>` to `Action::GotoTop`
@@ -190,7 +190,8 @@ This allows you to map for example:
 Remember, if you add a new `Action` variant you also have to update the `deserialize` method accordingly.
 ```
 
-And because we are now using multiple keys as input, you have to update the `app.rs` main loop accordingly to handle that:
+And because we are now using multiple keys as input, you have to update the `app.rs` main loop
+accordingly to handle that:
 
 ```rust
     // -- snip --

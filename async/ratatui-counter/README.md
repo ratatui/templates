@@ -1,6 +1,6 @@
 # ratatui-counter
 
-Counter application with ratatui-async-template
+Counter application with async-template
 
 ## Run demo
 
