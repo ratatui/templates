@@ -1,15 +1,13 @@
-# `template` 🧀
+# Ratatui templates 🧀
 
-A template for bootstrapping a Rust
+This repository contains templates for bootstrapping a Rust
 [**TUI**](https://en.wikipedia.org/wiki/Text-based_user_interface) application with
 [`Ratatui`](https://github.com/ratatui-org/ratatui) &
 [`crossterm`](https://github.com/crossterm-rs/crossterm).
 
-<img src="https://raw.githubusercontent.com/ratatui-org/ratatui/b33c878808c4c40591d7a2d9f9d94d6fee95a96f/examples/demo2.gif" width="600">
-
 ## Project structure
 
-```
+```text
 src/
 ├── app.rs     -> holds the state and application logic
 ├── event.rs   -> handles the terminal events (key press, mouse click, resize, etc.)
@@ -24,15 +22,15 @@ src/
 
 1. Install [`cargo-generate`](https://github.com/cargo-generate/cargo-generate#installation)
 
-```sh
-cargo install cargo-generate
-```
+   ```shell
+   cargo install cargo-generate
+   ```
 
-2. Clone this repository via `cargo-generate`:
+2. Create a new app based on this repository:
 
-```sh
-cargo generate --git https://github.com/ratatui-org/template --name <project-name>
-```
+   ```shell
+   cargo generate ratatui-org/ratatui-template simple
+   ```
 
 ## See also
 
