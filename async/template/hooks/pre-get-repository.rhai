@@ -1,20 +1,20 @@
 // loosely based on https://github.com/xoac/opinionated-rust-template/blob/main/template/pre-get-repository.rhai
 if !variable::is_set("project-description") {
-    let project_description = variable::prompt("Enter a short description of the project?");
+    let project_description = variable::prompt("Short description of the project");
     variable::set("project-description", project_description);
 }
 
 let use_gitserver = if variable::is_set("use_gitserver") {
     variable::get("use_gitserver")
 } else {
-    variable::prompt("Would you like to set a Git repository URL?", true)
+    variable::prompt("Would you like to set a Git repository URL?", "true", ["true", "false"])
 };
 
-if use_gitserver {
-    let gs_username = variable::prompt("Please enter your gitserver username:");
+if use_gitserver == "true" || use_gitserver == true {
+    let gs_username = variable::prompt("Username");
     variable::set("gs_username", gs_username);
     let project_name = variable::get("project-name");
-    let origin_repository = variable::prompt("Please enter repository URL: ", "https://github.com/" + {gs_username} + "/" + {project_name});
+    let origin_repository = variable::prompt("Repository URL", "https://github.com/" + {gs_username} + "/" + {project_name});
     origin_repository.trim();
     let repository = origin_repository; // make copy for parse
 
@@ -56,7 +56,7 @@ if use_gitserver {
 }
 
 if !variable::is_set("crossterm_io") {
-    let crossterm_io = variable::prompt("Would you like to use stderr or stdout for Crossterm IO?", "stderr", ["stderr", "stdout"]);
+    let crossterm_io = variable::prompt("Use stdout or stderr for Crossterm IO?", "stdout", ["stdout", "stderr"]);
     variable::set("crossterm_io", crossterm_io);
 } else {
     if variable::get("crossterm_io").to_lower() == "stdout" {
@@ -64,18 +64,18 @@ if !variable::is_set("crossterm_io") {
     } else if variable::get("crossterm_io").to_lower() == "stderr" {
         variable::set("crossterm_io", "stderr");
     } else {
-        print("!!! Unknown value for `crossterm_io`: " + variable::get("crossterm_io") + ". Using `stderr`.");
-        variable::set("crossterm_io", "stderr");
+        print("!!! Unknown value for `crossterm_io`: " + variable::get("crossterm_io") + ". Using `stdout`.");
+        variable::set("crossterm_io", "stdout");
     }
 };
 
 let use_rustfmt = if variable::is_set("use_rustfmt") {
     variable::get("use_rustfmt")
 } else {
-    variable::prompt("Would you like to use an opinionated rustfmt.toml file?", true)
+    variable::prompt("Use an opinionated rustfmt.toml file?", "true", ["true", "false"])
 };
 
-if !use_rustfmt {
+if use_rustfmt == "true" || use_rustfmt == true {
     file::delete("./.rustfmt.toml");
 }
 
