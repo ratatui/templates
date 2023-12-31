@@ -42,5 +42,5 @@ fn main() {
     }
   }
 
-  println!("cargo:rustc-env=_GIT_INFO={}", git_describe);
+  println!("cargo:rustc-env=_GIT_INFO={}", git_describe); // used in ./src/utils.rs
 }
