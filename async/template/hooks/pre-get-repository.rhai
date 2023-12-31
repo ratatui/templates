@@ -75,15 +75,12 @@ let use_rustfmt = if variable::is_set("use_rustfmt") {
     variable::prompt("Use an opinionated rustfmt.toml file?", "false", ["true", "false"])
 };
 
-if use_rustfmt == "true" || use_rustfmt == true {
+if use_rustfmt == "false" || use_rustfmt == false {
     file::delete("./.rustfmt.toml");
+} else {
+    print("!!! opinionated rustfmt.toml requires nightly.");
+    variable::set("msrv", "nightly");
 }
-
-let project_name = variable::get("project-name");
-let crate_name = project_name;
-crate_name.replace("-", "_");
-crate_name.replace(" ", "_");
-variable::set("crate_name", crate_name);
 
 let msrv = if variable::is_set("msrv") {
     variable::get("msrv")
@@ -91,5 +88,11 @@ let msrv = if variable::is_set("msrv") {
     variable::prompt("What is your Minimum Supported Rust Version", "stable")
 };
 variable::set("msrv", msrv);
+
+let project_name = variable::get("project-name");
+let crate_name = project_name;
+crate_name.replace("-", "_");
+crate_name.replace(" ", "_");
+variable::set("crate_name", crate_name);
 
 file::delete("./hooks");
