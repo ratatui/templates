@@ -4,7 +4,7 @@
       "<q>": "Quit", // Quit the application
       "<j>": "ScheduleIncrement",
       "<k>": "ScheduleDecrement",
-      "<l>": "ToggleShowHelp",
+      "<?>": "ToggleShowHelp",
       "</>": "EnterInsert",
       "<Ctrl-d>": "Quit", // Another way to quit
       "<Ctrl-c>": "Quit", // Yet another way to quit

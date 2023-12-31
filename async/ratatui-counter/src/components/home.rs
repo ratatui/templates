@@ -228,9 +228,8 @@ impl Component for Home {
         Row::new(vec!["q", "Quit"]),
         Row::new(vec!["?", "Open Help"]),
       ];
-      let table = Table::new(rows)
+      let table = Table::new(rows, &[Constraint::Percentage(10), Constraint::Percentage(90)])
         .header(Row::new(vec!["Key", "Action"]).bottom_margin(1).style(Style::default().add_modifier(Modifier::BOLD)))
-        .widths(&[Constraint::Percentage(10), Constraint::Percentage(90)])
         .column_spacing(1);
       f.render_widget(table, rect.inner(&Margin { vertical: 4, horizontal: 2 }));
     };

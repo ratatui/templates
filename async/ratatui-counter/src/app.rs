@@ -8,14 +8,9 @@ use crate::{
   action::Action,
   components::{fps::FpsCounter, home::Home, Component},
   config::Config,
+  mode::Mode,
   tui,
 };
-
-#[derive(Default, Debug, Copy, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum Mode {
-  #[default]
-  Home,
-}
 
 pub struct App {
   pub config: Config,
@@ -31,7 +26,7 @@ pub struct App {
 impl App {
   pub fn new(tick_rate: f64, frame_rate: f64) -> Result<Self> {
     let home = Home::new();
-    let fps = FpsCounter::new();
+    let fps = FpsCounter::default();
     let config = Config::new()?;
     let mode = Mode::Home;
     Ok(Self {
@@ -49,9 +44,8 @@ impl App {
   pub async fn run(&mut self) -> Result<()> {
     let (action_tx, mut action_rx) = mpsc::unbounded_channel();
 
-    let mut tui = tui::Tui::new()?;
-    tui.tick_rate(self.tick_rate);
-    tui.frame_rate(self.frame_rate);
+    let mut tui = tui::Tui::new()?.tick_rate(self.tick_rate).frame_rate(self.frame_rate);
+    // tui.mouse(true);
     tui.enter()?;
 
     for component in self.components.iter_mut() {
@@ -63,7 +57,7 @@ impl App {
     }
 
     for component in self.components.iter_mut() {
-      component.init()?;
+      component.init(tui.size()?)?;
     }
 
     loop {
@@ -75,7 +69,7 @@ impl App {
           tui::Event::Resize(x, y) => action_tx.send(Action::Resize(x, y))?,
           tui::Event::Key(key) => {
             if let Some(keymap) = self.config.keybindings.get(&self.mode) {
-              if let Some(action) = keymap.get(&vec![key.clone()]) {
+              if let Some(action) = keymap.get(&vec![key]) {
                 log::info!("Got action: {action:?}");
                 action_tx.send(action.clone())?;
               } else {
@@ -143,9 +137,8 @@ impl App {
       if self.should_suspend {
         tui.suspend()?;
         action_tx.send(Action::Resume)?;
-        tui = tui::Tui::new()?;
-        tui.tick_rate(self.tick_rate);
-        tui.frame_rate(self.frame_rate);
+        tui = tui::Tui::new()?.tick_rate(self.tick_rate).frame_rate(self.frame_rate);
+        // tui.mouse(true);
         tui.enter()?;
       } else if self.should_quit {
         tui.stop()?;
