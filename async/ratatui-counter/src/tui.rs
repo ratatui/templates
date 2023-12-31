@@ -6,7 +6,10 @@ use std::{
 use color_eyre::eyre::Result;
 use crossterm::{
   cursor,
-  event::{Event as CrosstermEvent, KeyEvent, KeyEventKind, MouseEvent},
+  event::{
+    DisableBracketedPaste, DisableMouseCapture, EnableBracketedPaste, EnableMouseCapture, Event as CrosstermEvent,
+    KeyEvent, KeyEventKind, MouseEvent,
+  },
   terminal::{EnterAlternateScreen, LeaveAlternateScreen},
 };
 use futures::{FutureExt, StreamExt};
@@ -18,7 +21,11 @@ use tokio::{
 };
 use tokio_util::sync::CancellationToken;
 
-pub type Frame<'a> = ratatui::Frame<'a, Backend<std::io::Stderr>>;
+pub type IO = std::io::Stdout;
+pub fn io() -> IO {
+  std::io::stdout()
+}
+pub type Frame<'a> = ratatui::Frame<'a>;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum Event {
@@ -37,32 +44,48 @@ pub enum Event {
 }
 
 pub struct Tui {
-  pub terminal: ratatui::Terminal<Backend<std::io::Stderr>>,
+  pub terminal: ratatui::Terminal<Backend<IO>>,
   pub task: JoinHandle<()>,
   pub cancellation_token: CancellationToken,
   pub event_rx: UnboundedReceiver<Event>,
   pub event_tx: UnboundedSender<Event>,
   pub frame_rate: f64,
   pub tick_rate: f64,
+  pub mouse: bool,
+  pub paste: bool,
 }
 
 impl Tui {
   pub fn new() -> Result<Self> {
     let tick_rate = 4.0;
     let frame_rate = 60.0;
-    let terminal = ratatui::Terminal::new(Backend::new(std::io::stderr()))?;
+    let terminal = ratatui::Terminal::new(Backend::new(io()))?;
     let (event_tx, event_rx) = mpsc::unbounded_channel();
     let cancellation_token = CancellationToken::new();
     let task = tokio::spawn(async {});
-    Ok(Self { terminal, task, cancellation_token, event_rx, event_tx, frame_rate, tick_rate })
+    let mouse = false;
+    let paste = false;
+    Ok(Self { terminal, task, cancellation_token, event_rx, event_tx, frame_rate, tick_rate, mouse, paste })
   }
 
-  pub fn tick_rate(&mut self, tick_rate: f64) {
+  pub fn tick_rate(mut self, tick_rate: f64) -> Self {
     self.tick_rate = tick_rate;
+    self
   }
 
-  pub fn frame_rate(&mut self, frame_rate: f64) {
+  pub fn frame_rate(mut self, frame_rate: f64) -> Self {
     self.frame_rate = frame_rate;
+    self
+  }
+
+  pub fn mouse(mut self, mouse: bool) -> Self {
+    self.mouse = mouse;
+    self
+  }
+
+  pub fn paste(mut self, paste: bool) -> Self {
+    self.paste = paste;
+    self
   }
 
   pub fn start(&mut self) {
@@ -147,7 +170,13 @@ impl Tui {
 
   pub fn enter(&mut self) -> Result<()> {
     crossterm::terminal::enable_raw_mode()?;
-    crossterm::execute!(std::io::stderr(), EnterAlternateScreen, cursor::Hide)?;
+    crossterm::execute!(io(), EnterAlternateScreen, cursor::Hide)?;
+    if self.mouse {
+      crossterm::execute!(io(), EnableMouseCapture)?;
+    }
+    if self.paste {
+      crossterm::execute!(io(), EnableBracketedPaste)?;
+    }
     self.start();
     Ok(())
   }
@@ -156,7 +185,13 @@ impl Tui {
     self.stop()?;
     if crossterm::terminal::is_raw_mode_enabled()? {
       self.flush()?;
-      crossterm::execute!(std::io::stderr(), LeaveAlternateScreen, cursor::Show)?;
+      if self.paste {
+        crossterm::execute!(io(), DisableBracketedPaste)?;
+      }
+      if self.mouse {
+        crossterm::execute!(io(), DisableMouseCapture)?;
+      }
+      crossterm::execute!(io(), LeaveAlternateScreen, cursor::Show)?;
       crossterm::terminal::disable_raw_mode()?;
     }
     Ok(())
@@ -184,7 +219,7 @@ impl Tui {
 }
 
 impl Deref for Tui {
-  type Target = ratatui::Terminal<Backend<std::io::Stderr>>;
+  type Target = ratatui::Terminal<Backend<IO>>;
 
   fn deref(&self) -> &Self::Target {
     &self.terminal
