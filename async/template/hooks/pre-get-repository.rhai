@@ -72,7 +72,7 @@ if !variable::is_set("crossterm_io") {
 let use_rustfmt = if variable::is_set("use_rustfmt") {
     variable::get("use_rustfmt")
 } else {
-    variable::prompt("Use an opinionated rustfmt.toml file?", "true", ["true", "false"])
+    variable::prompt("Use an opinionated rustfmt.toml file?", "false", ["true", "false"])
 };
 
 if use_rustfmt == "true" || use_rustfmt == true {
