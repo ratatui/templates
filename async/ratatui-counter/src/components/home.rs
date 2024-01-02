@@ -17,6 +17,7 @@ pub enum Mode {
   Normal,
   Insert,
   Processing,
+  Help,
 }
 
 #[derive(Default)]
@@ -96,7 +97,7 @@ impl Component for Home {
   fn handle_key_events(&mut self, key: KeyEvent) -> Result<Option<Action>> {
     self.last_events.push(key.clone());
     let action = match self.mode {
-      Mode::Normal | Mode::Processing => return Ok(None),
+      Mode::Normal | Mode::Processing | Mode::Help => return Ok(None),
       Mode::Insert => {
         match key.code {
           KeyCode::Esc => Action::EnterNormal,
@@ -122,9 +123,16 @@ impl Component for Home {
     match action {
       Action::Tick => self.tick(),
       Action::Render => self.render_tick(),
-      Action::ToggleShowHelp => self.show_help = !self.show_help,
-      Action::ScheduleIncrement => self.schedule_increment(1),
-      Action::ScheduleDecrement => self.schedule_decrement(1),
+      Action::ToggleShowHelp if self.mode != Mode::Insert => {
+        self.show_help = !self.show_help;
+        if self.show_help {
+          self.mode = Mode::Help;
+        } else {
+          self.mode = Mode::Normal;
+        }
+      },
+      Action::ScheduleIncrement if self.mode == Mode::Normal => self.schedule_increment(1),
+      Action::ScheduleDecrement if self.mode == Mode::Normal => self.schedule_decrement(1),
       Action::Increment(i) => self.increment(i),
       Action::Decrement(i) => self.decrement(i),
       Action::CompleteInput(s) => self.add(s),
