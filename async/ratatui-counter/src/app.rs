@@ -44,8 +44,7 @@ impl App {
   pub async fn run(&mut self) -> Result<()> {
     let (action_tx, mut action_rx) = mpsc::unbounded_channel();
 
-    let mut tui = tui::Tui::new()?.tick_rate(self.tick_rate).frame_rate(self.frame_rate);
-    // tui.mouse(true);
+    let mut tui = tui::Tui::new()?.tick_rate(self.tick_rate).frame_rate(self.frame_rate).mouse(true);
     tui.enter()?;
 
     for component in self.components.iter_mut() {
@@ -137,8 +136,7 @@ impl App {
       if self.should_suspend {
         tui.suspend()?;
         action_tx.send(Action::Resume)?;
-        tui = tui::Tui::new()?.tick_rate(self.tick_rate).frame_rate(self.frame_rate);
-        // tui.mouse(true);
+        tui = tui::Tui::new()?.tick_rate(self.tick_rate).frame_rate(self.frame_rate).mouse(true);
         tui.enter()?;
       } else if self.should_quit {
         tui.stop()?;
