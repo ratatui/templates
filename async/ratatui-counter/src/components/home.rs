@@ -265,9 +265,11 @@ impl Component for Home {
       Action::CompleteInput(s) => self.add(s),
       Action::EnterNormal => {
         self.mode = Mode::Normal;
+        return Ok(Some(Action::EnterHomeNormal));
       },
       Action::EnterInsert => {
         self.mode = Mode::Insert;
+        return Ok(Some(Action::EnterHomeInput));
       },
       Action::EnterProcessing => {
         self.mode = Mode::Processing;
@@ -281,38 +283,37 @@ impl Component for Home {
     Ok(None)
   }
 
-  fn handle_events(&mut self, event: Option<Event>) -> Result<Option<Action>> {
-    if let Some(Event::Mouse(MouseEvent { kind, column, row, modifiers })) = event {
-      // TODO: simulate better button clicks
-      self.increment_btn_state = ButtonState::Normal;
-      self.decrement_btn_state = ButtonState::Normal;
-      if column >= self.increment_rect.left()
-        && column <= self.increment_rect.right()
-        && row >= self.increment_rect.top()
-        && row <= self.increment_rect.bottom()
-      {
-        if kind == MouseEventKind::Moved {
-          self.increment_btn_state = ButtonState::Hover;
-        } else if kind == MouseEventKind::Down(MouseButton::Left) {
-          self.increment_btn_state = ButtonState::Clicked;
-          return Ok(Some(Action::ScheduleIncrement));
-        } else if kind == MouseEventKind::Up(MouseButton::Left) {
-          self.increment_btn_state = ButtonState::Hover;
-        }
-      };
-      if column >= self.decrement_rect.left()
-        && column <= self.decrement_rect.right()
-        && row >= self.decrement_rect.top()
-        && row <= self.decrement_rect.bottom()
-      {
-        if kind == MouseEventKind::Moved {
-          self.decrement_btn_state = ButtonState::Hover;
-        } else if kind == MouseEventKind::Down(MouseButton::Left) {
-          self.decrement_btn_state = ButtonState::Clicked;
-          return Ok(Some(Action::ScheduleDecrement));
-        } else if kind == MouseEventKind::Up(MouseButton::Left) {
-          self.decrement_btn_state = ButtonState::Hover;
-        }
+  fn handle_mouse_events(&mut self, event: MouseEvent) -> Result<Option<Action>> {
+    let MouseEvent { kind, column, row, modifiers } = event;
+    // TODO: simulate better button clicks
+    self.increment_btn_state = ButtonState::Normal;
+    self.decrement_btn_state = ButtonState::Normal;
+    if column >= self.increment_rect.left()
+      && column <= self.increment_rect.right()
+      && row >= self.increment_rect.top()
+      && row <= self.increment_rect.bottom()
+    {
+      if kind == MouseEventKind::Moved {
+        self.increment_btn_state = ButtonState::Hover;
+      } else if kind == MouseEventKind::Down(MouseButton::Left) {
+        self.increment_btn_state = ButtonState::Clicked;
+        return Ok(Some(Action::ScheduleIncrement));
+      } else if kind == MouseEventKind::Up(MouseButton::Left) {
+        self.increment_btn_state = ButtonState::Hover;
+      }
+    };
+    if column >= self.decrement_rect.left()
+      && column <= self.decrement_rect.right()
+      && row >= self.decrement_rect.top()
+      && row <= self.decrement_rect.bottom()
+    {
+      if kind == MouseEventKind::Moved {
+        self.decrement_btn_state = ButtonState::Hover;
+      } else if kind == MouseEventKind::Down(MouseButton::Left) {
+        self.decrement_btn_state = ButtonState::Clicked;
+        return Ok(Some(Action::ScheduleDecrement));
+      } else if kind == MouseEventKind::Up(MouseButton::Left) {
+        self.decrement_btn_state = ButtonState::Hover;
       }
     }
     Ok(None)

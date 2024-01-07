@@ -104,6 +104,8 @@ impl App {
           Action::Quit => self.should_quit = true,
           Action::Suspend => self.should_suspend = true,
           Action::Resume => self.should_suspend = false,
+          Action::EnterHomeInput => self.mode = Mode::HomeInput,
+          Action::EnterHomeNormal => self.mode = Mode::Home,
           Action::Resize(w, h) => {
             tui.resize(Rect::new(0, 0, w, h))?;
             tui.draw(|f| {
