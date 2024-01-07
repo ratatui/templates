@@ -28,8 +28,6 @@ pub enum Action {
   EnterInsert,
   EnterProcessing,
   ExitProcessing,
-  EnterModeHomeInput,
-  EnterModeHomeNormal,
   Update,
 }
 //// ANCHOR_END: action_enum

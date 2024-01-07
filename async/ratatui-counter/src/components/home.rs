@@ -1,4 +1,4 @@
-use std::{collections::HashMap, time::Duration};
+use std::{cell::RefCell, collections::HashMap, rc::Rc, time::Duration};
 
 use color_eyre::eyre::Result;
 use crossterm::event::{KeyCode, KeyEvent, MouseButton, MouseEvent, MouseEventKind};
@@ -12,16 +12,7 @@ use tracing::trace;
 use tui_input::{backend::crossterm::EventHandler, Input};
 
 use super::{Component, Frame};
-use crate::{action::Action, config::key_event_to_string, tui::Event};
-
-#[derive(Default, Copy, Clone, PartialEq, Eq)]
-pub enum Mode {
-  #[default]
-  Normal,
-  Insert,
-  Processing,
-  Help,
-}
+use crate::{action::Action, config::key_event_to_string, mode::Mode, tui::Event};
 
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ButtonState {
@@ -37,7 +28,7 @@ pub struct Home {
   pub counter: usize,
   pub app_ticker: usize,
   pub render_ticker: usize,
-  pub mode: Mode,
+  pub mode: Rc<RefCell<Mode>>,
   pub input: Input,
   pub action_tx: Option<UnboundedSender<Action>>,
   pub keymap: HashMap<KeyEvent, Action>,
@@ -52,8 +43,8 @@ pub struct Home {
 }
 
 impl Home {
-  pub fn new() -> Self {
-    Self::default()
+  pub fn new(mode: Rc<RefCell<Mode>>) -> Self {
+    Self { mode, ..Default::default() }
   }
 
   pub fn keymap(mut self, keymap: HashMap<KeyEvent, Action>) -> Self {
@@ -134,7 +125,7 @@ impl Home {
           .title("ratatui async template")
           .title_alignment(Alignment::Center)
           .borders(Borders::ALL)
-          .border_style(match self.mode {
+          .border_style(match *self.mode.borrow() {
             Mode::Processing => Style::default().fg(Color::Yellow),
             _ => Style::default(),
           })
@@ -148,7 +139,7 @@ impl Home {
     let width = self.main_rect.width.max(3) - 3; // keep 2 for borders and 1 for cursor
     let scroll = self.input.visual_scroll(width as usize);
     Paragraph::new(self.input.value())
-      .style(match self.mode {
+      .style(match *self.mode.borrow() {
         Mode::Insert => Style::default().fg(Color::Yellow),
         _ => Style::default(),
       })
@@ -174,7 +165,7 @@ impl Home {
       Row::new(vec!["/", "Enter Input"]),
       Row::new(vec!["ESC", "Exit Input"]),
       Row::new(vec!["Enter", "Submit Input"]),
-      Row::new(vec!["q", "Quit"]),
+      Row::new(vec!["qq", "Quit"]),
       Row::new(vec!["?", "Open Help"]),
     ];
     let table = Table::new(rows, &[Constraint::Percentage(10), Constraint::Percentage(90)])
@@ -223,7 +214,7 @@ impl Component for Home {
 
   fn handle_key_events(&mut self, key: KeyEvent) -> Result<Option<Action>> {
     self.last_events.push(key.clone());
-    let action = match self.mode {
+    let action = match *self.mode.borrow() {
       Mode::Normal | Mode::Processing | Mode::Help => return Ok(None),
       Mode::Insert => {
         match key.code {
@@ -250,34 +241,11 @@ impl Component for Home {
     match action {
       Action::Tick => self.tick(),
       Action::Render => self.render_tick(),
-      Action::ToggleShowHelp if self.mode != Mode::Insert => {
-        self.show_help = !self.show_help;
-        if self.show_help {
-          self.mode = Mode::Help;
-        } else {
-          self.mode = Mode::Normal;
-        }
-      },
-      Action::ScheduleIncrement if self.mode == Mode::Normal => self.schedule_increment(1),
-      Action::ScheduleDecrement if self.mode == Mode::Normal => self.schedule_decrement(1),
+      Action::ScheduleIncrement if *self.mode.borrow() == Mode::Normal => self.schedule_increment(1),
+      Action::ScheduleDecrement if *self.mode.borrow() == Mode::Normal => self.schedule_decrement(1),
       Action::Increment(i) => self.increment(i),
       Action::Decrement(i) => self.decrement(i),
       Action::CompleteInput(s) => self.add(s),
-      Action::EnterNormal => {
-        self.mode = Mode::Normal;
-        return Ok(Some(Action::EnterModeHomeNormal));
-      },
-      Action::EnterInsert => {
-        self.mode = Mode::Insert;
-        return Ok(Some(Action::EnterModeHomeInput));
-      },
-      Action::EnterProcessing => {
-        self.mode = Mode::Processing;
-      },
-      Action::ExitProcessing => {
-        // TODO: Make this go to previous mode instead
-        self.mode = Mode::Normal;
-      },
       _ => (),
     }
     Ok(None)
@@ -354,14 +322,14 @@ impl Component for Home {
     f.render_widget(self.input_widget(), input_rect);
     self.input_rect = input_rect;
 
-    if self.mode == Mode::Insert {
+    if *self.mode.borrow() == Mode::Insert {
       f.set_cursor(
         (input_rect.x + 1 + self.input.cursor() as u16).min(input_rect.x + input_rect.width - 2),
         input_rect.y + 1,
       )
     }
 
-    if self.show_help {
+    if *self.mode.borrow() == Mode::Help {
       let rect = rect.inner(&Margin { horizontal: 4, vertical: 2 });
       f.render_widget(Clear, rect);
       let (block, table) = self.help_widget();
