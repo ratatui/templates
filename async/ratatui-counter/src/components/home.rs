@@ -265,11 +265,11 @@ impl Component for Home {
       Action::CompleteInput(s) => self.add(s),
       Action::EnterNormal => {
         self.mode = Mode::Normal;
-        return Ok(Some(Action::EnterHomeNormal));
+        return Ok(Some(Action::EnterModeHomeNormal));
       },
       Action::EnterInsert => {
         self.mode = Mode::Insert;
-        return Ok(Some(Action::EnterHomeInput));
+        return Ok(Some(Action::EnterModeHomeInput));
       },
       Action::EnterProcessing => {
         self.mode = Mode::Processing;
