@@ -1,6 +1,6 @@
 ## Simple Async template
 
-The simple template will create the following project structure:
+This simple async template will create the following project structure:
 
 ```text
 src/
@@ -13,10 +13,12 @@ src/
 └── ui.rs      -> renders the widgets / UI
 ```
 
-This is identical to the simple template but has `async` events out of the box with `tokio` and
+This is identical to the [simple] template but has `async` events out of the box with `tokio` and
 `crossterm`'s `EventStream`.
 
-Here's the exact diff if you want to convert your own code to async:
+[simple](../simple/)
+
+Here's a `diff` if you use as reference if want to convert your own code to `async`:
 
 **`./Cargo.toml`**
 
@@ -33,7 +35,6 @@ Here's the exact diff if you want to convert your own code to async:
 +futures = "0.3.30"
 +ratatui = "0.25.0"
 +tokio = { version = "1.35.1", features = ["full"] }
-+tokio-util = "0.7.10"
 ```
 
 **`./src/event.rs`**
