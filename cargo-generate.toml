@@ -1,4 +1,4 @@
 # configuration for https://cargo-generate.github.io/cargo-generate/
 
 [template]
-sub_templates = ["simple", "async"]
+sub_templates = ["simple", "simple-async", "component"]
