@@ -19,22 +19,11 @@ This repository contains templates for bootstrapping a Rust
    cargo generate ratatui-org/ratatui-template
    ```
 
-3. Choose either the [Simple](#simple-template) or [Async](./async/README.md) template.
+3. Choose one of the following templates:
 
-## Simple template
-
-The simple template will create the following project structure:
-
-```text
-src/
-├── app.rs     -> holds the state and application logic
-├── event.rs   -> handles the terminal events (key press, mouse click, resize, etc.)
-├── handler.rs -> handles the key press events and updates the application
-├── lib.rs     -> module definitions
-├── main.rs    -> entry-point
-├── tui.rs     -> initializes/exits the terminal interface
-└── ui.rs      -> renders the widgets / UI
-```
+   - [Simple](./simple/README.md)
+   - [Simple Async](./simple-async/README.md)
+   - [Component](./component/README.md)
 
 ## See also
 
