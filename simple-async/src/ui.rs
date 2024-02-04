@@ -1,7 +1,7 @@
 use ratatui::{
     layout::Alignment,
     style::{Color, Style},
-    widgets::{Block, BorderType, Borders, Paragraph},
+    widgets::{Block, BorderType, Paragraph},
     Frame,
 };
 
@@ -22,14 +22,13 @@ pub fn render(app: &mut App, frame: &mut Frame) {
             app.counter
         ))
         .block(
-            Block::default()
+            Block::bordered()
                 .title("Template")
                 .title_alignment(Alignment::Center)
-                .borders(Borders::ALL)
                 .border_type(BorderType::Rounded),
         )
         .style(Style::default().fg(Color::Cyan).bg(Color::Black))
-        .alignment(Alignment::Center),
+        .centered(),
         frame.size(),
     )
 }
