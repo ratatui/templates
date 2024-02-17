@@ -19,7 +19,7 @@ cd ratatui-hello-world
   - Supports suspend signal hooks
 - Logs using [tracing](https://github.com/tokio-rs/tracing)
 - [better-panic](https://github.com/mitsuhiko/better-panic)
-- [color-eyre](https://github.com/eyre/color-eyre)
+- [color-eyre](https://github.com/eyre-rs/color-eyre)
 - [human-panic](https://github.com/rust-cli/human-panic)
 - Clap for command line argument parsing
 - `Component` trait with
