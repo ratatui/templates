@@ -8,7 +8,7 @@ You can start by using `cargo-generate`:
 
 ```shell
 cargo install cargo-generate
-cargo generate ratatui-org/templates async --name ratatui-hello-world
+cargo generate ratatui-org/templates component --name ratatui-hello-world
 cd ratatui-hello-world
 ```
 
