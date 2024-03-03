@@ -44,6 +44,9 @@ impl EventHandler {
                 let tick_delay = tick.tick();
                 let crossterm_event = reader.next().fuse();
                 tokio::select! {
+                  _ = _sender.closed() => {
+                    break;
+                  }
                   _ = tick_delay => {
                     _sender.send(Event::Tick).unwrap();
                   }
