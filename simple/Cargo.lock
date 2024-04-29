@@ -380,7 +380,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "toto"
+name = "templates-qol"
 version = "0.1.0"
 dependencies = [
  "crossterm",
