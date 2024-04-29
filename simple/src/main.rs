@@ -1,10 +1,10 @@
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
 use std::io;
-use templates_qol::app::{App, AppResult};
-use templates_qol::event::{Event, EventHandler};
-use templates_qol::handler::handle_key_events;
-use templates_qol::tui::Tui;
+use {{crate_name}}::app::{App, AppResult};
+use {{crate_name}}::event::{Event, EventHandler};
+use {{crate_name}}::handler::handle_key_events;
+use {{crate_name}}::tui::Tui;
 
 fn main() -> AppResult<()> {
     // Create an application.
