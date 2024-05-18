@@ -1,11 +1,11 @@
-# Ratatui templates 🧀
+# Ratatui Templates 🧀
 
 This repository contains templates for bootstrapping a Rust
-[**TUI**](https://en.wikipedia.org/wiki/Text-based_user_interface) application with
+[TUI](https://en.wikipedia.org/wiki/Text-based_user_interface) application with
 [`Ratatui`](https://github.com/ratatui-org/ratatui) &
 [`crossterm`](https://github.com/crossterm-rs/crossterm).
 
-## Creating a project
+## Getting Started
 
 1. Install [`cargo-generate`](https://github.com/cargo-generate/cargo-generate#installation)
 
@@ -24,8 +24,3 @@ This repository contains templates for bootstrapping a Rust
    - [Simple](./simple/README.md)
    - [Simple Async](./simple-async/README.md)
    - [Component](./component/README.md)
-
-## See also
-
-- [Rust Munich Meetup #8 - Designing TUI Applications in Rust](https://www.youtube.com/watch?v=ogdJnOLo238)
-  (2021/outdated)
