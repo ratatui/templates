@@ -16,7 +16,7 @@ This repository contains templates for bootstrapping a Rust
 2. Create a new app based on this repository:
 
    ```shell
-   cargo generate ratatui-org/ratatui-template
+   cargo generate ratatui-org/templates
    ```
 
 3. Choose one of the following templates:
