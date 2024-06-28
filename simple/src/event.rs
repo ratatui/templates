@@ -1,5 +1,7 @@
 use crate::app::AppResult;
-use crossterm::event::{self, Event as CrosstermEvent, KeyEvent, KeyEventKind, MouseEvent};
+use ratatui::crossterm::event::{
+    self, Event as CrosstermEvent, KeyEvent, KeyEventKind, MouseEvent,
+};
 use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
