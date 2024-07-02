@@ -14,7 +14,7 @@ pub enum Action {
   Suspend,
   Resume,
   Quit,
-  Refresh,
+  ClearScreen,
   Error(String),
   Help,
 }
