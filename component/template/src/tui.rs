@@ -7,8 +7,8 @@ use color_eyre::eyre::Result;
 use crossterm::{
   cursor,
   event::{
-    DisableBracketedPaste, DisableMouseCapture, EnableBracketedPaste, EnableMouseCapture, Event as CrosstermEvent,
-    KeyEvent, KeyEventKind, MouseEvent,
+    DisableBracketedPaste, DisableMouseCapture, EnableBracketedPaste, EnableMouseCapture,
+    Event as CrosstermEvent, EventStream, KeyEvent, KeyEventKind, MouseEvent, 
   },
   terminal::{EnterAlternateScreen, LeaveAlternateScreen},
 };
@@ -89,63 +89,39 @@ impl Tui {
   }
 
   pub fn start(&mut self) {
-    let tick_delay = std::time::Duration::from_secs_f64(1.0 / self.tick_rate);
-    let render_delay = std::time::Duration::from_secs_f64(1.0 / self.frame_rate);
-    self.cancel();
+    self.cancel(); // Cancel any existing task
     self.cancellation_token = CancellationToken::new();
-    let _cancellation_token = self.cancellation_token.clone();
-    let _event_tx = self.event_tx.clone();
+    let cancellation_token = self.cancellation_token.clone();
+    let event_tx = self.event_tx.clone();
+    let mut event_stream = EventStream::new();
+    let mut tick_interval = tokio::time::interval(Duration::from_secs_f64(1.0 / self.tick_rate));
+    let mut render_interval = tokio::time::interval(Duration::from_secs_f64(1.0 / self.frame_rate));
     self.task = tokio::spawn(async move {
-      let mut reader = crossterm::event::EventStream::new();
-      let mut tick_interval = tokio::time::interval(tick_delay);
-      let mut render_interval = tokio::time::interval(render_delay);
-      _event_tx.send(Event::Init).unwrap();
+      event_tx.send(Event::Init).expect("failed to send init event"); // likely a bug if this fails
       loop {
-        let tick_delay = tick_interval.tick();
-        let render_delay = render_interval.tick();
-        let crossterm_event = reader.next().fuse();
-        tokio::select! {
-          _ = _cancellation_token.cancelled() => {
+        let event = tokio::select! {
+          _ = cancellation_token.cancelled() => {
             break;
           }
-          maybe_event = crossterm_event => {
-            match maybe_event {
-              Some(Ok(evt)) => {
-                match evt {
-                  CrosstermEvent::Key(key) => {
-                    if key.kind == KeyEventKind::Press {
-                      _event_tx.send(Event::Key(key)).unwrap();
-                    }
-                  },
-                  CrosstermEvent::Mouse(mouse) => {
-                    _event_tx.send(Event::Mouse(mouse)).unwrap();
-                  },
-                  CrosstermEvent::Resize(x, y) => {
-                    _event_tx.send(Event::Resize(x, y)).unwrap();
-                  },
-                  CrosstermEvent::FocusLost => {
-                    _event_tx.send(Event::FocusLost).unwrap();
-                  },
-                  CrosstermEvent::FocusGained => {
-                    _event_tx.send(Event::FocusGained).unwrap();
-                  },
-                  CrosstermEvent::Paste(s) => {
-                    _event_tx.send(Event::Paste(s)).unwrap();
-                  },
-                }
-              }
-              Some(Err(_)) => {
-                _event_tx.send(Event::Error).unwrap();
-              }
-              None => {},
+          crossterm_event = event_stream.next().fuse() => match crossterm_event {
+            Some(Ok(event)) => match event {
+              CrosstermEvent::Key(key) if key.kind == KeyEventKind::Press => Event::Key(key),
+              CrosstermEvent::Mouse(mouse) => Event::Mouse(mouse),
+              CrosstermEvent::Resize(x, y) => Event::Resize(x, y),
+              CrosstermEvent::FocusLost => Event::FocusLost,
+              CrosstermEvent::FocusGained => Event::FocusGained,
+              CrosstermEvent::Paste(s) => Event::Paste(s),
+              _ => continue, // ignore other events
             }
+            Some(Err(_)) => Event::Error,
+            None => break, // the event stream has stopped and will not produce any more events
           },
-          _ = tick_delay => {
-              _event_tx.send(Event::Tick).unwrap();
-          },
-          _ = render_delay => {
-              _event_tx.send(Event::Render).unwrap();
-          },
+          _ = tick_interval.tick() => Event::Tick,
+          _ = render_interval.tick() => Event::Render,
+        };
+        if event_tx.send(event).is_err() {
+          // the receiver has been dropped, so there's no point in continuing the loop
+          break;
         }
       }
     });
