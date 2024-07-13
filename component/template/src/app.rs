@@ -127,6 +127,14 @@ impl App {
               }
             })?;
           },
+          Action::ExecuteCommand(ref command, ref args) => {
+            tui.exit()?;
+            let cmd = command.to_string();
+            let cmd_args = args.iter().map(|s| s.as_str()).collect::<Vec<&str>>();
+            self.spawn_process(&cmd, &cmd_args)?;
+            tui.enter()?;
+            action_tx.send(Action::ClearScreen)?;
+          }
           _ => {},
         }
         for component in self.components.iter_mut() {
@@ -148,5 +156,13 @@ impl App {
     }
     tui.exit()?;
     Ok(())
+  }
+
+  fn spawn_process(&self, command: &str, args: &[&str]) -> Result<()> {
+      let status = std::process::Command::new(command).args(args).status()?;
+      if !status.success() {
+        eprintln!("\nCommand failed with status: {}", status);
+      }
+      Ok(())
   }
 }

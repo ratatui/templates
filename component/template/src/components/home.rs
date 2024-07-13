@@ -35,6 +35,18 @@ impl Component for Home {
     Ok(())
   }
 
+  fn handle_key_events(&mut self, key: KeyEvent) -> Result<Option<Action>> {
+    match key.code {
+      KeyCode::Char('e') => {
+        let cmd = String::from("vim");
+        let cmd_args = vec!["/tmp/a.txt".into()];
+        let action = Action::ExecuteCommand(cmd, cmd_args);
+        Ok(Some(action))
+      }
+      _ => Ok(None)
+    }
+  }
+
   fn update(&mut self, action: Action) -> Result<Option<Action>> {
     match action {
       Action::Tick => {
@@ -45,7 +57,7 @@ impl Component for Home {
   }
 
   fn draw(&mut self, f: &mut Frame<'_>, area: Rect) -> Result<()> {
-    f.render_widget(Paragraph::new("hello world"), area);
+    f.render_widget(Paragraph::new("Hello world, press 'e' to edit /tmp/a.txt with vim"), area);
     Ok(())
   }
 }

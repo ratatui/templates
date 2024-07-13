@@ -6,6 +6,9 @@ use serde::{
 };
 use strum::Display;
 
+type Command = String;
+type CommandArgs = Vec<String>;
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Display, Deserialize)]
 pub enum Action {
   Tick,
@@ -17,4 +20,5 @@ pub enum Action {
   ClearScreen,
   Error(String),
   Help,
+  ExecuteCommand(Command, CommandArgs),
 }
