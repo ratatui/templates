@@ -1,6 +1,7 @@
 use color_eyre::Result;
 use crossterm::event::KeyEvent;
 use ratatui::prelude::Rect;
+use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc;
 use tracing::{debug, info};
 
@@ -8,7 +9,6 @@ use crate::{
     action::Action,
     components::{fps::FpsCounter, home::Home, Component},
     config::Config,
-    mode::Mode,
     tui::{Event, Tui},
 };
 
@@ -24,6 +24,13 @@ pub struct App {
     action_tx: mpsc::UnboundedSender<Action>,
     action_rx: mpsc::UnboundedReceiver<Action>,
 }
+
+#[derive(Default, Debug, Copy, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum Mode {
+    #[default]
+    Home,
+}
+
 
 impl App {
     pub fn new(tick_rate: f64, frame_rate: f64) -> Result<Self> {
