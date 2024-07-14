@@ -55,40 +55,6 @@ if use_gitserver == "true" || use_gitserver == true {
     variable::set("repository", "");
 }
 
-if !variable::is_set("crossterm_io") {
-    let crossterm_io = variable::prompt("Use stdout or stderr for Crossterm IO?", "stdout", ["stdout", "stderr"]);
-    variable::set("crossterm_io", crossterm_io);
-} else {
-    if variable::get("crossterm_io").to_lower() == "stdout" {
-        variable::set("crossterm_io", "stdout");
-    } else if variable::get("crossterm_io").to_lower() == "stderr" {
-        variable::set("crossterm_io", "stderr");
-    } else {
-        print("!!! Unknown value for `crossterm_io`: " + variable::get("crossterm_io") + ". Using `stdout`.");
-        variable::set("crossterm_io", "stdout");
-    }
-};
-
-let use_rustfmt = if variable::is_set("use_rustfmt") {
-    variable::get("use_rustfmt")
-} else {
-    variable::prompt("Use an opinionated rustfmt.toml file?", "false", ["true", "false"])
-};
-
-if use_rustfmt == "false" || use_rustfmt == false {
-    file::delete("./.rustfmt.toml");
-} else {
-    print("!!! opinionated rustfmt.toml requires nightly.");
-    variable::set("msrv", "nightly");
-}
-
-let msrv = if variable::is_set("msrv") {
-    variable::get("msrv")
-} else {
-    variable::prompt("What is your Minimum Supported Rust Version", "stable")
-};
-variable::set("msrv", msrv);
-
 let project_name = variable::get("project-name");
 let crate_name = project_name;
 crate_name.replace("-", "_");

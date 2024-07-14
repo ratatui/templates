@@ -1,90 +1,91 @@
 use std::time::Instant;
 
-use color_eyre::eyre::Result;
-use ratatui::{prelude::*, widgets::*};
+use color_eyre::Result;
+use ratatui::{
+    layout::{Constraint, Layout, Rect},
+    style::{Style, Stylize},
+    text::Span,
+    widgets::Paragraph,
+    Frame,
+};
 
 use super::Component;
-use crate::{action::Action, tui::Frame};
+
+use crate::action::Action;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FpsCounter {
-  app_start_time: Instant,
-  app_frames: u32,
-  app_fps: f64,
+    last_tick_update: Instant,
+    tick_count: u32,
+    ticks_per_second: f64,
 
-  render_start_time: Instant,
-  render_frames: u32,
-  render_fps: f64,
+    last_frame_update: Instant,
+    frame_count: u32,
+    frames_per_second: f64,
 }
 
 impl Default for FpsCounter {
-  fn default() -> Self {
-    Self::new()
-  }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl FpsCounter {
-  pub fn new() -> Self {
-    Self {
-      app_start_time: Instant::now(),
-      app_frames: 0,
-      app_fps: 0.0,
-      render_start_time: Instant::now(),
-      render_frames: 0,
-      render_fps: 0.0,
+    pub fn new() -> Self {
+        Self {
+            last_tick_update: Instant::now(),
+            tick_count: 0,
+            ticks_per_second: 0.0,
+            last_frame_update: Instant::now(),
+            frame_count: 0,
+            frames_per_second: 0.0,
+        }
     }
-  }
 
-  fn app_tick(&mut self) -> Result<()> {
-    self.app_frames += 1;
-    let now = Instant::now();
-    let elapsed = (now - self.app_start_time).as_secs_f64();
-    if elapsed >= 1.0 {
-      self.app_fps = self.app_frames as f64 / elapsed;
-      self.app_start_time = now;
-      self.app_frames = 0;
+    fn app_tick(&mut self) -> Result<()> {
+        self.tick_count += 1;
+        let now = Instant::now();
+        let elapsed = (now - self.last_tick_update).as_secs_f64();
+        if elapsed >= 1.0 {
+            self.ticks_per_second = self.tick_count as f64 / elapsed;
+            self.last_tick_update = now;
+            self.tick_count = 0;
+        }
+        Ok(())
     }
-    Ok(())
-  }
 
-  fn render_tick(&mut self) -> Result<()> {
-    self.render_frames += 1;
-    let now = Instant::now();
-    let elapsed = (now - self.render_start_time).as_secs_f64();
-    if elapsed >= 1.0 {
-      self.render_fps = self.render_frames as f64 / elapsed;
-      self.render_start_time = now;
-      self.render_frames = 0;
+    fn render_tick(&mut self) -> Result<()> {
+        self.frame_count += 1;
+        let now = Instant::now();
+        let elapsed = (now - self.last_frame_update).as_secs_f64();
+        if elapsed >= 1.0 {
+            self.frames_per_second = self.frame_count as f64 / elapsed;
+            self.last_frame_update = now;
+            self.frame_count = 0;
+        }
+        Ok(())
     }
-    Ok(())
-  }
 }
 
 impl Component for FpsCounter {
-  fn update(&mut self, action: Action) -> Result<Option<Action>> {
-    if let Action::Tick = action {
-      self.app_tick()?
-    };
-    if let Action::Render = action {
-      self.render_tick()?
-    };
-    Ok(None)
-  }
+    fn update(&mut self, action: Action) -> Result<Option<Action>> {
+        match action {
+            Action::Tick => self.app_tick()?,
+            Action::Render => self.render_tick()?,
+            _ => {}
+        };
+        Ok(None)
+    }
 
-  fn draw(&mut self, f: &mut Frame<'_>, rect: Rect) -> Result<()> {
-    let rects = Layout::default()
-      .direction(Direction::Vertical)
-      .constraints(vec![
-        Constraint::Length(1), // first row
-        Constraint::Min(0),
-      ])
-      .split(rect);
-
-    let rect = rects[0];
-
-    let s = format!("{:.2} ticks per sec (app) {:.2} frames per sec (render)", self.app_fps, self.render_fps);
-    let block = Block::default().title(block::Title::from(s.dim()).alignment(Alignment::Right));
-    f.render_widget(block, rect);
-    Ok(())
-  }
+    fn draw(&mut self, frame: &mut Frame, area: Rect) -> Result<()> {
+        let [top, _] = Layout::vertical([Constraint::Length(1), Constraint::Min(0)]).areas(area);
+        let message = format!(
+            "{:.2} ticks/sec, {:.2} FPS",
+            self.ticks_per_second, self.frames_per_second
+        );
+        let span = Span::styled(message, Style::new().dim());
+        let paragraph = Paragraph::new(span).right_aligned();
+        frame.render_widget(paragraph, top);
+        Ok(())
+    }
 }
