@@ -2,13 +2,14 @@ use color_eyre::eyre::Result;
 use crossterm::event::KeyEvent;
 use ratatui::prelude::Rect;
 use tokio::sync::mpsc;
+use tracing::{debug, info};
 
 use crate::{
     action::Action,
     components::{fps::FpsCounter, home::Home, Component},
     config::Config,
     mode::Mode,
-    tui,
+    tui::{Tui, Event},
 };
 
 pub struct App {
@@ -24,18 +25,14 @@ pub struct App {
 
 impl App {
     pub fn new(tick_rate: f64, frame_rate: f64) -> Result<Self> {
-        let home = Home::new();
-        let fps = FpsCounter::default();
-        let config = Config::new()?;
-        let mode = Mode::Home;
         Ok(Self {
             tick_rate,
             frame_rate,
-            components: vec![Box::new(home), Box::new(fps)],
+            components: vec![Box::new(Home::new()), Box::new(FpsCounter::default())],
             should_quit: false,
             should_suspend: false,
-            config,
-            mode,
+            config: Config::new()?,
+            mode: Mode::Home,
             last_tick_key_events: Vec::new(),
         })
     }
@@ -43,10 +40,10 @@ impl App {
     pub async fn run(&mut self) -> Result<()> {
         let (action_tx, mut action_rx) = mpsc::unbounded_channel();
 
-        let mut tui = tui::Tui::new()?
+        let mut tui = Tui::new()?
+            // .mouse(true) // uncomment this line to enable mouse support
             .tick_rate(self.tick_rate)
             .frame_rate(self.frame_rate);
-        // tui.mouse(true);
         tui.enter()?;
 
         for component in self.components.iter_mut() {
@@ -64,14 +61,14 @@ impl App {
         loop {
             if let Some(e) = tui.next().await {
                 match e {
-                    tui::Event::Quit => action_tx.send(Action::Quit)?,
-                    tui::Event::Tick => action_tx.send(Action::Tick)?,
-                    tui::Event::Render => action_tx.send(Action::Render)?,
-                    tui::Event::Resize(x, y) => action_tx.send(Action::Resize(x, y))?,
-                    tui::Event::Key(key) => {
+                    Event::Quit => action_tx.send(Action::Quit)?,
+                    Event::Tick => action_tx.send(Action::Tick)?,
+                    Event::Render => action_tx.send(Action::Render)?,
+                    Event::Resize(x, y) => action_tx.send(Action::Resize(x, y))?,
+                    Event::Key(key) => {
                         if let Some(keymap) = self.config.keybindings.get(&self.mode) {
                             if let Some(action) = keymap.get(&vec![key]) {
-                                log::info!("Got action: {action:?}");
+                                info!("Got action: {action:?}");
                                 action_tx.send(action.clone())?;
                             } else {
                                 // If the key was not handled as a single key action,
@@ -80,7 +77,7 @@ impl App {
 
                                 // Check for multi-key combinations
                                 if let Some(action) = keymap.get(&self.last_tick_key_events) {
-                                    log::info!("Got action: {action:?}");
+                                    info!("Got action: {action:?}");
                                     action_tx.send(action.clone())?;
                                 }
                             }
@@ -97,7 +94,7 @@ impl App {
 
             while let Ok(action) = action_rx.try_recv() {
                 if action != Action::Tick && action != Action::Render {
-                    log::debug!("{action:?}");
+                    debug!("{action:?}");
                 }
                 match action {
                     Action::Tick => {

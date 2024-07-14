@@ -71,7 +71,7 @@ pub fn initialize_panic_handler() -> Result<()> {
             eprintln!("{}", panic_hook.panic_report(panic_info)); // prints color-eyre stack trace to stderr
         }
         let msg = format!("{}", panic_hook.panic_report(panic_info));
-        log::error!("Error: {}", strip_ansi_escapes::strip_str(msg));
+        error!("Error: {}", strip_ansi_escapes::strip_str(msg));
 
         #[cfg(debug_assertions)]
         {

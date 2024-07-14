@@ -18,7 +18,6 @@ use crate::{
 
 async fn tokio_main() -> Result<()> {
     initialize_logging()?;
-
     initialize_panic_handler()?;
 
     let args = Cli::parse();
