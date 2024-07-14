@@ -12,7 +12,7 @@ pub struct Cli {
         long,
         value_name = "FLOAT",
         help = "Tick rate, i.e. number of ticks per second",
-        default_value_t = 1.0
+        default_value_t = 4.0
     )]
     pub tick_rate: f64,
 
@@ -21,7 +21,7 @@ pub struct Cli {
         long,
         value_name = "FLOAT",
         help = "Frame rate, i.e. number of frames per second",
-        default_value_t = 4.0
+        default_value_t = 60.0
     )]
     pub frame_rate: f64,
 }
