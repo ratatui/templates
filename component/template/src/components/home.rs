@@ -1,16 +1,9 @@
-use std::{collections::HashMap, time::Duration};
-
 use color_eyre::eyre::Result;
-use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::{prelude::*, widgets::*};
-use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc::UnboundedSender;
 
 use super::Component;
-use crate::{
-    action::Action,
-    config::{Config, KeyBindings},
-};
+use crate::{action::Action, config::Config};
 
 #[derive(Default)]
 pub struct Home {
@@ -37,14 +30,19 @@ impl Component for Home {
 
     fn update(&mut self, action: Action) -> Result<Option<Action>> {
         match action {
-            Action::Tick => {}
+            Action::Tick => {
+                // add any logic here that should run on every tick
+            }
+            Action::Render => {
+                // add any logic here that should run on every render
+            }
             _ => {}
         }
         Ok(None)
     }
 
-    fn draw(&mut self, f: &mut Frame, area: Rect) -> Result<()> {
-        f.render_widget(Paragraph::new("hello world"), area);
+    fn draw(&mut self, frame: &mut Frame, area: Rect) -> Result<()> {
+        frame.render_widget(Paragraph::new("hello world"), area);
         Ok(())
     }
 }
