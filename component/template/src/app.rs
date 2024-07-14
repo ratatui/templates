@@ -31,7 +31,6 @@ pub enum Mode {
     Home,
 }
 
-
 impl App {
     pub fn new(tick_rate: f64, frame_rate: f64) -> Result<Self> {
         let (action_tx, action_rx) = mpsc::unbounded_channel();

@@ -93,43 +93,58 @@ impl Tui {
     pub fn start(&mut self) {
         self.cancel(); // Cancel any existing task
         self.cancellation_token = CancellationToken::new();
-        let cancellation_token = self.cancellation_token.clone();
-        let event_tx = self.event_tx.clone();
+        let event_loop = Self::event_loop(
+            self.event_tx.clone(),
+            self.cancellation_token.clone(),
+            self.tick_rate,
+            self.frame_rate,
+        );
+        self.task = tokio::spawn(async {
+            event_loop.await;
+        });
+    }
+
+    async fn event_loop(
+        event_tx: UnboundedSender<Event>,
+        cancellation_token: CancellationToken,
+        tick_rate: f64,
+        frame_rate: f64,
+    ) {
         let mut event_stream = EventStream::new();
-        let mut tick_interval = interval(Duration::from_secs_f64(1.0 / self.tick_rate));
-        let mut render_interval = interval(Duration::from_secs_f64(1.0 / self.frame_rate));
-        self.task = tokio::spawn(async move {
-            // if this fails, then it's likely a bug in the calling code
-            event_tx
-                .send(Event::Init)
-                .expect("failed to send init event");
-            loop {
-                let event = tokio::select! {
-                    _ = cancellation_token.cancelled() => {
-                        break;
-                    }
-                    _ = tick_interval.tick() => Event::Tick,
-                    _ = render_interval.tick() => Event::Render,
-                    crossterm_event = event_stream.next().fuse() => match crossterm_event {
-                        Some(Ok(event)) => match event {
-                            CrosstermEvent::Key(key) if key.kind == KeyEventKind::Press => Event::Key(key),
-                            CrosstermEvent::Mouse(mouse) => Event::Mouse(mouse),
-                            CrosstermEvent::Resize(x, y) => Event::Resize(x, y),
-                            CrosstermEvent::FocusLost => Event::FocusLost,
-                            CrosstermEvent::FocusGained => Event::FocusGained,
-                            CrosstermEvent::Paste(s) => Event::Paste(s),
-                            _ => continue, // ignore other events
-                        }
-                        Some(Err(_)) => Event::Error,
-                        None => break, // the event stream has stopped and will not produce any more events
-                    },
-                };
-                if event_tx.send(event).is_err() {
-                    // the receiver has been dropped, so there's no point in continuing the loop
+        let mut tick_interval = interval(Duration::from_secs_f64(1.0 / tick_rate));
+        let mut render_interval = interval(Duration::from_secs_f64(1.0 / frame_rate));
+
+        // if this fails, then it's likely a bug in the calling code
+        event_tx
+            .send(Event::Init)
+            .expect("failed to send init event");
+        loop {
+            let event = tokio::select! {
+                _ = cancellation_token.cancelled() => {
                     break;
                 }
+                _ = tick_interval.tick() => Event::Tick,
+                _ = render_interval.tick() => Event::Render,
+                crossterm_event = event_stream.next().fuse() => match crossterm_event {
+                    Some(Ok(event)) => match event {
+                        CrosstermEvent::Key(key) if key.kind == KeyEventKind::Press => Event::Key(key),
+                        CrosstermEvent::Mouse(mouse) => Event::Mouse(mouse),
+                        CrosstermEvent::Resize(x, y) => Event::Resize(x, y),
+                        CrosstermEvent::FocusLost => Event::FocusLost,
+                        CrosstermEvent::FocusGained => Event::FocusGained,
+                        CrosstermEvent::Paste(s) => Event::Paste(s),
+                        _ => continue, // ignore other events
+                    }
+                    Some(Err(_)) => Event::Error,
+                    None => break, // the event stream has stopped and will not produce any more events
+                },
+            };
+            if event_tx.send(event).is_err() {
+                // the receiver has been dropped, so there's no point in continuing the loop
+                break;
             }
-        });
+        }
+        cancellation_token.cancel();
     }
 
     pub fn stop(&self) -> Result<()> {
