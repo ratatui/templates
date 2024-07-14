@@ -1,7 +1,4 @@
 [values]
 gh-username = "ratatui"
 project-description = "Example of ratatui template"
-msrv = "nightly"
 use_gitserver = false
-crossterm_io = "stderr"
-use_rustfmt = false
