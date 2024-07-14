@@ -4,8 +4,8 @@ if !variable::is_set("project-description") {
     variable::set("project-description", project_description);
 }
 
-let use_gitserver = if variable::is_set("use_gitserver") {
-    variable::get("use_gitserver")
+let use_gitserver = if variable::is_set("use-gitserver") {
+    variable::get("use-gitserver")
 } else {
     variable::prompt("Would you like to set a Git repository URL?", "true", ["true", "false"])
 };
