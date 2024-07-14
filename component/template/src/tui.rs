@@ -192,7 +192,7 @@ impl Tui {
         Ok(())
     }
 
-    pub async fn next(&mut self) -> Option<Event> {
+    pub async fn next_event(&mut self) -> Option<Event> {
         self.event_rx.recv().await
     }
 }
