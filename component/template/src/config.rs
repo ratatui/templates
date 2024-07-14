@@ -1,8 +1,10 @@
-use std::{collections::HashMap, path::PathBuf};
+use std::{collections::HashMap, env, path::PathBuf};
 
-use color_eyre::eyre::Result;
+use color_eyre::Result;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use derive_deref::{Deref, DerefMut};
+use directories::ProjectDirs;
+use lazy_static::lazy_static;
 use ratatui::style::{Color, Modifier, Style};
 use serde::{de::Deserializer, Deserialize};
 use tracing::error;
@@ -29,11 +31,23 @@ pub struct Config {
     pub styles: Styles,
 }
 
+lazy_static! {
+    pub static ref PROJECT_NAME: String = env!("CARGO_CRATE_NAME").to_uppercase().to_string();
+    pub static ref DATA_FOLDER: Option<PathBuf> =
+        env::var(format!("{}_DATA", PROJECT_NAME.clone()))
+            .ok()
+            .map(PathBuf::from);
+    pub static ref CONFIG_FOLDER: Option<PathBuf> =
+        env::var(format!("{}_CONFIG", PROJECT_NAME.clone()))
+            .ok()
+            .map(PathBuf::from);
+}
+
 impl Config {
     pub fn new() -> Result<Self, config::ConfigError> {
         let default_config: Config = json5::from_str(CONFIG).unwrap();
-        let data_dir = crate::utils::get_data_dir();
-        let config_dir = crate::utils::get_config_dir();
+        let data_dir = get_data_dir();
+        let config_dir = get_config_dir();
         let mut builder = config::Config::builder()
             .set_default("data_dir", data_dir.to_str().unwrap())?
             .set_default("config_dir", config_dir.to_str().unwrap())?;
@@ -78,6 +92,32 @@ impl Config {
 
         Ok(cfg)
     }
+}
+
+pub fn get_data_dir() -> PathBuf {
+    let directory = if let Some(s) = DATA_FOLDER.clone() {
+        s
+    } else if let Some(proj_dirs) = project_directory() {
+        proj_dirs.data_local_dir().to_path_buf()
+    } else {
+        PathBuf::from(".").join(".data")
+    };
+    directory
+}
+
+pub fn get_config_dir() -> PathBuf {
+    let directory = if let Some(s) = CONFIG_FOLDER.clone() {
+        s
+    } else if let Some(proj_dirs) = project_directory() {
+        proj_dirs.config_local_dir().to_path_buf()
+    } else {
+        PathBuf::from(".").join(".config")
+    };
+    directory
+}
+
+fn project_directory() -> Option<ProjectDirs> {
+    ProjectDirs::from("com", "kdheepak", env!("CARGO_PKG_NAME"))
 }
 
 #[derive(Clone, Debug, Default, Deref, DerefMut)]

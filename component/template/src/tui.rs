@@ -4,7 +4,7 @@ use std::{
     time::Duration,
 };
 
-use color_eyre::eyre::Result;
+use color_eyre::Result;
 use crossterm::{
     cursor,
     event::{

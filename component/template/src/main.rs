@@ -1,38 +1,26 @@
-pub mod action;
-pub mod app;
-pub mod cli;
-pub mod components;
-pub mod config;
-pub mod mode;
-pub mod tui;
-pub mod utils;
-
 use clap::Parser;
 use cli::Cli;
-use color_eyre::eyre::Result;
+use color_eyre::Result;
 
-use crate::{
-    app::App,
-    utils::{initialize_logging, initialize_panic_handler},
-};
+use crate::app::App;
 
-async fn tokio_main() -> Result<()> {
-    initialize_logging()?;
-    initialize_panic_handler()?;
+mod action;
+mod app;
+mod cli;
+mod components;
+mod config;
+mod error_handling;
+mod logging;
+mod mode;
+mod tui;
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    crate::error_handling::init()?;
+    crate::logging::init()?;
 
     let args = Cli::parse();
     let mut app = App::new(args.tick_rate, args.frame_rate)?;
     app.run().await?;
-
     Ok(())
-}
-
-#[tokio::main]
-async fn main() -> Result<()> {
-    if let Err(e) = tokio_main().await {
-        eprintln!("{} error: Something went wrong", env!("CARGO_PKG_NAME"));
-        Err(e)
-    } else {
-        Ok(())
-    }
 }

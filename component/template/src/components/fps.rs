@@ -1,6 +1,6 @@
 use std::time::Instant;
 
-use color_eyre::eyre::Result;
+use color_eyre::Result;
 use ratatui::{
     layout::{Constraint, Layout, Rect},
     style::{Style, Stylize},

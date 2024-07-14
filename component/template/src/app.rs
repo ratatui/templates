@@ -1,4 +1,4 @@
-use color_eyre::eyre::Result;
+use color_eyre::Result;
 use crossterm::event::KeyEvent;
 use ratatui::prelude::Rect;
 use tokio::sync::mpsc;
@@ -9,7 +9,7 @@ use crate::{
     components::{fps::FpsCounter, home::Home, Component},
     config::Config,
     mode::Mode,
-    tui::{Tui, Event},
+    tui::{Event, Tui},
 };
 
 pub struct App {
@@ -80,7 +80,7 @@ impl App {
 
     async fn handle_events(&mut self, tui: &mut Tui) -> Result<()> {
         let Some(event) = tui.next_event().await else {
-            return Ok(())
+            return Ok(());
         };
         let action_tx = self.action_tx.clone();
         match event {
@@ -102,7 +102,7 @@ impl App {
     fn handle_key_event(&mut self, key: KeyEvent) -> Result<()> {
         let action_tx = self.action_tx.clone();
         let Some(keymap) = self.config.keybindings.get(&self.mode) else {
-            return Ok(())
+            return Ok(());
         };
         match keymap.get(&vec![key]) {
             Some(action) => {
@@ -160,7 +160,8 @@ impl App {
         tui.draw(|frame| {
             for component in self.components.iter_mut() {
                 if let Err(err) = component.draw(frame, frame.size()) {
-                    let _ = self.action_tx
+                    let _ = self
+                        .action_tx
                         .send(Action::Error(format!("Failed to draw: {:?}", err)));
                 }
             }
