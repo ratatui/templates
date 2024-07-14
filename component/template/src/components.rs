@@ -9,8 +9,9 @@ pub mod fps;
 pub mod home;
 
 /// `Component` is a trait that represents a visual and interactive element of the user interface.
-/// Implementors of this trait can be registered with the main application loop and will be able to receive events,
-/// update state, and be rendered on the screen.
+///
+/// Implementors of this trait can be registered with the main application loop and will be able to
+/// receive events, update state, and be rendered on the screen.
 pub trait Component {
     /// Register an action handler that can send actions for processing if necessary.
     ///
@@ -21,8 +22,8 @@ pub trait Component {
     /// # Returns
     ///
     /// * `Result<()>` - An Ok result or an error.
-    #[allow(unused_variables)]
     fn register_action_handler(&mut self, tx: UnboundedSender<Action>) -> Result<()> {
+        let _ = tx; // to appease clippy
         Ok(())
     }
     /// Register a configuration handler that provides configuration settings if necessary.
@@ -34,8 +35,8 @@ pub trait Component {
     /// # Returns
     ///
     /// * `Result<()>` - An Ok result or an error.
-    #[allow(unused_variables)]
     fn register_config_handler(&mut self, config: Config) -> Result<()> {
+        let _ = config; // to appease clippy
         Ok(())
     }
     /// Initialize the component with a specified area if necessary.
@@ -47,7 +48,8 @@ pub trait Component {
     /// # Returns
     ///
     /// * `Result<()>` - An Ok result or an error.
-    fn init(&mut self, _area: Rect) -> Result<()> {
+    fn init(&mut self, area: Rect) -> Result<()> {
+        let _ = area; // to appease clippy
         Ok(())
     }
     /// Handle incoming events and produce actions if necessary.
@@ -60,12 +62,12 @@ pub trait Component {
     ///
     /// * `Result<Option<Action>>` - An action to be processed or none.
     fn handle_events(&mut self, event: Option<Event>) -> Result<Option<Action>> {
-        let r = match event {
-            Some(Event::Key(key_event)) => self.handle_key_events(key_event)?,
-            Some(Event::Mouse(mouse_event)) => self.handle_mouse_events(mouse_event)?,
+        let action = match event {
+            Some(Event::Key(key_event)) => self.handle_key_event(key_event)?,
+            Some(Event::Mouse(mouse_event)) => self.handle_mouse_event(mouse_event)?,
             _ => None,
         };
-        Ok(r)
+        Ok(action)
     }
     /// Handle key events and produce actions if necessary.
     ///
@@ -76,8 +78,8 @@ pub trait Component {
     /// # Returns
     ///
     /// * `Result<Option<Action>>` - An action to be processed or none.
-    #[allow(unused_variables)]
-    fn handle_key_events(&mut self, key: KeyEvent) -> Result<Option<Action>> {
+    fn handle_key_event(&mut self, key: KeyEvent) -> Result<Option<Action>> {
+        let _ = key; // to appease clippy
         Ok(None)
     }
     /// Handle mouse events and produce actions if necessary.
@@ -89,8 +91,8 @@ pub trait Component {
     /// # Returns
     ///
     /// * `Result<Option<Action>>` - An action to be processed or none.
-    #[allow(unused_variables)]
-    fn handle_mouse_events(&mut self, mouse: MouseEvent) -> Result<Option<Action>> {
+    fn handle_mouse_event(&mut self, mouse: MouseEvent) -> Result<Option<Action>> {
+        let _ = mouse; // to appease clippy
         Ok(None)
     }
     /// Update the state of the component based on a received action. (REQUIRED)
@@ -102,8 +104,8 @@ pub trait Component {
     /// # Returns
     ///
     /// * `Result<Option<Action>>` - An action to be processed or none.
-    #[allow(unused_variables)]
     fn update(&mut self, action: Action) -> Result<Option<Action>> {
+        let _ = action; // to appease clippy
         Ok(None)
     }
     /// Render the component on the screen. (REQUIRED)
