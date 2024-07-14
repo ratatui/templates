@@ -103,6 +103,8 @@ impl Tui {
           _ = cancellation_token.cancelled() => {
             break;
           }
+          _ = tick_interval.tick() => Event::Tick,
+          _ = render_interval.tick() => Event::Render,
           crossterm_event = event_stream.next().fuse() => match crossterm_event {
             Some(Ok(event)) => match event {
               CrosstermEvent::Key(key) if key.kind == KeyEventKind::Press => Event::Key(key),
@@ -116,8 +118,6 @@ impl Tui {
             Some(Err(_)) => Event::Error,
             None => break, // the event stream has stopped and will not produce any more events
           },
-          _ = tick_interval.tick() => Event::Tick,
-          _ = render_interval.tick() => Event::Render,
         };
         if event_tx.send(event).is_err() {
           // the receiver has been dropped, so there's no point in continuing the loop
