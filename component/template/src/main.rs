@@ -9,13 +9,13 @@ mod app;
 mod cli;
 mod components;
 mod config;
-mod error_handling;
+mod errors;
 mod logging;
 mod tui;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    crate::error_handling::init()?;
+    crate::errors::init()?;
     crate::logging::init()?;
 
     let args = Cli::parse();
