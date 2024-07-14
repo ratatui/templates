@@ -1,3 +1,5 @@
+#![allow(dead_code)] // Remove this once you start using the code
+
 use std::{
     io::{stdout, Stdout},
     ops::{Deref, DerefMut},
