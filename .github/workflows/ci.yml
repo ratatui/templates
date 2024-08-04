@@ -60,7 +60,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Run cargo generate
-        uses: orhun/cargo-generate-action@fix/argument_passing
+        uses: cargo-generate/cargo-generate-action@v0.20.0
         with:
           name: ${{ env.PROJECT_NAME }}
           template: component
