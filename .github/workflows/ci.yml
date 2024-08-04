@@ -64,7 +64,7 @@ jobs:
         with:
           name: ${{ env.PROJECT_NAME }}
           template: component
-          arguments: --define=gh-username=\"ratatui\" --define=project-description=\"Example of ratatui template\" --define=use-gitserver=false
+          arguments: --define=gh-username=ratatui --define=project-description=example --define=use-gitserver=false
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
       - name: Cargo check
