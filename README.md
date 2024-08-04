@@ -24,3 +24,10 @@ This repository contains templates for bootstrapping a Rust
    - [Simple](./simple/README.md)
    - [Simple Async](./simple-async/README.md)
    - [Component](./component/README.md)
+
+## Contributing
+
+To keep the generated code up to date, install [`just`] and run `just generate-all` (or a specific
+template - e.g. `just generate-simple`).
+
+[`just`]: https://just.systems/
