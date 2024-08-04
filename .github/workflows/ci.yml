@@ -14,7 +14,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Run cargo generate
-        uses: cargo-generate/cargo-generate-action@v0.18.3
+        uses: cargo-generate/cargo-generate-action@v0.20.0
         with:
           name: ${{ env.PROJECT_NAME }}
           template: simple
@@ -37,7 +37,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Run cargo generate
-        uses: cargo-generate/cargo-generate-action@v0.18.3
+        uses: cargo-generate/cargo-generate-action@v0.20.0
         with:
           name: ${{ env.PROJECT_NAME }}
           template: simple-async
@@ -60,11 +60,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Run cargo generate
-        uses: cargo-generate/cargo-generate-action@v0.18.3
+        uses: cargo-generate/cargo-generate-action@v0.20.0
         with:
           name: ${{ env.PROJECT_NAME }}
           template: component
-          template_values_file: .github/workflows/template.toml
+          arguments: --define=gh-username=ratatui --define=project-description=example --define=use-gitserver=false
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
       - name: Cargo check
