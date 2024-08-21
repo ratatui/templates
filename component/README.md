@@ -8,7 +8,7 @@ You can start by using `cargo-generate`:
 
 ```shell
 cargo install cargo-generate
-cargo generate ratatui-org/templates component --name ratatui-hello-world
+cargo generate ratatui/templates component --name ratatui-hello-world
 cd ratatui-hello-world
 ```
 
@@ -23,19 +23,19 @@ cd ratatui-hello-world
 - [human-panic](https://github.com/rust-cli/human-panic)
 - Clap for command line argument parsing
 - `Component` trait with
-  [`Home`](https://github.com/ratatui-org/async-template/blob/main/template/src/components/home.rs)
+  [`Home`](https://github.com/ratatui/async-template/blob/main/template/src/components/home.rs)
   and
-  [`Fps`](https://github.com/ratatui-org/async-template/blob/main/template/src/components/fps.rs)
+  [`Fps`](https://github.com/ratatui/async-template/blob/main/template/src/components/fps.rs)
   components as examples
 
 ## Advanced Usage
 
 You can also use a
-[`template.toml`](https://github.com/ratatui-org/async-template/blob/main/.github/workflows/template.toml)
+[`template.toml`](https://github.com/ratatui/async-template/blob/main/.github/workflows/template.toml)
 file to skip the prompts:
 
 ```bash
-$ cargo generate --git https://github.com/ratatui-org/async-template --template-values-file .github/workflows/template.toml --name ratatui-hello-world
+$ cargo generate --git https://github.com/ratatui/async-template --template-values-file .github/workflows/template.toml --name ratatui-hello-world
 # OR generate from local clone
 $ cargo generate --path . --template-values-file .github/workflows/template.toml --name ratatui-hello-world
 ```
@@ -104,7 +104,7 @@ Data directory: /Users/kd/gitrepos/async-template/ratatui-hello-world/.data
 ## Documentation
 
 Read documentation on design decisions in the template here:
-<https://ratatui-org.github.io/async-template/>
+<https://ratatui.github.io/async-template/>
 
 ## Counter + Text Input Demo
 
@@ -113,7 +113,7 @@ run a demo without using `cargo generate`, you can run the counter + text input 
 the instructions below:
 
 ```bash
-git clone https://github.com/ratatui-org/async-template
+git clone https://github.com/ratatui/async-template
 cd async-template
 cd ratatui-counter # counter + text input demo
 
@@ -128,4 +128,4 @@ cargo run
 
 You should see a demo like this:
 
-![counter demo](https://github.com/ratatui-org/async-template/assets/1813121/057a0fe9-9f6d-4f8c-963c-ca2725721bdd)
+![counter demo](https://github.com/ratatui/async-template/assets/1813121/057a0fe9-9f6d-4f8c-963c-ca2725721bdd)
