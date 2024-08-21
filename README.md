@@ -2,7 +2,7 @@
 
 This repository contains templates for bootstrapping a Rust
 [TUI](https://en.wikipedia.org/wiki/Text-based_user_interface) application with
-[`Ratatui`](https://github.com/ratatui-org/ratatui) &
+[`Ratatui`](https://github.com/ratatui/ratatui) &
 [`crossterm`](https://github.com/crossterm-rs/crossterm).
 
 ## Getting Started
@@ -16,7 +16,7 @@ This repository contains templates for bootstrapping a Rust
 2. Create a new app based on this repository:
 
    ```shell
-   cargo generate ratatui-org/templates
+   cargo generate ratatui/templates
    ```
 
 3. Choose one of the following templates:
