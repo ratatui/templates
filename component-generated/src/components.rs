@@ -1,6 +1,9 @@
 use color_eyre::Result;
 use crossterm::event::{KeyEvent, MouseEvent};
-use ratatui::{layout::Rect, Frame};
+use ratatui::{
+    layout::{Rect, Size},
+    Frame,
+};
 use tokio::sync::mpsc::UnboundedSender;
 
 use crate::{action::Action, config::Config, tui::Event};
@@ -48,7 +51,7 @@ pub trait Component {
     /// # Returns
     ///
     /// * `Result<()>` - An Ok result or an error.
-    fn init(&mut self, area: Rect) -> Result<()> {
+    fn init(&mut self, area: Size) -> Result<()> {
         let _ = area; // to appease clippy
         Ok(())
     }

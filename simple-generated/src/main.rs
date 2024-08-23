@@ -1,10 +1,19 @@
-use simple_generated::app::{App, AppResult};
-use simple_generated::event::{Event, EventHandler};
-use simple_generated::handler::handle_key_events;
-use simple_generated::tui::Tui;
 use std::io;
-use ratatui::backend::CrosstermBackend;
-use ratatui::Terminal;
+
+use ratatui::{backend::CrosstermBackend, Terminal};
+
+use crate::{
+    app::{App, AppResult},
+    event::{Event, EventHandler},
+    handler::handle_key_events,
+    tui::Tui,
+};
+
+pub mod app;
+pub mod event;
+pub mod handler;
+pub mod tui;
+pub mod ui;
 
 fn main() -> AppResult<()> {
     // Create an application.

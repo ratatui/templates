@@ -1,10 +1,19 @@
-use {{crate_name}}::app::{App, AppResult};
-use {{crate_name}}::event::{Event, EventHandler};
-use {{crate_name}}::handler::handle_key_events;
-use {{crate_name}}::tui::Tui;
 use std::io;
-use ratatui::backend::CrosstermBackend;
-use ratatui::Terminal;
+
+use ratatui::{backend::CrosstermBackend, Terminal};
+
+use crate::{
+    app::{App, AppResult},
+    event::{Event, EventHandler},
+    handler::handle_key_events,
+    tui::Tui,
+};
+
+pub mod app;
+pub mod event;
+pub mod handler;
+pub mod tui;
+pub mod ui;
 
 #[tokio::main]
 async fn main() -> AppResult<()> {
