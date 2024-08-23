@@ -44,5 +44,4 @@ tracing-subscriber = { version = "0.3.18", features = ["env-filter", "serde"] }
 
 [build-dependencies]
 anyhow = "1.0.86"
-vergen = { version = "9.0.0", features = ["build"] }
-vergen-gix = "1.0.0"
+vergen-gix = { version = "1.0.0", features = ["build", "cargo"] }

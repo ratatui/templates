@@ -195,6 +195,38 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a12916984aab3fa6e39d655a33e09c0071eb36d6ab3aea5c2d78551f1df6d952"
 
 [[package]]
+name = "camino"
+version = "1.1.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8b96ec4966b5813e2c0507c1f86115c8c5abaadc3980879c3424042a02fd1ad3"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "cargo-platform"
+version = "0.1.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "24b1f0365a6c6bb4020cd05806fd0d33c44d38046b8bd7f0e40814b9763cabfc"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "cargo_metadata"
+version = "0.18.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2d886547e41f740c616ae73108f6eb70afe6d940c7bc697cb30f13daec073037"
+dependencies = [
+ "camino",
+ "cargo-platform",
+ "semver",
+ "serde",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
 name = "cassowary"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -347,7 +379,6 @@ dependencies = [
  "tracing",
  "tracing-error",
  "tracing-subscriber",
- "vergen",
  "vergen-gix",
 ]
 
@@ -1987,6 +2018,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
+name = "semver"
+version = "1.0.23"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "61697e0a1c7e512e84a621326239844a24d8207b4669b41bc18b32ea5cbf988b"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "serde"
 version = "1.0.208"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2558,7 +2598,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c32e7318e93a9ac53693b6caccfb05ff22e04a44c7cf8a279051f24c09da286f"
 dependencies = [
  "anyhow",
+ "cargo_metadata",
  "derive_builder",
+ "getset",
+ "regex",
  "rustversion",
  "time",
  "vergen-lib",
