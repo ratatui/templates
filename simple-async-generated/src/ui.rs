@@ -29,6 +29,6 @@ pub fn render(app: &mut App, frame: &mut Frame) {
         )
         .style(Style::default().fg(Color::Cyan).bg(Color::Black))
         .centered(),
-        frame.size(),
+        frame.area(),
     )
 }

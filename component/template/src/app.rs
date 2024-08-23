@@ -165,7 +165,7 @@ impl App {
     fn render(&mut self, tui: &mut Tui) -> Result<()> {
         tui.draw(|frame| {
             for component in self.components.iter_mut() {
-                if let Err(err) = component.draw(frame, frame.size()) {
+                if let Err(err) = component.draw(frame, frame.area()) {
                     let _ = self
                         .action_tx
                         .send(Action::Error(format!("Failed to draw: {:?}", err)));
