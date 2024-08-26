@@ -6,4 +6,4 @@ license = "MIT"
 edition = "2021"
 
 [dependencies]
-ratatui = "0.28.0"
+ratatui = "0.28.1"
