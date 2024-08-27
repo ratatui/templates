@@ -63,6 +63,9 @@ impl EventSource {
 /// thread. It sends a tick event at a regular interval. The tick rate is specified by the
 /// `tick_rate` parameter. If an error occurs, it sends an error event to the main thread and then
 /// stops running.
+///
+/// Errors sending an event are ignored as this generally indicates that the main thread has exited
+/// and is no longer listening for events.
 fn event_thread(sender: mpsc::Sender<Event>, tick_rate: Duration) {
     let mut last_tick: Option<Instant> = None;
     loop {
@@ -70,7 +73,7 @@ fn event_thread(sender: mpsc::Sender<Event>, tick_rate: Duration) {
             .map(|tick| tick.elapsed() >= tick_rate)
             .unwrap_or(true)
         {
-            sender.send(Event::Tick).expect("failed to send tick event");
+            let _ = sender.send(Event::Tick);
             last_tick = Some(Instant::now());
         }
 
