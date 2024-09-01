@@ -26,7 +26,8 @@ impl App {
     }
 
     pub fn run(mut self, mut terminal: DefaultTerminal) -> Result<()> {
-        let tick_interval = Duration::from_secs_f64(1.0 / 10.0); // 10 ticks per second
+        const TICKS_PER_SECOND: f64 = 10.0;
+        let tick_interval = Duration::from_secs_f64(1.0 / TICKS_PER_SECOND);
         let events = EventSource::new(tick_interval);
         self.running = true;
         while self.running {
