@@ -5,7 +5,7 @@ edition = "2021"
 description = "{{project-description}}"
 authors = ["{{authors}}"]
 build = "build.rs"
-{%- if repository != "" %}
+{% if repository != "" -%}
 repository = "{{repository}}"
 {%- endif %}
 
