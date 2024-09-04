@@ -1,7 +1,6 @@
 pub use app::App;
 
 pub mod app;
-pub mod event;
 
 fn main() -> color_eyre::Result<()> {
     color_eyre::install()?;
