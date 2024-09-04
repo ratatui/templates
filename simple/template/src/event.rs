@@ -37,14 +37,16 @@ pub enum Event {
 pub struct EventSource {
     /// Event receiver channel.
     receiver: mpsc::Receiver<Event>,
+    /// Handle to the event thread.
+    _handle: thread::JoinHandle<()>,
 }
 
 impl EventSource {
     /// Constructs a new instance of [`EventHandler`].
     pub fn new(tick_rate: Duration) -> Self {
         let (sender, receiver) = mpsc::channel();
-        thread::spawn(move || event_thread(sender, tick_rate));
-        Self { receiver }
+        let _handle = thread::spawn(move || event_thread(sender, tick_rate));
+        Self { receiver, _handle }
     }
 
     /// Receive the next event from the handler thread.
