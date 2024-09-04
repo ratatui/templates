@@ -2137,6 +2137,8 @@ dependencies = [
 name = "simple-generated"
 version = "0.1.0"
 dependencies = [
+ "color-eyre",
+ "crossterm",
  "ratatui",
 ]
 
