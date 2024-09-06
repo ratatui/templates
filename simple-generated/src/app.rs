@@ -19,6 +19,7 @@ impl App {
         Self::default()
     }
 
+    /// Run the application's main loop.
     pub fn run(mut self, mut terminal: DefaultTerminal) -> Result<()> {
         self.running = true;
         while self.running {
@@ -28,8 +29,34 @@ impl App {
         Ok(())
     }
 
+    /// Renders the user interface.
+    ///
+    /// This is where you add new widgets. See the following resources for more information:
+    /// - <https://docs.rs/ratatui/latest/ratatui/widgets/index.html>
+    /// - <https://github.com/ratatui/ratatui/tree/master/examples>
+    fn draw(&mut self, frame: &mut Frame) {
+        let title = Line::from("Ratatui Simple Template")
+            .bold()
+            .blue()
+            .centered();
+        let text = "Hello, Ratatui!\n\n\
+            Created using https://github.com/ratatui/templates\n\
+            Press `Esc`, `Ctrl-C` or `q` to stop running.";
+        frame.render_widget(
+            Paragraph::new(text)
+                .block(Block::bordered().title(title))
+                .centered(),
+            frame.area(),
+        )
+    }
+
+    /// Reads the crossterm events and updates the state of [`App`].
+    ///
+    /// If your application needs to perform work in between handling events, you can use the
+    /// [`event::poll`] function to check if there are any events available with a timeout.
     fn handle_crossterm_events(&mut self) -> Result<()> {
         match event::read()? {
+            // it's important to check KeyEventKind::Press to avoid handling key release events
             Event::Key(key) if key.kind == KeyEventKind::Press => self.on_key_event(key),
             Event::Mouse(_) => {}
             Event::Resize(_, _) => {}
@@ -51,27 +78,5 @@ impl App {
     /// Set running to false to quit the application.
     fn quit(&mut self) {
         self.running = false;
-    }
-
-    /// Renders the user interface widgets.
-    fn draw(&mut self, frame: &mut Frame) {
-        // This is where you add new widgets.
-        // See the following resources:
-        // - https://docs.rs/ratatui/latest/ratatui/widgets/index.html
-        // - https://github.com/ratatui/ratatui/tree/master/examples
-
-        let title = Line::from("Ratatui Simple Template")
-            .bold()
-            .blue()
-            .centered();
-        let text = "Hello, Ratatui!\n\n\
-            Created using https://github.com/ratatui/templates\n\
-            Press `Esc`, `Ctrl-C` or `q` to stop running.";
-        frame.render_widget(
-            Paragraph::new(text)
-                .block(Block::bordered().title(title))
-                .centered(),
-            frame.area(),
-        )
     }
 }
