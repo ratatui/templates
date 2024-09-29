@@ -55,6 +55,13 @@ pub trait Component {
         let _ = area; // to appease clippy
         Ok(())
     }
+    /// Whether the app should send `Action::RawKeyEvent` or the corresponding `Action` variant.
+    ///
+    /// # Returns
+    /// * `bool` - Whether the component is waiting only for raw key events actions or not.
+    fn is_editing(&self) -> bool {
+        false
+    }
     /// Handle incoming events and produce actions if necessary.
     ///
     /// # Arguments
