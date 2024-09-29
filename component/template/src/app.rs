@@ -110,6 +110,10 @@ impl App {
         let Some(keymap) = self.config.keybindings.get(&self.mode) else {
             return Ok(());
         };
+        if self.components.iter().any(|c| c.is_editing()) {
+            action_tx.send(Action::RawKeyEvent(key))?;
+            return Ok(());
+        }
         match keymap.get(&vec![key]) {
             Some(action) => {
                 info!("Got action: {action:?}");
