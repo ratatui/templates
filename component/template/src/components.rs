@@ -62,6 +62,13 @@ pub trait Component {
     fn is_editing(&self) -> bool {
         false
     }
+    /// Returns zero or more `Action` that should never be sent as `Action::RawKeyEvent` to this component even if `Self::is_editing` returns `true`.
+    ///
+    /// # Returns
+    /// * `Vec<Action>` - A list of `Action` that should never be sent as `Action::RawKeyEvent`.
+    fn escape_editing_mode(&self) -> Vec<Action> {
+        vec![]
+    }
     /// Handle incoming events and produce actions if necessary.
     ///
     /// # Arguments
