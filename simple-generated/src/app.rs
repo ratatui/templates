@@ -7,8 +7,7 @@ use ratatui::{
     DefaultTerminal, Frame,
 };
 
-/// The main application which holds the state
-/// and logic of the application.
+/// The main application which holds the state and logic of the application.
 #[derive(Debug, Default)]
 pub struct App {
     /// Is the application running?
