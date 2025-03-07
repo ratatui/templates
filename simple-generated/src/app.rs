@@ -24,7 +24,7 @@ impl App {
     pub fn run(mut self, mut terminal: DefaultTerminal) -> Result<()> {
         self.running = true;
         while self.running {
-            terminal.draw(|frame| self.draw(frame))?;
+            terminal.draw(|frame| self.render(frame))?;
             self.handle_crossterm_events()?;
         }
         Ok(())
@@ -36,7 +36,7 @@ impl App {
     ///
     /// - <https://docs.rs/ratatui/latest/ratatui/widgets/index.html>
     /// - <https://github.com/ratatui/ratatui/tree/main/ratatui-widgets/examples>
-    fn draw(&mut self, frame: &mut Frame) {
+    fn render(&mut self, frame: &mut Frame) {
         let title = Line::from("Ratatui Simple Template")
             .bold()
             .blue()
