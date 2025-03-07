@@ -699,6 +699,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "event-driven-generated"
+version = "0.1.0"
+dependencies = [
+ "color-eyre",
+ "crossterm",
+ "ratatui",
+]
+
+[[package]]
 name = "eyre"
 version = "0.6.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"

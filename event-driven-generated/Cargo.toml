@@ -1,0 +1,11 @@
+[package]
+name = "event-driven-generated"
+version = "0.1.0"
+authors = ["Orhun Parmaksız <orhunparmaksiz@gmail.com>"]
+license = "MIT"
+edition = "2021"
+
+[dependencies]
+crossterm = "0.28.1"
+ratatui = "0.29.0"
+color-eyre = "0.6.3"
