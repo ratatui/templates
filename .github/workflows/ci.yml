@@ -6,72 +6,54 @@ on:
   pull_request:
 
 jobs:
-  build-simple:
+  build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        template:
+          - simple
+          - simple-async
+          - component
+        include:
+          - template: hello-world
+            project_name: ratatui-github-example
+            arguments: ""
+          - template: simple
+            project_name: ratatui-github-example
+            arguments: ""
+          - template: simple-async
+            project_name: ratatui-github-example
+            arguments: ""
+          - template: event-driven
+            project_name: ratatui-github-example
+            arguments: ""
+          - template: event-driven-async
+            project_name: ratatui-github-example
+            arguments: ""
+          - template: component
+            project_name: ratatui-github-example
+            arguments: "--define=gh-username=ratatui --define=project-description=example --define=use-gitserver=false"
     env:
-      PROJECT_NAME: ratatui-github-example
+      PROJECT_NAME: ${{ matrix.project_name }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Run cargo generate
-        uses: cargo-generate/cargo-generate-action@v0.20.0
-        with:
-          name: ${{ env.PROJECT_NAME }}
-          template: simple
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-      - name: Cargo check
-        # we need to move the generated project to a temp folder, away from the template project
-        # otherwise `cargo` runs would fail
-        # see https://github.com/rust-lang/cargo/issues/9922
-        run: |
-          mv $PROJECT_NAME ${{ runner.temp }}/
-          cd ${{ runner.temp }}/$PROJECT_NAME
-          cargo check --tests
 
-  build-simple-async:
-    runs-on: ubuntu-latest
-    env:
-      PROJECT_NAME: ratatui-github-example
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
       - name: Run cargo generate
         uses: cargo-generate/cargo-generate-action@v0.20.0
         with:
-          name: ${{ env.PROJECT_NAME }}
-          template: simple-async
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-      - name: Cargo check
-        # we need to move the generated project to a temp folder, away from the template project
-        # otherwise `cargo` runs would fail
-        # see https://github.com/rust-lang/cargo/issues/9922
-        run: |
-          mv $PROJECT_NAME ${{ runner.temp }}/
-          cd ${{ runner.temp }}/$PROJECT_NAME
-          cargo check --tests
+          name: ${{ matrix.project_name }}
+          template: ${{ matrix.template }}
+          arguments: ${{ matrix.arguments }}
 
-  build-component:
-    runs-on: ubuntu-latest
-    env:
-      PROJECT_NAME: ratatui-github-example
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Run cargo generate
-        uses: cargo-generate/cargo-generate-action@v0.20.0
-        with:
-          name: ${{ env.PROJECT_NAME }}
-          template: component
-          arguments: --define=gh-username=ratatui --define=project-description=example --define=use-gitserver=false
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+
       - name: Cargo check
         # we need to move the generated project to a temp folder, away from the template project
-        # otherwise `cargo` runs would fail
+        # otherwise cargo runs would fail
         # see https://github.com/rust-lang/cargo/issues/9922
         run: |
-          mv $PROJECT_NAME ${{ runner.temp }}/
-          cd ${{ runner.temp }}/$PROJECT_NAME
+          mv ${{ env.PROJECT_NAME }} ${{ runner.temp }}/
+          cd ${{ runner.temp }}/${{ env.PROJECT_NAME }}
           cargo check --tests
