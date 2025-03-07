@@ -699,6 +699,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "event-driven-async-generated"
+version = "0.1.0"
+dependencies = [
+ "color-eyre",
+ "crossterm",
+ "futures",
+ "ratatui",
+ "tokio",
+]
+
+[[package]]
 name = "event-driven-generated"
 version = "0.1.0"
 dependencies = [

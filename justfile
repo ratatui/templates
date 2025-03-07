@@ -32,3 +32,7 @@ generate-simple-async:
 generate-event-driven:
     rm -rv event-driven-generated
     cargo generate --path ./event-driven --name event-driven-generated
+
+generate-event-driven-async:
+    rm -rv event-driven-async-generated
+    cargo generate --path ./event-driven-async --name event-driven-async-generated
