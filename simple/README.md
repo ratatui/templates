@@ -1,12 +1,6 @@
 # Ratatui Simple Template
 
-The simple template will create the following project structure:
-
-```text
-src/
-├── app.rs     -> holds the state and application logic
-└── main.rs    -> entry-point
-```
+A simple example of a Ratatui application.
 
 ## Design choices
 

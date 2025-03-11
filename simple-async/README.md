@@ -1,12 +1,6 @@
 # Ratatui Simple template
 
-The simple template will create the following project structure:
-
-```text
-src/
-├── app.rs     -> holds the state and application logic
-└── main.rs    -> entry-point
-```
+A simple example of a Ratatui application.
 
 This is identical to the [simple](../simple) template but has `async` events out of the box with `tokio` and
 `crossterm`'s `EventStream`.
