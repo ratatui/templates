@@ -2,7 +2,7 @@
 
 This repository contains templates for bootstrapping a Rust
 [TUI](https://en.wikipedia.org/wiki/Text-based_user_interface) application with
-[`Ratatui`](https://github.com/ratatui/ratatui) &
+[`Ratatui`](https://github.com/ratatui/ratatui) and
 [`crossterm`](https://github.com/crossterm-rs/crossterm).
 
 ## Getting Started
@@ -21,9 +21,10 @@ This repository contains templates for bootstrapping a Rust
 
 3. Choose one of the following templates:
 
-   - [Simple](./simple/README.md)
-   - [Simple Async](./simple-async/README.md)
-   - [Component](./component/README.md)
+   - [Hello World](./hello-world/README.md): A "Hello, World!" example.
+   - [Simple](./simple/README.md) | [Simple Async](./simple-async/README.md): A simple example.
+   - [Event Driven](./event-driven/README.md) | [Event Driven Async](./event-driven-async/README.md): An example of an event-driven TUI application.
+   - [Component](./component/README.md): An example of a component-based TUI application.
 
 ## Contributing
 
