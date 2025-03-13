@@ -14,7 +14,7 @@ env:
 # ensure that the workflow is only triggered once per PR, subsequent pushes to the PR will cancel
 # and restart the workflow. See https://docs.github.com/en/actions/using-jobs/using-concurrency
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  group: {% raw %}${{ github.workflow }}-${{ github.head_ref || github.run_id }}{% endraw %}
   cancel-in-progress: true
 
 jobs:
@@ -63,8 +63,8 @@ jobs:
         env:
           RUSTDOCFLAGS: --cfg docsrs
   test:
-    runs-on: ${{ matrix.os }}
-    name: test ${{ matrix.os }}
+    runs-on: {% raw %}${{ matrix.os }}{% endraw %}
+    name: test {% raw %}${{ matrix.os }}{% endraw %}
     strategy:
       fail-fast: false
       matrix:
