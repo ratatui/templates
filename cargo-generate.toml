@@ -9,4 +9,5 @@ sub_templates = [
   "event-driven",
   "event-driven-async",
   "component",
+  "web",
 ]

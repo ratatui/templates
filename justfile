@@ -38,3 +38,7 @@ generate-event-driven $CARGO_NAME="your name" $CARGO_EMAIL="author@example.com":
 generate-event-driven-async $CARGO_NAME="your name" $CARGO_EMAIL="author@example.com":
     rm -rv event-driven-async-generated
     cargo generate --path ./event-driven-async --name event-driven-async-generated
+
+generate-web $CARGO_NAME="your name" $CARGO_EMAIL="author@example.com":
+    rm -rv web-generated
+    cargo generate --path ./web --name web-generated

@@ -33,6 +33,9 @@ jobs:
           - template: component
             project_name: ratatui-github-example
             arguments: "--define=gh-username=ratatui --define=project-description=example --define=use-gitserver=false"
+          - template: web
+            project_name: ratatui-github-example
+            arguments: ""
     env:
       PROJECT_NAME: ${{ matrix.project_name }}
     steps:

@@ -25,6 +25,7 @@ This repository contains templates for bootstrapping a Rust
    - [Simple](./simple/README.md) | [Simple Async](./simple-async/README.md): A simple example.
    - [Event Driven](./event-driven/README.md) | [Event Driven Async](./event-driven-async/README.md): An example of an event-driven TUI application.
    - [Component](./component/README.md): An example of a component-based TUI application.
+   - [Web](./web/README.md): An example of a TUI application that runs on web.
 
 ## Contributing
 
