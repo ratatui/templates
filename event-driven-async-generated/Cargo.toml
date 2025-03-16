@@ -1,9 +1,9 @@
 [package]
 name = "event-driven-async-generated"
 version = "0.1.0"
-authors = ["Orhun Parmaksız <orhunparmaksiz@gmail.com>"]
+authors = ["your name <author@example.com>"]
 license = "MIT"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 crossterm = { version = "0.28.1", features = ["event-stream"] }
