@@ -1,9 +1,9 @@
 [package]
 name = "event-driven-generated"
 version = "0.1.0"
-authors = ["your name <author@example.com>"]
+authors = ["Orhun Parmaksız <orhunparmaksiz@gmail.com>"]
 license = "MIT"
-edition = "2024"
+edition = "2021"
 
 [dependencies]
 crossterm = "0.28.1"
