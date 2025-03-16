@@ -17,35 +17,24 @@ generate-component:
     cargo generate --path ./component \
         --name component-generated \
         --define project-description="An example generated using the component template" \
-        --define author="your name <author@example.com>" \
         --define use-gitserver=false
 
 generate-hello-world:
     rm -rv hello-world-generated
-    cargo generate --path ./hello-world \
-        --name hello-world-generated \
-        --define author="your name <author@example.com>"
+    cargo generate --path ./hello-world --name hello-world-generated
 
 generate-simple:
     rm -rv simple-generated
-    cargo generate --path ./simple \
-        --name simple-generated \
-        --define author="your name <author@example.com>"
+    cargo generate --path ./simple --name simple-generated
 
 generate-simple-async:
     rm -rv simple-async-generated
-    cargo generate --path ./simple-async \
-        --name simple-async-generated \
-        --define author="your name <author@example.com>"
+    cargo generate --path ./simple-async --name simple-async-generated
 
 generate-event-driven:
     rm -rv event-driven-generated
-    cargo generate --path ./event-driven \
-        --name event-driven-generated \
-        --define author="your name <author@example.com>"
+    cargo generate --path ./event-driven --name event-driven-generated
 
 generate-event-driven-async:
     rm -rv event-driven-async-generated
-    cargo generate --path ./event-driven-async \
-        --name event-driven-async-generated \
-        --define author="your name <author@example.com>"
+    cargo generate --path ./event-driven-async --name event-driven-async-generated
