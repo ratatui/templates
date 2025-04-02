@@ -23,9 +23,9 @@ cd ratatui-hello-world
 - [human-panic](https://github.com/rust-cli/human-panic)
 - Clap for command line argument parsing
 - `Component` trait with
-  [`Home`](https://github.com/ratatui/async-template/blob/main/template/src/components/home.rs)
+  [`Home`](https://github.com/ratatui/templates/blob/main/component/template/src/components/home.rs)
   and
-  [`Fps`](https://github.com/ratatui/async-template/blob/main/template/src/components/fps.rs)
+  [`Fps`](https://github.com/ratatui/templates/blob/main/component/template/src/components/fps.rs)
   components as examples
 
 ## Advanced Usage
@@ -104,7 +104,7 @@ Data directory: /Users/kd/gitrepos/async-template/ratatui-hello-world/.data
 ## Documentation
 
 Read documentation on design decisions in the template here:
-<https://ratatui.github.io/async-template/>
+<https://ratatui.rs/templates/component/>
 
 ## Counter + Text Input Demo
 
