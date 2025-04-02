@@ -1,4 +1,4 @@
-# async-template
+# Ratatui Component template
 
 ![async template demo](https://user-images.githubusercontent.com/1813121/277114001-0d25a09c-f24e-4ffc-8763-cd258828cec0.gif)
 
