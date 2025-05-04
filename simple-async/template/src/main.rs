@@ -64,25 +64,19 @@ impl App {
 
     /// Reads the crossterm events and updates the state of [`App`].
     async fn handle_crossterm_events(&mut self) -> Result<()> {
-        tokio::select! {
-            event = self.event_stream.next().fuse() => {
-                match event {
-                    Some(Ok(evt)) => {
-                        match evt {
-                            Event::Key(key)
-                                if key.kind == KeyEventKind::Press
-                                    => self.on_key_event(key),
-                            Event::Mouse(_) => {}
-                            Event::Resize(_, _) => {}
-                            _ => {}
-                        }
-                    }
+        let event = self.event_stream.next().fuse().await;
+        match event {
+            Some(Ok(evt)) => {
+                match evt {
+                    Event::Key(key)
+                        if key.kind == KeyEventKind::Press
+                            => self.on_key_event(key),
+                    Event::Mouse(_) => {}
+                    Event::Resize(_, _) => {}
                     _ => {}
                 }
             }
-            _ = tokio::time::sleep(tokio::time::Duration::from_millis(100)) => {
-                // Sleep for a short duration to avoid busy waiting.
-            }
+            _ => {}
         }
         Ok(())
     }
