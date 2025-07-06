@@ -1,11 +1,3 @@
 [workspace]
-members = [
-    "*-generated",
-    "component-generated",
-    "event-driven-async-generated",
-    "event-driven-generated",
-    "hello-world-generated",
-    "simple-async-generated",
-    "simple-generated",
-]
 resolver = "2"
+members = ["*-generated"]
