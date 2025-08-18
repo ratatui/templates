@@ -37,7 +37,7 @@ jobs:
       PROJECT_NAME: ${{ matrix.project_name }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Run cargo generate
         uses: cargo-generate/cargo-generate-action@v0.20.0
