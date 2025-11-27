@@ -1,4 +1,3 @@
-use color_eyre::Result;
 use crossterm::event::{Event, EventStream, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 use futures::{FutureExt, StreamExt};
 use ratatui::{
@@ -32,7 +31,7 @@ impl App {
     }
 
     /// Run the application's main loop.
-    pub async fn run(mut self, mut terminal: DefaultTerminal) -> Result<()> {
+    pub async fn run(mut self, mut terminal: DefaultTerminal) -> color_eyre::Result<()> {
         self.running = true;
         while self.running {
             terminal.draw(|frame| self.draw(frame))?;
@@ -63,19 +62,15 @@ impl App {
     }
 
     /// Reads the crossterm events and updates the state of [`App`].
-    async fn handle_crossterm_events(&mut self) -> Result<()> {
+    async fn handle_crossterm_events(&mut self) -> color_eyre::Result<()> {
         let event = self.event_stream.next().fuse().await;
         match event {
-            Some(Ok(evt)) => {
-                match evt {
-                    Event::Key(key)
-                        if key.kind == KeyEventKind::Press
-                            => self.on_key_event(key),
-                    Event::Mouse(_) => {}
-                    Event::Resize(_, _) => {}
-                    _ => {}
-                }
-            }
+            Some(Ok(evt)) => match evt {
+                Event::Key(key) if key.kind == KeyEventKind::Press => self.on_key_event(key),
+                Event::Mouse(_) => {}
+                Event::Resize(_, _) => {}
+                _ => {}
+            },
             _ => {}
         }
         Ok(())

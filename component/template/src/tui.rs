@@ -6,7 +6,6 @@ use std::{
     time::Duration,
 };
 
-use color_eyre::Result;
 use crossterm::{
     cursor,
     event::{
@@ -55,7 +54,7 @@ pub struct Tui {
 }
 
 impl Tui {
-    pub fn new() -> Result<Self> {
+    pub fn new() -> color_eyre::Result<Self> {
         let (event_tx, event_rx) = mpsc::unbounded_channel();
         Ok(Self {
             terminal: ratatui::Terminal::new(Backend::new(stdout()))?,
@@ -147,7 +146,7 @@ impl Tui {
         cancellation_token.cancel();
     }
 
-    pub fn stop(&self) -> Result<()> {
+    pub fn stop(&self) -> color_eyre::Result<()> {
         self.cancel();
         let mut counter = 0;
         while !self.task.is_finished() {
@@ -164,7 +163,7 @@ impl Tui {
         Ok(())
     }
 
-    pub fn enter(&mut self) -> Result<()> {
+    pub fn enter(&mut self) -> color_eyre::Result<()> {
         crossterm::terminal::enable_raw_mode()?;
         crossterm::execute!(stdout(), EnterAlternateScreen, cursor::Hide)?;
         if self.mouse {
@@ -177,7 +176,7 @@ impl Tui {
         Ok(())
     }
 
-    pub fn exit(&mut self) -> Result<()> {
+    pub fn exit(&mut self) -> color_eyre::Result<()> {
         self.stop()?;
         if crossterm::terminal::is_raw_mode_enabled()? {
             self.flush()?;
@@ -197,14 +196,14 @@ impl Tui {
         self.cancellation_token.cancel();
     }
 
-    pub fn suspend(&mut self) -> Result<()> {
+    pub fn suspend(&mut self) -> color_eyre::Result<()> {
         self.exit()?;
         #[cfg(not(windows))]
         signal_hook::low_level::raise(signal_hook::consts::signal::SIGTSTP)?;
         Ok(())
     }
 
-    pub fn resume(&mut self) -> Result<()> {
+    pub fn resume(&mut self) -> color_eyre::Result<()> {
         self.enter()?;
         Ok(())
     }

@@ -1,6 +1,5 @@
 use clap::Parser;
 use cli::Cli;
-use color_eyre::Result;
 
 use crate::app::App;
 
@@ -14,7 +13,7 @@ mod logging;
 mod tui;
 
 #[tokio::main]
-async fn main() -> Result<()> {
+async fn main() -> color_eyre::Result<()> {
     crate::errors::init()?;
     crate::logging::init()?;
 

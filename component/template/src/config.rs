@@ -2,7 +2,6 @@
 
 use std::{collections::HashMap, env, path::PathBuf};
 
-use color_eyre::Result;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use derive_deref::{Deref, DerefMut};
 use directories::ProjectDirs;
@@ -46,7 +45,7 @@ lazy_static! {
 }
 
 impl Config {
-    pub fn new() -> Result<Self, config::ConfigError> {
+    pub fn new() -> color_eyre::Result<Self, config::ConfigError> {
         let default_config: Config = json5::from_str(CONFIG).unwrap();
         let data_dir = get_data_dir();
         let config_dir = get_config_dir();
@@ -126,7 +125,7 @@ fn project_directory() -> Option<ProjectDirs> {
 pub struct KeyBindings(pub HashMap<Mode, HashMap<Vec<KeyEvent>, Action>>);
 
 impl<'de> Deserialize<'de> for KeyBindings {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    fn deserialize<D>(deserializer: D) -> color_eyre::Result<Self, D::Error>
     where
         D: Deserializer<'de>,
     {
@@ -147,7 +146,7 @@ impl<'de> Deserialize<'de> for KeyBindings {
     }
 }
 
-fn parse_key_event(raw: &str) -> Result<KeyEvent, String> {
+fn parse_key_event(raw: &str) -> color_eyre::Result<KeyEvent, String> {
     let raw_lower = raw.to_ascii_lowercase();
     let (remaining, modifiers) = extract_modifiers(&raw_lower);
     parse_key_code_with_modifiers(remaining, modifiers)
@@ -181,7 +180,7 @@ fn extract_modifiers(raw: &str) -> (&str, KeyModifiers) {
 fn parse_key_code_with_modifiers(
     raw: &str,
     mut modifiers: KeyModifiers,
-) -> Result<KeyEvent, String> {
+) -> color_eyre::Result<KeyEvent, String> {
     let c = match raw {
         "esc" => KeyCode::Esc,
         "enter" => KeyCode::Enter,
@@ -291,7 +290,7 @@ pub fn key_event_to_string(key_event: &KeyEvent) -> String {
     key
 }
 
-pub fn parse_key_sequence(raw: &str) -> Result<Vec<KeyEvent>, String> {
+pub fn parse_key_sequence(raw: &str) -> color_eyre::Result<Vec<KeyEvent>, String> {
     if raw.chars().filter(|c| *c == '>').count() != raw.chars().filter(|c| *c == '<').count() {
         return Err(format!("Unable to parse `{}`", raw));
     }
@@ -501,7 +500,7 @@ mod tests {
     }
 
     #[test]
-    fn test_config() -> Result<()> {
+    fn test_config() -> color_eyre::Result<()> {
         let c = Config::new()?;
         assert_eq!(
             c.keybindings

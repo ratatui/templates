@@ -1,19 +1,15 @@
-use color_eyre::Result;
-use crossterm::event::{self, Event};
 use ratatui::{DefaultTerminal, Frame};
 
-fn main() -> Result<()> {
+fn main() -> color_eyre::Result<()> {
     color_eyre::install()?;
-    let terminal = ratatui::init();
-    let result = run(terminal);
-    ratatui::restore();
-    result
+    ratatui::run(app)?;
+    Ok(())
 }
 
-fn run(mut terminal: DefaultTerminal) -> Result<()> {
+fn app(terminal: &mut DefaultTerminal) -> std::io::Result<()> {
     loop {
         terminal.draw(render)?;
-        if matches!(event::read()?, Event::Key(_)) {
+        if crossterm::event::read()?.is_key_press() {
             break Ok(());
         }
     }
