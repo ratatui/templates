@@ -106,7 +106,7 @@ impl App {
 
     fn handle_key_event(&mut self, key: KeyEvent) -> color_eyre::Result<()> {
         let action_tx = self.action_tx.clone();
-        let Some(keymap) = self.config.keybindings.get(&self.mode) else {
+        let Some(keymap) = self.config.keybindings.0.get(&self.mode) else {
             return Ok(());
         };
         match keymap.get(&vec![key]) {

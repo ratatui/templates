@@ -432,7 +432,6 @@ dependencies = [
  "color-eyre",
  "config",
  "crossterm 0.28.1",
- "derive_deref",
  "directories",
  "futures",
  "human-panic",
@@ -691,17 +690,6 @@ checksum = "ab63b0e2bf4d5928aff72e83a7dace85d7bba5fe12dcc3c5a572d78caffd3f3c"
 dependencies = [
  "derive_builder_core",
  "syn 2.0.100",
-]
-
-[[package]]
-name = "derive_deref"
-version = "1.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dcdbcee2d9941369faba772587a565f4f534e42cb8d17e5295871de730163b2b"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 1.0.109",
 ]
 
 [[package]]

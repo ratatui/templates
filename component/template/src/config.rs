@@ -3,11 +3,10 @@
 use std::{collections::HashMap, env, path::PathBuf};
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use derive_deref::{Deref, DerefMut};
 use directories::ProjectDirs;
 use lazy_static::lazy_static;
 use ratatui::style::{Color, Modifier, Style};
-use serde::{Deserialize, de::Deserializer};
+use serde::{de::Deserializer, Deserialize};
 use tracing::error;
 
 use crate::{action::Action, app::Mode};
@@ -85,7 +84,7 @@ impl Config {
             }
         }
         for (mode, default_styles) in default_config.styles.iter() {
-            let user_styles = cfg.styles.entry(*mode).or_default();
+            let user_styles = cfg.styles.0.entry(*mode).or_default();
             for (style_key, style) in default_styles.iter() {
                 user_styles.entry(style_key.clone()).or_insert(*style);
             }

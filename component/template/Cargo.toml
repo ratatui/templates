@@ -24,7 +24,6 @@ clap = { version = "4.5.20", features = [
 color-eyre = "0.6.3"
 config = "0.14.0"
 crossterm = { version = "0.28.1", features = ["serde", "event-stream"] }
-derive_deref = "1.1.1"
 directories = "5.0.1"
 futures = "0.3.31"
 human-panic = "2.0.2"

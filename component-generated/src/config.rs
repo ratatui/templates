@@ -3,7 +3,6 @@
 use std::{collections::HashMap, env, path::PathBuf};
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use derive_deref::{Deref, DerefMut};
 use directories::ProjectDirs;
 use lazy_static::lazy_static;
 use ratatui::style::{Color, Modifier, Style};
@@ -76,16 +75,16 @@ impl Config {
 
         let mut cfg: Self = builder.build()?.try_deserialize()?;
 
-        for (mode, default_bindings) in default_config.keybindings.iter() {
-            let user_bindings = cfg.keybindings.entry(*mode).or_default();
+        for (mode, default_bindings) in default_config.keybindings.0.iter() {
+            let user_bindings = cfg.keybindings.0.entry(*mode).or_default();
             for (key, cmd) in default_bindings.iter() {
                 user_bindings
                     .entry(key.clone())
                     .or_insert_with(|| cmd.clone());
             }
         }
-        for (mode, default_styles) in default_config.styles.iter() {
-            let user_styles = cfg.styles.entry(*mode).or_default();
+        for (mode, default_styles) in default_config.styles.0.iter() {
+            let user_styles = cfg.styles.0.entry(*mode).or_default();
             for (style_key, style) in default_styles.iter() {
                 user_styles.entry(style_key.clone()).or_insert(*style);
             }
@@ -121,7 +120,7 @@ fn project_directory() -> Option<ProjectDirs> {
     ProjectDirs::from("com", "kdheepak", env!("CARGO_PKG_NAME"))
 }
 
-#[derive(Clone, Debug, Default, Deref, DerefMut)]
+#[derive(Clone, Debug, Default)]
 pub struct KeyBindings(pub HashMap<Mode, HashMap<Vec<KeyEvent>, Action>>);
 
 impl<'de> Deserialize<'de> for KeyBindings {
@@ -317,7 +316,7 @@ pub fn parse_key_sequence(raw: &str) -> color_eyre::Result<Vec<KeyEvent>, String
     sequences.into_iter().map(parse_key_event).collect()
 }
 
-#[derive(Clone, Debug, Default, Deref, DerefMut)]
+#[derive(Clone, Debug, Default)]
 pub struct Styles(pub HashMap<Mode, HashMap<String, Style>>);
 
 impl<'de> Deserialize<'de> for Styles {
@@ -504,6 +503,7 @@ mod tests {
         let c = Config::new()?;
         assert_eq!(
             c.keybindings
+                .0
                 .get(&Mode::Home)
                 .unwrap()
                 .get(&parse_key_sequence("<q>").unwrap_or_default())
