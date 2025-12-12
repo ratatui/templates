@@ -1,12 +1,14 @@
 use crossterm::event::{self, Event, KeyEvent, KeyEventKind};
-use crossterm_keybind::KeyBind;
 use crossterm_keybind::KeyBindTrait;
+use app_event::AppKeyEvent;
 use ratatui::{
     DefaultTerminal, Frame,
     style::Stylize,
     text::Line,
     widgets::{Block, Paragraph},
 };
+
+mod app_event;
 
 fn main() -> color_eyre::Result<()> {
     color_eyre::install()?;
@@ -17,16 +19,6 @@ fn main() -> color_eyre::Result<()> {
     let result = App::new().run(terminal);
     ratatui::restore();
     result
-}
-
-#[derive(KeyBind)]
-pub enum AppKeyEvent {
-    /// The app will be closed with following key bindings
-    /// - combin key Control and c
-    /// - single key Esc
-    /// - single key q
-    #[keybindings["Control+c", "q", "Esc"]]
-    Quit,
 }
 
 /// The main application which holds the state and logic of the application.
