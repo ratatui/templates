@@ -43,7 +43,7 @@ tracing-subscriber = { version = "0.3.18", features = ["env-filter", "serde"] }
 
 [build-dependencies]
 anyhow = "1.0.90"
-vergen-gix = { version = "1.0.2", features = ["build", "cargo"] }
+vergen-gix = { version = "9.1.0", features = ["build", "cargo"] }
 
 # Read the optimization guideline for more details: https://ratatui.rs/recipes/apps/release-your-app/#optimizations
 [profile.release]
