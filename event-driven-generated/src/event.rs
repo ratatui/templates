@@ -1,5 +1,5 @@
 use color_eyre::eyre::WrapErr;
-use ratatui::crossterm::event::{self, Event as CrosstermEvent};
+use crossterm::event::{self, Event as CrosstermEvent};
 use std::{
     sync::mpsc,
     thread,

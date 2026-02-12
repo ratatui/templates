@@ -1,6 +1,6 @@
 use color_eyre::eyre::OptionExt;
+use crossterm::event::Event as CrosstermEvent;
 use futures::{FutureExt, StreamExt};
-use ratatui::crossterm::event::Event as CrosstermEvent;
 use std::time::Duration;
 use tokio::sync::mpsc;
 

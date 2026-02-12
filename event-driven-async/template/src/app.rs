@@ -1,8 +1,6 @@
 use crate::event::{AppEvent, Event, EventHandler};
-use ratatui::{
-    DefaultTerminal,
-    crossterm::event::{KeyCode, KeyEvent, KeyModifiers},
-};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use ratatui::DefaultTerminal;
 
 /// Application.
 #[derive(Debug)]

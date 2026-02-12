@@ -8,7 +8,7 @@ edition = "2024"
 
 [dependencies]
 crossterm = "0.28.1"
-ratatui = "0.29.0"
+ratatui = "0.30.0"
 color-eyre = "0.6.3"
 
 # Read the optimization guideline for more details: https://ratatui.rs/recipes/apps/release-your-app/#optimizations
