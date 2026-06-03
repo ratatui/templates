@@ -1,12 +1,13 @@
+use std::sync::LazyLock;
+
 use tracing_error::ErrorLayer;
 use tracing_subscriber::{EnvFilter, fmt, prelude::*};
 
 use crate::config;
 
-lazy_static::lazy_static! {
-    pub static ref LOG_ENV: String = format!("{}_LOG_LEVEL", config::PROJECT_NAME.clone());
-    pub static ref LOG_FILE: String = format!("{}.log", env!("CARGO_PKG_NAME"));
-}
+pub static LOG_ENV: LazyLock<String> =
+    LazyLock::new(|| format!("{}_LOG_LEVEL", config::PROJECT_NAME.clone()));
+pub static LOG_FILE: LazyLock<String> = LazyLock::new(|| format!("{}.log", env!("CARGO_PKG_NAME")));
 
 pub fn init() -> color_eyre::Result<()> {
     let directory = config::get_data_dir();

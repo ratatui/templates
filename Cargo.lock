@@ -420,7 +420,6 @@ dependencies = [
  "futures",
  "human-panic",
  "json5",
- "lazy_static",
  "libc",
  "pretty_assertions",
  "ratatui",
