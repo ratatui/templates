@@ -144,6 +144,9 @@ impl App {
                 Action::ClearScreen => tui.terminal.clear()?,
                 Action::Resize(w, h) => self.handle_resize(tui, w, h)?,
                 Action::Render => self.render(tui)?,
+                Action::Error(ref err) => {
+                    tracing::error!(?err)
+                }
                 _ => {}
             }
             for component in self.components.iter_mut() {
